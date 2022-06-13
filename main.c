@@ -1,6 +1,5 @@
 #include "main.h"
 #include "fdt.h"
-#include "dram_v2.h"
 #include "ff.h"
 #include "sunxi_gpio.h"
 #include "sunxi_sdhci.h"
@@ -10,37 +9,6 @@
 #include "board.h"
 
 struct image_info image;
-
-extern void		  sys_uart_init(void);
-extern void		  sys_clock_init(void);
-
-
-dram_para_t ddr_param = {
-	.dram_clk	 = 792,
-	.dram_type	 = 3,
-	.dram_zq	 = 0x7b7bfb,
-	.dram_odt_en = 0x00,
-	.dram_para1	 = 0x000010d2,
-	.dram_para2	 = 0x0000,
-	.dram_mr0	 = 0x1c70,
-	.dram_mr1	 = 0x042,
-	.dram_mr2	 = 0x18,
-	.dram_mr3	 = 0x0,
-	.dram_tpr0	 = 0x004A2195,
-	.dram_tpr1	 = 0x02423190,
-	.dram_tpr2	 = 0x0008B061,
-	.dram_tpr3	 = 0xB4787896,
-	.dram_tpr4	 = 0x0,
-	.dram_tpr5	 = 0x48484848,
-	.dram_tpr6	 = 0x00000048,
-	.dram_tpr7	 = 0x1620121e,
-	.dram_tpr8	 = 0x0,
-	.dram_tpr9	 = 0x0,
-	.dram_tpr10	 = 0x0,
-	.dram_tpr11	 = 0x00340000,
-	.dram_tpr12	 = 0x00000046,
-	.dram_tpr13	 = 0x34000100,
-};
 
 #if 0
 void neon_enable(void)
@@ -189,7 +157,6 @@ int main(void)
 		write32(0x070901f4, reg32);
 		debug("fix vccio detect value:0x%x\r\n", reg32);
 	}
-
 
 	uint32_t addr = 0x0200180C;
 	uint32_t val  = (1 << 16) | (1 << 0);
