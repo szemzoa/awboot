@@ -1,8 +1,9 @@
 /**
  * \file
  *
- * \brief Linker script for running in internal FLASH on the SAMD21G17D
+ * \brief Linker script for T113-S3 internal SRAM
  *
+ * based on: Linker script for running in internal FLASH on the SAMD21G17D
  * Copyright (c) 2018 Microchip Technology Inc.
  *
  * \asf_license_start
