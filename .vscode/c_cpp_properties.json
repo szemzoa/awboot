@@ -1,0 +1,13 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "cStandard": "gnu99",
+            "mergeConfigurations": true
+        }
+    ],
+    "version": 4
+}
