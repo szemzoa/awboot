@@ -6,12 +6,11 @@ TOPDIR=$(shell pwd)
 BUILD_REVISION_H = "build_revision.h"
 BUILD_REVISION_D = "BUILD_REVISION"
 
-SRCS =  main.c debug.c xformat.c lib/div.c lib/fdt.c lib/string.c
+SRCS =  main.c debug.c xformat.c lib/div.c lib/fdt.c lib/string.c board.c
 
 INCLUDE_DIRS= -I . -I include -I lib 
 LIB_DIR= -L ./
 LIBS= -lm 
-#-lsun8iw20p1_fes
 
 include	arch/arch.mk
 include	lib/fatfs/fatfs.mk

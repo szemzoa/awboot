@@ -5,7 +5,7 @@ INCLUDE_DIRS += -I $(ARCH)/arm32/include -I $(SOC)/include -I $(SOC) -I $(SOC)/m
 
 #SRCS	+=  $(SOC)/sys-clock.c
 SRCS	+=  $(SOC)/mctl_hal.c
-SRCS	+=  $(SOC)/sys-uart.c
+SRCS	+=  $(SOC)/sunxi_usart.c
 SRCS	+=  $(SOC)/arch_timer.c
 SRCS	+=  $(SOC)/sunxi_gpio.c
 SRCS	+=  $(SOC)/sdcard.c

@@ -1,12 +1,12 @@
 #include "debug.h"
+#include "sunxi_usart.h"
 #include "main.h"
-
-extern void sys_uart_putc(void *arg, char c);
+#include "board.h"
 
 void debug(const char *fmt, ...) 
 {
 	va_list args;
 	va_start(args, fmt);
-	xvformat(sys_uart_putc, NULL, fmt, args);
+	xvformat(sunxi_usart_putc, &usart_dbg, fmt, args);
 	va_end(args);
 }

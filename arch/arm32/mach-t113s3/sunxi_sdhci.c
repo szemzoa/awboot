@@ -181,24 +181,6 @@ enum {
 #define SDXC_SEND_AUTO_STOPCCSD		(1 << 9)
 #define SDXC_CEATA_DEV_IRQ_ENABLE	(1 << 10)
 
-struct sdhci_t sdhci0 = {
-	.name = "sdhci0",
-	.addr = 0x04020000,
-	.reset = 400,
-	.voltage = MMC_VDD_27_36,
-	.width = MMC_BUS_WIDTH_4,
-	.clock = 25 * 1000 * 1000,
-	.removable = 0,
-	.isspi = FALSE,
-	.gpio_clk = GPIO_PIN(PORTF, 2),
-	.gpio_cmd = GPIO_PIN(PORTF, 3),
-	.gpio_d0 = GPIO_PIN(PORTF, 1),
-	.gpio_d1 = GPIO_PIN(PORTF, 0),
-	.gpio_d2 = GPIO_PIN(PORTF, 5),
-	.gpio_d3 = GPIO_PIN(PORTF, 4),
-};
-
-
 extern uint32_t get_sys_ticks();
 
 

@@ -7,17 +7,13 @@
 #include "sdcard.h"
 #include "arm32.h"
 #include "debug.h"
+#include "board.h"
 
 struct image_info image;
 
 extern void		  sys_uart_init(void);
 extern void		  sys_clock_init(void);
 
-#define CONFIG_KERNEL_FILENAME	"zImage"
-#define CONFIG_DTB_FILENAME	"sun8i-mangopi-mq-dual-linux.dtb"
-
-#define CONFIG_KERNEL_LOAD_ADDR 0x45000000
-#define CONFIG_DTB_LOAD_ADDR	0x41800000
 
 dram_para_t ddr_param = {
 	.dram_clk	 = 792,
@@ -178,7 +174,8 @@ int main(void)
 	void (*kernel_entry)(int zero, int arch, unsigned int params);
 
 
-	sys_uart_init();
+//	sys_clock_init();
+	board_init();
 
 	debug("Allwinner T113-loader\r\n");
 	udelay(10000);
@@ -193,7 +190,6 @@ int main(void)
 		debug("fix vccio detect value:0x%x\r\n", reg32);
 	}
 
-	//	sys_clock_init();
 
 	uint32_t addr = 0x0200180C;
 	uint32_t val  = (1 << 16) | (1 << 0);
@@ -201,12 +197,6 @@ int main(void)
 	udelay(200);
 
 	init_DRAM(0, &ddr_param);
-
-	sunxi_gpio_init(GPIO_PIN(PORTD, 22), GPIO_OUTPUT);
-	sunxi_gpio_set_value(GPIO_PIN(PORTD, 22), 0);
-
-	sunxi_sdhci_init(&sdhci0);
-	sdcard_init(&sdcard0, &sdhci0);
 
 	memset(&image, 0, sizeof(struct image_info));
 	image.dest = (unsigned char *)CONFIG_KERNEL_LOAD_ADDR;

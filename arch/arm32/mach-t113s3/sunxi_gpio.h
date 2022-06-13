@@ -1,6 +1,8 @@
 #ifndef __SUNXI_GPIO_H__
 #define __SUNXI_GPIO_H__
 
+#include <inttypes.h>
+
 enum {
 	GPIO_INPUT		  = 0,
 	GPIO_OUTPUT		  = 1,
@@ -33,6 +35,12 @@ typedef uint32_t gpio_t;
 #define PIO_NUM_IO_BITS 5
 
 #define GPIO_PIN(x, y)	(((uint32_t)(x << PIO_NUM_IO_BITS)) | y)
+
+typedef struct {
+    gpio_t	pin;
+    uint8_t	mux;
+} gpio_mux_t;
+
 
 extern void sunxi_gpio_init(gpio_t pin, int cfg);
 extern void sunxi_gpio_set_value(gpio_t pin, int value);
