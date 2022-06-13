@@ -65,12 +65,15 @@ void board_init_led(gpio_t led)
         sunxi_gpio_set_value(led, 0);
 }
 
+void board_sdhci_init()
+{
+	sunxi_sdhci_init(&sdhci0);
+	sdcard_init(&sdcard0, &sdhci0);
+}
+
 void board_init()
 {
 	board_init_led(led_blue);
-
 	sunxi_usart_init(&usart_dbg);
 
-	sunxi_sdhci_init(&sdhci0);
-	sdcard_init(&sdcard0, &sdhci0);
 }

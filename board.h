@@ -3,6 +3,8 @@
 
 #include "dram_v2.h"
 
+#define CONFIG_ENABLE_CPU_FREQ_DUMP
+
 #define CONFIG_KERNEL_FILENAME	"zImage"
 #define CONFIG_DTB_FILENAME	"sun8i-mangopi-mq-dual-linux.dtb"
 
@@ -13,5 +15,6 @@ extern dram_para_t ddr_param;
 extern struct sunxi_usart_t usart_dbg;
 
 extern void board_init(void);
+extern void board_sdhci_init(void);
 
 #endif

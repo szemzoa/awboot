@@ -41,7 +41,6 @@ typedef struct {
     uint8_t	mux;
 } gpio_mux_t;
 
-
 extern void sunxi_gpio_init(gpio_t pin, int cfg);
 extern void sunxi_gpio_set_value(gpio_t pin, int value);
 extern int	sunxi_gpio_read(gpio_t pin);

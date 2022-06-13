@@ -31,6 +31,7 @@
 #include "sdcard.h"
 #include "sunxi_sdhci.h"
 #include "sunxi_gpio.h"
+#include "sunxi_clk.h"
 
 #define debug2(...)
 
@@ -417,8 +418,7 @@ static bool_t sdhci_t113_update_clk(struct sdhci_t * pdat)
 
 bool_t sdhci_set_clock(struct sdhci_t * sdhci, u32_t clock)
 {
-//	u32_t ratio = div(clk_get_rate(sdhci->pclk) + 2 * clock - 1, (2 * clock));
-	u32_t ratio = div(50000000 + 2 * clock - 1, (2 * clock));
+	u32_t ratio = div(sdhci->pclk + 2 * clock - 1, (2 * clock));
 
 	if((ratio & 0xff) != ratio)
 		return FALSE;
@@ -462,22 +462,6 @@ int sunxi_sdhci_init(struct sdhci_t *sdhci)
 	sunxi_gpio_init(sdhci->gpio_d3, GPIO_PERIPH_MUX2);
 	sunxi_gpio_set_pull(sdhci->gpio_d3, GPIO_PULL_UP);
 
-//	clk_enable(sdhci->pclk);
-
-#if 0
-        /* sdhc0 clock gate mask */
-        addr = 0x02001830;
-	val = 0;
-        write32(addr, val);
-
-        /* sdhc0 clock gate mask */
-        addr = 0x0200184c;
-	val = 0;
-        write32(addr, val);
-
-	udelay(400);
-#endif
-
         addr = 0x0200184c;
         val = read32(addr);
         val |= (1 << 16);
@@ -489,8 +473,7 @@ int sunxi_sdhci_init(struct sdhci_t *sdhci)
         val |= (1 << 31) | (1 << 24) | 11;		/* 50MHz */
         write32(addr, val);
 
-//	if(sdhci->reset >= 0)
-//		reset_deassert(sdhci->reset);
+	sdhci->pclk = div(sunxi_clk_get_peri1x_rate(), 12);
 
         /* sdhc0 clock gate pass */
         addr = 0x0200184c;

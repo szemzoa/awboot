@@ -68,7 +68,6 @@ reset:
 /*
 	bl  cpu_init_cp15
 */
-
        /*
          * disable interrupts (FIQ and IRQ), also set the cpu to SVC32 mode,
          * except if in HYP mode already
@@ -80,7 +79,6 @@ reset:
         orrne   r0, r0, #0x13           @ set SVC mode
         orr     r0, r0, #0xc0           @ disable FIQ and IRQ
         msr     cpsr,r0
-
 
         @set cntfrq to 24M
         ldr r0, =24000000

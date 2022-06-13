@@ -1,10 +1,13 @@
 #include "main.h"
 #include "fdt.h"
 #include "ff.h"
+#include "div.h"
 #include "sunxi_gpio.h"
 #include "sunxi_sdhci.h"
+#include "sunxi_clk.h"
 #include "sdcard.h"
 #include "arm32.h"
+#include "reg-ccu.h"
 #include "debug.h"
 #include "board.h"
 
@@ -136,17 +139,17 @@ int load_sdcard(struct image_info *image)
 int main(void)
 {
 //	unsigned int dtb_size;
-	unsigned int entry_point;
-	int ret;
-	uint32_t reg32;
-	void (*kernel_entry)(int zero, int arch, unsigned int params);
+    unsigned int entry_point;
+    int ret;
+    uint32_t reg32;
+    void (*kernel_entry)(int zero, int arch, unsigned int params);
 
-
-//	sys_clock_init();
 	board_init();
 
 	debug("Allwinner T113-loader\r\n");
 	udelay(10000);
+
+	sunxi_clk_init();
 
 	/* ?? */
 	reg32 = read32(0x070901f4);
@@ -164,6 +167,13 @@ int main(void)
 	udelay(200);
 
 	init_DRAM(0, &ddr_param);
+
+	#ifdef CONFIG_ENABLE_CPU_FREQ_DUMP
+	    sunxi_clk_dump();
+	#endif
+	udelay(10000);
+
+	board_sdhci_init();
 
 	memset(&image, 0, sizeof(struct image_info));
 	image.dest = (unsigned char *)CONFIG_KERNEL_LOAD_ADDR;

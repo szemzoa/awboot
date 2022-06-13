@@ -1,43 +1,12 @@
-/*
- * sys-clock.c
- *
- * Copyright(c) 2007-2022 Jianjun Jiang <8192542@qq.com>
- * Official site: http://xboot.org
- * Mobile phone: +86-18665388956
- * QQ: 8192542
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- */
-
 #include "main.h"
+#include "board.h"
+#include "div.h"
+#include "sunxi_clk.h"
 #include "reg-ccu.h"
+#include "debug.h"
 
-/*
-static inline void sdelay(int loops)
-{
-	__asm__ __volatile__ ("1:\n" "subs %0, %1, #1\n"
-		"bne 1b":"=r" (loops):"0"(loops));
-}
-*/
 
-static void set_pll_cpux_axi(void)
+void set_pll_cpux_axi(void)
 {
 	uint32_t val;
 
@@ -87,12 +56,13 @@ static void set_pll_cpux_axi(void)
 	write32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG, val);
 	sdelay(1);
 
-	/* Set and change cpu clk src */
-	val = read32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG);
-	val &= ~(0x07 << 24 | 0x3 << 16 | 0x3 << 8 | 0xf << 0);
-	val |= (0x03 << 24 | 0x0 << 16 | 0x0 << 8 | 0x0 << 0);
-	write32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG, val);
-	sdelay(1);
+	/* set and change cpu clk src to PLL_CPUX, PLL_CPUX:AXI0 = 1008M:504M */
+        val = read32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG);
+        val &= ~(0x07 << 24 | 0x3 << 16 | 0x3 << 8 | 0xf << 0);
+        val |= (0x03 << 24 | 0x0 << 16 | 0x0 << 8 | 0x1 << 0);
+        write32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG, val);
+        sdelay(1);
+
 }
 
 static void set_pll_periph0(void)
@@ -193,14 +163,14 @@ static void set_module(virtual_addr_t addr)
 	}
 }
 
-void sys_clock_init(void)
+void sunxi_clk_init(void)
 {
 	set_pll_cpux_axi();
 	set_pll_periph0();
 	set_ahb();
 	set_apb();
-//	set_dma();
-//	set_mbus();
+	set_dma();
+	set_mbus();
 	set_module(T113_CCU_BASE + CCU_PLL_PERI0_CTRL_REG);
 	set_module(T113_CCU_BASE + CCU_PLL_VIDEO0_CTRL_REG);
 	set_module(T113_CCU_BASE + CCU_PLL_VIDEO1_CTRL_REG);
@@ -208,3 +178,124 @@ void sys_clock_init(void)
 	set_module(T113_CCU_BASE + CCU_PLL_AUDIO0_CTRL_REG);
 	set_module(T113_CCU_BASE + CCU_PLL_AUDIO1_CTRL_REG);
 }
+
+uint32_t sunxi_clk_get_peri1x_rate()
+{
+    uint32_t reg32;
+    uint8_t plln, pllm, p0;
+
+	/* PLL PERIx */
+	reg32 = read32(T113_CCU_BASE + CCU_PLL_PERI0_CTRL_REG);
+	if (reg32 & (1 << 31)) {
+	    plln = ((reg32 >> 8) & 0xff) + 1;
+	    pllm = (reg32 & 0x01) + 1;
+	    p0 = ((reg32 >> 16) & 0x03) + 1;
+
+	    return ((div((24 * plln), (pllm * p0)) >> 1) * 1000 * 1000);
+	}
+
+	return 0;
+}
+
+#ifdef CONFIG_ENABLE_CPU_FREQ_DUMP
+void sunxi_clk_dump()
+{
+    uint32_t reg32;
+//    uint32_t cpu_clk, plln, pllm;
+    uint8_t p0, p1;
+
+
+	/* PLL CPU */
+	reg32 = read32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG);
+#if 0
+	cpu_clk = (reg32 >> 24) & 0x7;
+	debug("freq: cpu_clock: ");
+	switch(cpu_clk) {
+		case 0x0:
+		    debug("HOSC");
+		    break;
+
+		case 0x1:
+		    debug("CLK32");
+		    break;
+
+		case 0x2:
+		    debug("CLK16M_RC");
+		    break;
+
+		case 0x3:
+		    debug("PLL_CPU");
+		    break;
+
+		case 0x4:
+		    debug("PLL_PERI(1X)");
+		    break;
+
+		case 0x5:
+		    debug("PLL_PERI(2X)");
+		    break;
+
+		case 0x6:
+		    debug("PLL_PERI(800M)");
+		    break;
+	}
+	debug("\r\n");
+	debug("freq: PLL_cpu: ");
+#endif
+	reg32 = read32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG);
+//	if (reg32 & (1 << 31)) {
+	    p0 = (reg32 >> 16) & 0x03;
+	    if (p0 == 0) {
+		p1 = 1;
+	    } else if (p0 == 1) {
+		p1 = 2;
+	    } else if (p0 == 2) {
+		p1 = 4;
+	    } else {
+		p1 = 1;
+	    }
+
+	    debug("CPU freq=%u MHz\r\n", div((((reg32 >> 8) & 0xff) + 1) * 24, p1));
+
+//	} else {
+//	    debug("disabled\r\n");
+//	}
+
+#if 0
+	/* PLL PERIx */
+	reg32 = read32(T113_CCU_BASE + CCU_PLL_PERI0_CTRL_REG);
+	if (reg32 & (1 << 31)) {
+	    debug("freq: PLL_peri: enabled, ");
+
+	    plln = ((reg32 >> 8) & 0xff) + 1;
+	    pllm = (reg32 & 0x01) + 1;
+	    p0 = ((reg32 >> 16) & 0x03) + 1;
+	    p1 = ((reg32 >> 20) & 0x03) + 1;
+
+	    debug("(2X)=%uMHz, ", div((24 * plln), (pllm * p0)));
+	    debug("(1X)=%uMHz, ", div((24 * plln), (pllm * p0)) >> 1);
+	    debug("(800M)=%uMHz\r\n", div((24 * plln), (pllm * p1)));
+
+	} else {
+	    debug("disabled\r\n");
+	}
+
+	/* PLL DDR */
+	reg32 = read32(T113_CCU_BASE + CCU_PLL_DDR_CTRL_REG);
+	if (reg32 & (1 << 31)) {
+	    debug("freq: PLL_ddr: enabled");
+
+	    plln = ((reg32 >> 8) & 0xff) + 1;
+
+	    pllm = (reg32 & 0x01) + 1;
+	    p1 = ((reg32 >> 1) & 0x1) + 1;
+	    p0 = (reg32 & 0x01) + 1;
+
+	    debug("=%uMHz\r\n", div((24 * plln), (p0 * p1)));
+
+	} else {
+	    debug("disabled\r\n");
+	}
+#endif
+}
+#endif

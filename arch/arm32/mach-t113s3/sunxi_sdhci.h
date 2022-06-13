@@ -21,7 +21,7 @@ struct sdhci_t
 {
 	char *name;
 	uint32_t addr;
-	char *pclk;
+	uint32_t pclk;
 	uint32_t reset;
 	u32_t voltage;
 	u32_t width;
