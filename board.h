@@ -15,6 +15,6 @@ extern dram_para_t ddr_param;
 extern struct sunxi_usart_t usart_dbg;
 
 extern void board_init(void);
-extern void board_sdhci_init(void);
+extern int board_sdhci_init(void);
 
 #endif

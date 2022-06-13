@@ -51,4 +51,5 @@ void sunxi_usart_putc(void *arg, char c)
 
 	while((read32(usart->base + 0x7c) & (0x1 << 1)) == 0);
 	write32(usart->base + 0x00, c);
+	while((read32(usart->base + 0x7c) & (0x1 << 0)) == 1);
 }

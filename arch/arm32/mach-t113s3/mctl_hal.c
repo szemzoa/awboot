@@ -6,7 +6,7 @@
 #include "div.h"
 #include "main.h"
 
-#define CONFIG_DEBUG_DDR_DRIVER
+//#define CONFIG_DEBUG_DDR_DRIVER
 
 #ifdef CONFIG_DEBUG_DDR_DRIVER
 #define ddr_debug(...)      \

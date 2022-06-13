@@ -505,8 +505,7 @@ static bool_t sdcard_detect(struct sdhci_t *hci, struct sdcard_t *card)
 	cmd.resptype = MMC_RSP_R1;
 	if (!sdhci_transfer(hci, &cmd, NULL))
 		return FALSE;
-	debug("SD/MMC card at '%s' controller found\r\n", hci->name);
-	debug("  Attached is a %s card\r\n", card->version & SD_VERSION_SD ? "SD" : "MMC");
+
 	return TRUE;
 }
 
@@ -526,10 +525,17 @@ u64_t sdcard_blk_read(struct sdcard_pdata_t *card, u8_t *buf, u64_t blkno, u64_t
 	return blkcnt;
 }
 
-void sdcard_init(struct sdcard_pdata_t *card, struct sdhci_t *hci)
+int sdcard_init(struct sdcard_pdata_t *card, struct sdhci_t *hci)
 {
 	card->hci	 = hci;
 	card->online = FALSE;
 
-	sdcard_detect(card->hci, &card->card);
+	if (sdcard_detect(card->hci, &card->card) == TRUE) {
+	    debug("SD/MMC card at '%s' controller found\r\n", hci->name);
+	    // debug("  Attached is a %s card\r\n", card->version & SD_VERSION_SD ? "SD" : "MMC");
+	    return 0;
+	}
+
+	debug("SD/MMC card not found\r\n");
+	return -1;
 }

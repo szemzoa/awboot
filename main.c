@@ -147,8 +147,6 @@ int main(void)
 	board_init();
 
 	debug("Allwinner T113-loader\r\n");
-	udelay(10000);
-
 	sunxi_clk_init();
 
 	/* ?? */
@@ -158,7 +156,7 @@ int main(void)
 		reg32 = (reg32 & 0xffffff8f) | 0xc0;
 		reg32 = (reg32 & 0xffffff8e) | 0xc0;
 		write32(0x070901f4, reg32);
-		debug("fix vccio detect value:0x%x\r\n", reg32);
+		/* debug("fix vccio detect value:0x%x\r\n", reg32); */
 	}
 
 	uint32_t addr = 0x0200180C;
@@ -171,9 +169,9 @@ int main(void)
 	#ifdef CONFIG_ENABLE_CPU_FREQ_DUMP
 	    sunxi_clk_dump();
 	#endif
-	udelay(10000);
 
-	board_sdhci_init();
+	if (board_sdhci_init() != 0)
+		goto _error;
 
 	memset(&image, 0, sizeof(struct image_info));
 	image.dest = (unsigned char *)CONFIG_KERNEL_LOAD_ADDR;
