@@ -444,23 +444,23 @@ int sunxi_sdhci_init(struct sdhci_t *sdhci)
 {
     uint32_t addr, val;
 
-	sunxi_gpio_init(sdhci->gpio_clk, GPIO_PERIPH_MUX2);
-	sunxi_gpio_set_pull(sdhci->gpio_clk, GPIO_PULL_UP);
+	sunxi_gpio_init(sdhci->gpio_clk.pin, sdhci->gpio_clk.mux);
+	sunxi_gpio_set_pull(sdhci->gpio_clk.pin, GPIO_PULL_UP);
 
-	sunxi_gpio_init(sdhci->gpio_cmd, GPIO_PERIPH_MUX2);
-	sunxi_gpio_set_pull(sdhci->gpio_cmd, GPIO_PULL_UP);
+	sunxi_gpio_init(sdhci->gpio_cmd.pin, sdhci->gpio_cmd.mux);
+	sunxi_gpio_set_pull(sdhci->gpio_cmd.pin, GPIO_PULL_UP);
 
-	sunxi_gpio_init(sdhci->gpio_d0, GPIO_PERIPH_MUX2);
-	sunxi_gpio_set_pull(sdhci->gpio_d0, GPIO_PULL_UP);
+	sunxi_gpio_init(sdhci->gpio_d0.pin, sdhci->gpio_d0.mux);
+	sunxi_gpio_set_pull(sdhci->gpio_d0.pin, GPIO_PULL_UP);
 
-	sunxi_gpio_init(sdhci->gpio_d1, GPIO_PERIPH_MUX2);
-	sunxi_gpio_set_pull(sdhci->gpio_d1, GPIO_PULL_UP);
+	sunxi_gpio_init(sdhci->gpio_d1.pin, sdhci->gpio_d1.mux);
+	sunxi_gpio_set_pull(sdhci->gpio_d1.pin, GPIO_PULL_UP);
 
-	sunxi_gpio_init(sdhci->gpio_d2, GPIO_PERIPH_MUX2);
-	sunxi_gpio_set_pull(sdhci->gpio_d2, GPIO_PULL_UP);
+	sunxi_gpio_init(sdhci->gpio_d2.pin, sdhci->gpio_d2.mux);
+	sunxi_gpio_set_pull(sdhci->gpio_d2.pin, GPIO_PULL_UP);
 
-	sunxi_gpio_init(sdhci->gpio_d3, GPIO_PERIPH_MUX2);
-	sunxi_gpio_set_pull(sdhci->gpio_d3, GPIO_PULL_UP);
+	sunxi_gpio_init(sdhci->gpio_d3.pin, sdhci->gpio_d3.mux);
+	sunxi_gpio_set_pull(sdhci->gpio_d3.pin, GPIO_PULL_UP);
 
         addr = 0x0200184c;
         val = read32(addr);

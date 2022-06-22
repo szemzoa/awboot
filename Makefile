@@ -6,7 +6,7 @@ TOPDIR=$(shell pwd)
 BUILD_REVISION_H = "build_revision.h"
 BUILD_REVISION_D = "BUILD_REVISION"
 
-SRCS =  main.c debug.c xformat.c lib/div.c lib/fdt.c lib/string.c board.c
+SRCS =  main.c board.c lib/debug.c lib/xformat.c lib/div.c lib/fdt.c lib/string.c 
 
 INCLUDE_DIRS= -I . -I include -I lib 
 LIB_DIR= -L ./

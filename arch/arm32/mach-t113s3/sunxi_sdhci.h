@@ -29,12 +29,12 @@ struct sdhci_t
 	bool_t removable;
 	bool_t isspi;
 
-	gpio_t	gpio_d0;
-	gpio_t	gpio_d1;
-	gpio_t	gpio_d2;
-	gpio_t	gpio_d3;
-	gpio_t	gpio_cmd;
-	gpio_t	gpio_clk;
+	gpio_mux_t gpio_d0;
+	gpio_mux_t gpio_d1;
+	gpio_mux_t gpio_d2;
+	gpio_mux_t gpio_d3;
+	gpio_mux_t gpio_cmd;
+	gpio_mux_t gpio_clk;
 
 	void * sdcard;
 };
