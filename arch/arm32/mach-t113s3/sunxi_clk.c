@@ -28,7 +28,11 @@ void set_pll_cpux_axi(void)
 	/* Set default clk to 1008mhz */
 	val = read32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG);
 	val &= ~((0x3 << 16) | (0xff << 8) | (0x3 << 0));
-	val |= (41 << 8);
+#ifdef CONFIG_CPU_FREQ
+        val |= ((div(CONFIG_CPU_FREQ, 24000000) - 1) << 8);
+#else
+        val |= (41 << 8);
+#endif
 	write32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG, val);
 
 	/* Lock enable */
@@ -59,7 +63,7 @@ void set_pll_cpux_axi(void)
 	/* set and change cpu clk src to PLL_CPUX, PLL_CPUX:AXI0 = 1008M:504M */
         val = read32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG);
         val &= ~(0x07 << 24 | 0x3 << 16 | 0x3 << 8 | 0xf << 0);
-        val |= (0x03 << 24 | 0x0 << 16 | 0x0 << 8 | 0x1 << 0);
+        val |= (0x03 << 24 | 0x0 << 16 | 0x3 << 8 | 0x1 << 0);
         write32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG, val);
         sdelay(1);
 

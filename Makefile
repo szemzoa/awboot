@@ -15,15 +15,12 @@ LIBS= -lm
 include	arch/arch.mk
 include	lib/fatfs/fatfs.mk
 
-#CFLAGS += -march=armv7-a -mtune=cortex-a7 -mfpu=vfpv4 -mfloat-abi=hard -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
 CFLAGS += -march=armv7-a -mtune=cortex-a7  -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
 CFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES)
 
-#ASFLAGS += -march=armv7-a -mtune=cortex-a7 -mfpu=vfpv4 -mfloat-abi=hard -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
 ASFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
 ASFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES)
 
-#LDFLAGS += -march=armv7-a -mtune=cortex-a7 -mfpu=vfpv4 -mfloat-abi=hard -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
 LDFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
 LDFLAGS += -T ./arch/arm32/mach-t113s3/link.ld -nostdlib
 

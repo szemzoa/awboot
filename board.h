@@ -3,6 +3,8 @@
 
 #include "dram_v2.h"
 
+#define CONFIG_CPU_FREQ         1200000000
+
 #define CONFIG_ENABLE_CPU_FREQ_DUMP
 
 #define CONFIG_KERNEL_FILENAME	"zImage"
