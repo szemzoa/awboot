@@ -1,5 +1,6 @@
---- platsmp.c.old	2022-08-12 01:06:24.000000000 +0200
-+++ platsmp.c	2022-09-19 10:13:27.143160119 +0200
+diff -urN linux-6.0-orig/arch/arm/mach-sunxi/platsmp.c linux-6.0/arch/arm/mach-sunxi/platsmp.c
+--- linux-6.0-orig/arch/arm/mach-sunxi/platsmp.c	2022-10-02 23:09:07.000000000 +0200
++++ linux-6.0/arch/arm/mach-sunxi/platsmp.c	2022-10-05 11:12:56.918122933 +0200
 @@ -192,3 +192,33 @@
  	.smp_boot_secondary	= sun8i_smp_boot_secondary,
  };

@@ -1,5 +1,6 @@
---- Kconfig.orig	2022-09-27 10:53:13.806648342 +0200
-+++ Kconfig	2022-09-27 10:49:10.960649470 +0200
+diff -urN linux-6.0-orig/drivers/clk/sunxi-ng/Kconfig linux-6.0/drivers/clk/sunxi-ng/Kconfig
+--- linux-6.0-orig/drivers/clk/sunxi-ng/Kconfig	2022-10-02 23:09:07.000000000 +0200
++++ linux-6.0/drivers/clk/sunxi-ng/Kconfig	2022-10-05 11:09:03.531852167 +0200
 @@ -15,12 +15,12 @@
  config SUN20I_D1_CCU
  	tristate "Support for the Allwinner D1 CCU"
