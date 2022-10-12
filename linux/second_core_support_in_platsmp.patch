@@ -14,10 +14,10 @@ diff -urN linux-6.0-orig/arch/arm/mach-sunxi/platsmp.c linux-6.0/arch/arm/mach-s
 +    void __iomem *cpucfg_membase = ioremap(0x09010000, 0x10);
 +    void __iomem *cpuexec_membase[] = {ioremap(0x070005C4, 0x10),ioremap(0x070005C8, 0x10)};
 +
-+	spin_lock(&cpu_lock);
-+    
 +	if (cpu != 1)
 +	    return 0;
++
++	spin_lock(&cpu_lock);
 +
 +	/* Set CPU boot address */
 +	writel(__pa_symbol(secondary_startup),	cpuexec_membase[cpu]);
