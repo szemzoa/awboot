@@ -8,7 +8,7 @@
 #define CONFIG_ENABLE_CPU_FREQ_DUMP
 
 #define CONFIG_KERNEL_FILENAME	"zImage"
-#define CONFIG_DTB_FILENAME	"sun8i-mangopi-mq-dual-linux.dtb"
+#define CONFIG_DTB_FILENAME	"sun8i-t113-mangopi-dual.dtb"
 
 #define CONFIG_KERNEL_LOAD_ADDR 0x45000000
 #define CONFIG_DTB_LOAD_ADDR	0x41800000

@@ -33,10 +33,10 @@ dram_para_t ddr_param = {
 };
 
 struct sunxi_usart_t usart_dbg = {
-	.base 	= 0x02500000,
-	.id 	= 0,
-	.gpio_tx = { GPIO_PIN(PORTE, 2), GPIO_PERIPH_MUX6 },
-	.gpio_rx = { GPIO_PIN(PORTE, 3), GPIO_PERIPH_MUX6 },
+	.base 	= 0x02501400,
+	.id 	= 5,
+	.gpio_tx = { GPIO_PIN(PORTB, 4), GPIO_PERIPH_MUX7 },
+	.gpio_rx = { GPIO_PIN(PORTB, 5), GPIO_PERIPH_MUX7 },
 };
 
 struct sdhci_t sdhci0 = {
