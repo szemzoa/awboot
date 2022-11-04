@@ -4,6 +4,7 @@
 #include "div.h"
 #include "sunxi_gpio.h"
 #include "sunxi_sdhci.h"
+#include "sunxi_spi.h"
 #include "sunxi_clk.h"
 #include "sdcard.h"
 #include "arm32.h"
@@ -138,7 +139,7 @@ int load_sdcard(struct image_info *image)
 
 int main(void)
 {
-//	unsigned int dtb_size;
+    unsigned int size;
     unsigned int entry_point;
     int ret;
     uint32_t reg32;
@@ -170,21 +171,43 @@ int main(void)
 	    sunxi_clk_dump();
 	#endif
 
+	memset(&image, 0, sizeof(struct image_info));
+
+	image.of_dest = (unsigned char *)CONFIG_DTB_LOAD_ADDR;
+	image.dest = (unsigned char *)CONFIG_KERNEL_LOAD_ADDR;
+
+#ifdef CONFIG_BOOT_SPINAND
+	sunxi_spi_init(&sunxi_spi0);
+
+	if (spinand_detect(&sunxi_spi0) != 0)
+		goto _error;
+
+
+	spinand_read(&sunxi_spi0, (void *)CONFIG_DTB_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_DTB_ADDR, (uint64_t)sizeof(struct boot_param_header));
+	size = of_get_dt_total_size((void *)CONFIG_DTB_LOAD_ADDR);
+//	debug("dtb size: %u\r\n", size);
+
+	spinand_read(&sunxi_spi0, (void *)CONFIG_DTB_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_DTB_ADDR, (uint64_t)size);
+
+	spinand_read(&sunxi_spi0, (void *)CONFIG_KERNEL_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_KERNEL_ADDR, (uint64_t)sizeof(struct linux_zimage_header));
+	struct linux_zimage_header *hdr = (struct linux_zimage_header *)CONFIG_KERNEL_LOAD_ADDR;
+
+	size = hdr->end - hdr->start;
+//	debug("kernel size: %u\r\n", size);
+
+	spinand_read(&sunxi_spi0, (void *)CONFIG_KERNEL_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_KERNEL_ADDR, (uint64_t)size);
+#endif
+
+#ifdef CONFIG_BOOT_SDCARD
 	if (board_sdhci_init() != 0)
 		goto _error;
 
-	memset(&image, 0, sizeof(struct image_info));
-	image.dest = (unsigned char *)CONFIG_KERNEL_LOAD_ADDR;
 	strcpy(image.filename, CONFIG_KERNEL_FILENAME);
-
-	image.of_dest = (unsigned char *)CONFIG_DTB_LOAD_ADDR;
 	strcpy(image.of_filename, CONFIG_DTB_FILENAME);
 
 	if (load_sdcard(&image) != 0)
 		goto _error;
-
-	// dtb_size = of_get_dt_total_size((void *)CONFIG_DTB_LOAD_ADDR);
-	// debug("dtb size=%u bytes\r\n", dtb_size);
+#endif
 
 	ret = boot_image_setup((unsigned char *)image.dest, &entry_point);
 	if (ret)

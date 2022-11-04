@@ -8,6 +8,7 @@
 #include "io.h"
 #include "types.h"
 
+
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 
 #define ALIGN(size, align)      (((size) + (align) - 1) & (~((align) - 1)))

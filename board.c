@@ -3,6 +3,7 @@
 #include "sunxi_gpio.h"
 #include "sunxi_sdhci.h"
 #include "sunxi_usart.h"
+#include "sunxi_spi.h"
 #include "sdcard.h"
 
 dram_para_t ddr_param = {
@@ -37,6 +38,15 @@ struct sunxi_usart_t usart_dbg = {
 	.id 	= 5,
 	.gpio_tx = { GPIO_PIN(PORTB, 4), GPIO_PERIPH_MUX7 },
 	.gpio_rx = { GPIO_PIN(PORTB, 5), GPIO_PERIPH_MUX7 },
+};
+
+struct sunxi_spi_t sunxi_spi0 = {
+	.base 	= 0x04025000,
+	.id 	= 0,
+	.gpio_cs = { GPIO_PIN(PORTC, 3), GPIO_PERIPH_MUX2 },
+	.gpio_sck = { GPIO_PIN(PORTC, 2), GPIO_PERIPH_MUX2 },
+	.gpio_mosi = { GPIO_PIN(PORTC, 4), GPIO_PERIPH_MUX2 },
+	.gpio_miso = { GPIO_PIN(PORTC, 5), GPIO_PERIPH_MUX2 },
 };
 
 struct sdhci_t sdhci0 = {

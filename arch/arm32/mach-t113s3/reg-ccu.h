@@ -62,6 +62,8 @@
 #define CCU_MBUS_MAT_CLK_GATING_REG		(0x804)
 #define CCU_DRAM_BGR_REG				(0x80c)
 #define CCU_USART_BGR_REG				(0x90c)
+#define CCU_SPI0_CLK_REG				(0x940)
+#define CCU_SPI_BGR_REG				(0x96c)
 #define CCU_RISCV_CLK_REG				(0xd00)
 #define CCU_RISCV_GATING_REG			(0xd04)
 #define CCU_RISCV_CFG_BGR_REG			(0xd0c)

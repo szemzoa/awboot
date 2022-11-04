@@ -8,6 +8,7 @@ CFLAGS += -DCOUNTER_FREQUENCY=24000000
 SRCS	+=  $(SOC)/mctl_hal.c
 SRCS	+=  $(SOC)/sunxi_usart.c
 SRCS	+=  $(SOC)/arch_timer.c
+SRCS	+=  $(SOC)/sunxi_spi.c
 SRCS	+=  $(SOC)/sunxi_gpio.c
 SRCS	+=  $(SOC)/sdcard.c
 SRCS	+=  $(SOC)/sunxi_sdhci.c
