@@ -1,13 +1,45 @@
-# awboot
+# AWBoot
 
-Usage: <br/>
-    - compile mksunxi tool in the tools directory. <br/>
-    - rename the CONFIG_DTB_FILENAME to your board's dts. <br/>
-    - compile the bootloader: make. This will generate the bootloader with valid EGON header, usable with the xfel tool, or BOOTROM <br/>
-    - make a FAT16/32 partition on an SDCARD. <br/>
-    - copy zImage and the devicetree to the FAT partition. <br/>
-    1. <br/>
-    - xfel write 0x30000 awboot.bin <br/>
-    - xfel exec 0x30000 <br/>
-    2. or boot without xfel: modify the link address in arch/arm32/mach-t113s3/link.ld, ORIGIN = 0x00030000 to ORIGIN = 0x00020000 <br/>
-    - and write the awboot to sdcard, example: sudo dd if=awboot.bin of=/dev/(your sd device) bs=1024 seek=8
+Small linux bootloader for Allwinner T113-S3
+
+## Building
+
+Run `make`.  
+This will generate the bootloader with a valid EGON header, usable with the xfel tool or BOOTROM  
+
+## Using
+
+You will need [xfel](https://github.com/xboot/xfel) for uploading the file to memory or SPI flash.  
+This it not needed for writing to an SD card.  
+
+### FEL memory boot:
+```
+xfel write 0x30000 awboot-fel.bin
+xfel exec 0x30000
+```
+
+### FEL SPI NOR boot:
+```
+xfel spinor
+xfel spinor write 0 awboot-boot.bin
+xfel reset
+```
+
+### FEL SPI NAND boot:
+```
+xfel spinand
+xfel spinand write 0 awboot-boot.bin
+xfel reset
+```
+
+### SD Card boot:
+- create an MBR partition table and a FAT32 partition with an offset of 40KB using fdisk.  
+```
+sudo fdisk /dev/(your sd device)
+```
+- write awboot-boot.bin to sdcard with an offset of 8KB (16 sectors)  
+```
+sudo dd if=awboot-boot.bin of=/dev/(your sd device) bs=1024 seek=8
+```
+- compile (if needed) and copy your `.dtb` file to the FAT partition.
+- copy zImage to the FAT partition.
