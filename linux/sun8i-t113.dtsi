@@ -39,6 +39,8 @@
                         compatible = "arm,cortex-a7","arm,armv7";
                         reg = <0x0>;
                         clocks = <&ccu CLK_CPUX>;
+			clock-frequency = <1200000000>;
+			#cooling-cells = <2>;
                 };
 
                 cpu1: cpu@1 {
@@ -46,6 +48,54 @@
                         compatible = "arm,cortex-a7","arm,armv7";
                         reg = <0x1>;
                         clocks = <&ccu CLK_CPUX>;
+			clock-frequency = <1200000000>;
+			#cooling-cells = <2>;
+                };
+        };
+
+	memory {
+	    reg = <0x40000000 0x8000000>;
+	};
+
+	reserved-memory {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges;
+
+		dsp0_reserved: dsp0@42000000 {
+			no-map;
+			reg = <0x42000000 0x100000>;
+		};
+	};
+
+        thermal-zones {
+                cpu-thermal {
+			polling-delay-passive = <500>;
+			polling-delay = <1000>;
+                        thermal-sensors = <&ths>;
+
+			trips {
+				cpu_hot: cpu_hot {
+					/* milliCelsius */
+					temperature = <70000>;
+					hysteresis = <2000>;
+					type = "passive";
+				};
+
+				cpu_crit: cpu_crit {
+					/* milliCelsius */
+					temperature = <110000>;
+					hysteresis = <0>;
+					type = "critical";
+				};
+			};
+
+			cooling-maps {
+				map0 {
+					trip = <&cpu_hot>;
+					cooling-device = <&cpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+				};
+			};
                 };
         };
 
@@ -602,7 +652,7 @@
 				reg_ldob: ldob {
 				};
 			};
-/* ??? */
+
 			sram@400000 {
 			    compatible = "mmio-sram";
 			    reg = <0x400000 0x20000>;
@@ -681,6 +731,25 @@
 			#mbox-cells = <2>;
 		};
 */
+
+		dsp0_rproc: dsp0@0 {
+			compatible = "sunxi,sunxi-remote-proc";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0x400000 0x400000 0x10000>,
+					 <0x420000 0x420000 0x8000>,
+					 <0x440000 0x440000 0x8000>,
+					 <0x42000000 0x12000000 0x100000>,
+					 <0x400000 0x20028000 0x10000>,
+					 <0x420000 0x20038000 0x8000>,
+					 <0x440000 0x20040000 0x8000>,
+					 <0x42000000 0x32000000 0x100000>;
+			interrupts = <GIC_SPI 104 IRQ_TYPE_EDGE_RISING>;
+			clocks = <&ccu CLK_DSP>;
+			resets = <&ccu RST_DSP>;
+			memory-region = <&dsp0_reserved>;
+		};
+
 		sid: efuse@3006000 {
 			compatible = "allwinner,sun20i-d1-sid";
 			reg = <0x3006000 0x1000>;
@@ -1213,7 +1282,6 @@
 		    iommus = <&iommu 0>;
 		};
 
-/* ??? */
 		hwspinlock: hwlock@3005000 {
 		    compatible = "allwinner,sun20i-d1-hwspinlock",
 			 "allwinner,sun6i-a31-hwspinlock";
@@ -1258,9 +1326,8 @@
                         #interrupt-cells = <3>;
                 };
 
-/*
 		can0: can@02504000 {
-			compatible = "allwinner,sun4i-a10-can";
+			compatible = "allwinner,sun8i-t113-s3-can";
 			reg = <0x02504000 0x400>;
 			interrupts = <GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&ccu CLK_BUS_CAN0>;
@@ -1270,7 +1337,7 @@
 		};
 
 		can1: can@02504400 {
-			compatible = "allwinner,sun4i-a10-can";
+			compatible = "allwinner,sun8i-t113-s3-can";
 			reg = <0x02504400 0x400>;
 			interrupts = <GIC_SPI 22 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&ccu CLK_BUS_CAN1>;
@@ -1278,6 +1345,5 @@
 			resets = <&ccu RST_BUS_CAN1>;
 			status = "disabled";
 		};
-*/
 	};
 };

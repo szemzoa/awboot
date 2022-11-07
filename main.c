@@ -182,19 +182,17 @@ int main(void)
 	if (spinand_detect(&sunxi_spi0) != 0)
 		goto _error;
 
-
+	/* get dtb size and read */
 	spinand_read(&sunxi_spi0, (void *)CONFIG_DTB_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_DTB_ADDR, (uint64_t)sizeof(struct boot_param_header));
 	size = of_get_dt_total_size((void *)CONFIG_DTB_LOAD_ADDR);
-//	debug("dtb size: %u\r\n", size);
-
+	debug("spi-nand: dt blob: Read from 0x%08x addr=%x\r\n", CONFIG_SPINAND_DTB_ADDR, image.of_dest);
 	spinand_read(&sunxi_spi0, (void *)CONFIG_DTB_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_DTB_ADDR, (uint64_t)size);
 
+	/* get kernel size and read */
 	spinand_read(&sunxi_spi0, (void *)CONFIG_KERNEL_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_KERNEL_ADDR, (uint64_t)sizeof(struct linux_zimage_header));
 	struct linux_zimage_header *hdr = (struct linux_zimage_header *)CONFIG_KERNEL_LOAD_ADDR;
-
 	size = hdr->end - hdr->start;
-//	debug("kernel size: %u\r\n", size);
-
+	debug("spi-nand: Image: Read from 0x%08x addr=%x\r\n", CONFIG_SPINAND_KERNEL_ADDR, image.dest);
 	spinand_read(&sunxi_spi0, (void *)CONFIG_KERNEL_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_KERNEL_ADDR, (uint64_t)size);
 #endif
 

@@ -20,7 +20,10 @@
 
         chosen {
 		stdout-path = "serial5:115200n8";
+/*
                 bootargs = "mem=128M cma=72M root=/dev/mmcblk0p2 init=/sbin/init rootwait earlyprintk=sunxi-uart,0x02501400 console=tty0 console=ttyS5,115200";
+*/
+                bootargs = "mem=128M cma=64M root=/dev/mmcblk0p2 init=/sbin/init rootwait console=ttyS5,115200 earlyprintk=sunxi-uart,0x02501400";
         };
 
 	reg_vcc: vcc {
@@ -164,6 +167,19 @@
 	vcc-pf-supply = <&reg_vcc_3v3>;
 	vcc-pg-supply = <&reg_vcc_3v3>;
 
+	can0_pins_a: can0_pins@0 {
+		pins = "PB2", "PB3";
+		function = "can0";
+		drive-strength = <10>;
+		bias-pull-up;
+	};
+
+	can1_pins_a: can1_pins@0 {
+		pins = "PB4", "PB5";
+		function = "can1";
+		drive-strength = <10>;
+		bias-pull-up;
+	};		
 
 	uart5_pb4_pins: uart5-pb4-pins {
 	    pins = "PB4", "PB5";
@@ -196,6 +212,16 @@
 	pinctrl-0 = <&i2c2_pe12_pins>;
 	pinctrl-names = "default";
 	status = "okay";
+
+	gt911: touchscreen@28 {
+		compatible = "goodix,gt911";
+		reg = <0x28>;
+		interrupt-parent = <&pio>;
+		interrupts = <2 3 IRQ_TYPE_EDGE_FALLING>;
+		irq-gpios = <&pio 2 3 GPIO_ACTIVE_HIGH>;
+		reset-gpios = <&pio 2 2 GPIO_ACTIVE_HIGH>;
+		touchscreen-swapped-x-y;
+	};
 };
 
 &spi0 {
@@ -213,23 +239,23 @@
                         #size-cells = <1>;
 
                         partition@0 {
-                                label = "boot0";
-                                reg = <0x00000000 0x00100000>;
+                                label = "awboot";
+                                reg = <0x00000000 0x00020000>;	/* 128K */
                         };
 
-                        partition@100000 {
-                                label = "uboot";
-                                reg = <0x00100000 0x00300000>;
+                        partition@20000 {
+                                label = "dtb";
+                                reg = <0x00020000 0x00020000>;  /* 128k */
                         };
 
-                        partition@400000 {
-                                label = "secure_storage";
-                                reg = <0x00400000 0x00100000>;
+                        partition@40000 {
+                                label = "kernel";
+                                reg = <0x00040000 0x00800000>;  /* 8MB */
                         };
 
-                        partition@500000 {
-                                label = "sys";
-                                reg = <0x00500000 0x0fb00000>;
+                        partition@840000 {
+                                label = "filesystem";
+                                reg = <0x00840000 0x0f7c0000>;
                         };
                 };
         };
@@ -306,7 +332,7 @@
 
 &ths {
 	status = "okay";
-	vref-supply = <&reg_aldo>;
+/*	vref-supply = <&reg_aldo>; */
 };
 
 &usbphy {
@@ -331,7 +357,6 @@
 	status = "disabled";
 };
 
-/*
 &can0 {
 	pinctrl-names = "default";
 	pinctrl-0 = <&can0_pins>;
@@ -343,4 +368,4 @@
 	pinctrl-0 = <&can1_pins>;
 	status = "disabled";
 };
-*/
+

@@ -393,12 +393,12 @@ int spinand_detect(struct sunxi_spi_t *spi)
 	    	spinand_wait_for_busy(spi);
 	    }
 
-	    debug("spi-nand flash %s detected\r\n", spi->info.name);
+	    debug("spi-nand: %s detected\r\n", spi->info.name);
 
 	    return 0;
 	}
 
-	debug("spi-nand not found\r\n");
+	debug("spi-nand: flash not found\r\n");
 	return -1;
 }
 
