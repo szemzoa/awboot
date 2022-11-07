@@ -6,11 +6,11 @@ TOPDIR=$(shell pwd)
 BUILD_REVISION_H = "build_revision.h"
 BUILD_REVISION_D = "BUILD_REVISION"
 
-SRCS =  main.c board.c lib/debug.c lib/xformat.c lib/div.c lib/fdt.c lib/string.c 
+SRCS =  main.c board.c lib/debug.c lib/xformat.c lib/div.c lib/fdt.c lib/string.c
 
-INCLUDE_DIRS= -I . -I include -I lib 
+INCLUDE_DIRS= -I . -I include -I lib
 LIB_DIR= -L ./
-LIBS= -lm 
+LIBS= -lm
 
 include	arch/arch.mk
 include	lib/fatfs/fatfs.mk
@@ -22,7 +22,6 @@ ASFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-acce
 ASFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES)
 
 LDFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
-LDFLAGS += -T ./arch/arm32/mach-t113s3/link.ld -nostdlib
 
 STRIP=arm-none-eabi-strip
 CC=arm-none-eabi-gcc
@@ -40,8 +39,8 @@ MKSUNXI = ./tools/mksunxi
 
 # Objects
 EXT_OBJS =
-BUILD_OBJS = $(SRCS:.c=.o) 
-BUILD_OBJSA = $(ASRCS:.S=.o) 
+BUILD_OBJS = $(SRCS:.c=.o)
+BUILD_OBJSA = $(ASRCS:.S=.o)
 OBJS = $(BUILD_OBJSA) $(BUILD_OBJS) $(EXT_OBJS)
 
 LBC_VERSION = $(shell grep LBC_APP_VERSION main.h | cut -d '"' -f 2)"-"$(shell /bin/cat .build_revision)
@@ -65,19 +64,28 @@ build_revision:
 
 .SILENT:
 
-build: $(TARGET).elf $(TARGET).bin
+build: $(TARGET)-boot.elf $(TARGET)-boot.bin $(TARGET)-fel.elf $(TARGET)-fel.bin
 #$(STRIP) $(TARGET)
 
 .SECONDARY : $(TARGET)
 .PRECIOUS : $(OBJS)
-$(TARGET).elf: $(OBJS)
+$(TARGET)-fel.elf: $(OBJS)
 	echo "  LD    $@"
-	$(CC) $^ -o $@ $(LIB_DIR) $(LIBS) $(LDFLAGS) -Wl,-Map,$(TARGET).map
+	$(CC) $^ -o $@ $(LIB_DIR) $(LIBS) $(LDFLAGS) -T ./arch/arm32/mach-t113s3/link-fel.ld -nostdlib -Wl,-Map,$(TARGET).map
 
-$(TARGET).bin: $(TARGET).elf
+$(TARGET)-boot.elf: $(OBJS)
+	echo "  LD    $@"
+	$(CC) $^ -o $@ $(LIB_DIR) $(LIBS) $(LDFLAGS) -T ./arch/arm32/mach-t113s3/link-boot.ld -nostdlib -Wl,-Map,$(TARGET).map
+
+$(TARGET)-fel.bin: $(TARGET)-fel.elf
 	@echo OBJCOPY $@
 	$(OBJCOPY) -O binary $< $@
-	$(SIZE) $(TARGET).elf
+	$(SIZE) $(TARGET)-fel.elf
+
+$(TARGET)-boot.bin: $(TARGET)-boot.elf
+	@echo OBJCOPY $@
+	$(OBJCOPY) -O binary $< $@
+	$(SIZE) $(TARGET)-boot.elf
 
 %.o : %.c
 	echo "  CC    $<"
@@ -98,8 +106,13 @@ clean:
 	rm -f $(TARGET).elf
 	rm -f .deps
 	rm -f .dep/*.d
+	rm -f $(MKSUNXI)
 
-mkboot:
-	$(MKSUNXI) $(TOPDIR)/$(TARGET).bin
+mksunxi:
+	gcc $(MKSUNXI).c -o $(MKSUNXI)
+
+mkboot: mksunxi build
+	$(MKSUNXI) $(TOPDIR)/$(TARGET)-fel.bin
+	$(MKSUNXI) $(TOPDIR)/$(TARGET)-boot.bin
 
 -include $(shell mkdir .dep 2>/dev/null) $(wildcard .dep/*)

@@ -1,0 +1,8 @@
+
+*.o
+*.bin
+*.elf
+*.map
+
+tools/mksunxi
+
