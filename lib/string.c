@@ -117,6 +117,35 @@ int strncmp(const char *p1, const char *p2, unsigned int cnt)
 	return 0;
 }
 
+int strspn(const char *s1, const char *s2)
+{
+	const char *p = s1, *spanp;
+	char c, sc;
+
+cont:
+	c = *p++;
+	for (spanp = s2; (sc = *spanp++) != 0;)
+		if (sc == c)
+			goto cont;
+	return (p - 1 - s1);
+}
+
+int strcspn(const char *s1, const char *s2)
+{
+	const char *p, *spanp;
+	char c, sc;
+
+	for (p = s1;;) {
+		c = *p++;
+		spanp = s2;
+		do {
+			if ((sc = *spanp++) == c)
+				return (p - 1 - s1);
+		} while (sc != 0);
+	}
+	/* NOTREACHED */
+}
+
 char *strchr(const char *s, int c)
 {
 	for (; *s != (char) c; ++s)
