@@ -11,8 +11,10 @@
 #include "reg-ccu.h"
 #include "debug.h"
 #include "board.h"
+#include "lfs.h"
 
-struct image_info image;
+// variables used by the filesystem
+static struct image_info image;
 
 #if 0
 void neon_enable(void)
@@ -137,9 +139,53 @@ int load_sdcard(struct image_info *image)
   return 0;
 }
 
+#ifdef CONFIG_BOOT_SPINAND
+static lfs_t lfs;
+static lfs_file_t file;
+static uint8_t file_buffer[2048];
+
+static struct lfs_file_config file_cfg = {
+	.buffer = file_buffer
+};
+
+static int lfs_spi_read(const struct lfs_config *cfg, lfs_block_t block,
+		lfs_off_t off, void *buffer, lfs_size_t size) {
+		int rc = -1;
+
+		// check if read is valid
+		LFS_ASSERT(off  % cfg->read_size == 0);
+		LFS_ASSERT(size % cfg->read_size == 0);
+		LFS_ASSERT(block < cfg->block_count);
+
+    // read data
+    rc = spinand_read(&sunxi_spi0, buffer, off, size);
+		if (rc < 0)
+			return rc;
+
+		return rc;
+}
+
+// configuration of the filesystem is provided by this struct
+static const struct lfs_config lfs_cfg = {
+	// block device operations (read-only)
+	.read  = lfs_spi_read,
+	.prog  = 0,
+	.erase = 0,
+	.sync  = 0,
+
+	// block device configuration
+	.read_size = 16,
+	.prog_size = 16,
+	.block_size = 4096,
+	.block_count = 128,
+	.cache_size = 16,
+	.lookahead_size = 16,
+	.block_cycles = 500,
+};
+#endif
+
 int main(void)
 {
-    unsigned int size;
     unsigned int entry_point;
     int ret;
     uint32_t reg32;
@@ -182,18 +228,27 @@ int main(void)
   if (spi_nand_detect(&sunxi_spi0) != 0)
     goto _error;
 
-  /* get dtb size and read */
-  spi_nand_read(&sunxi_spi0, (void *)CONFIG_DTB_LOAD_ADDR, (uint32_t)CONFIG_SPINAND_DTB_ADDR, (uint32_t)sizeof(struct boot_param_header));
-  size = of_get_dt_total_size((void *)CONFIG_DTB_LOAD_ADDR);
-  debug("spi-nand: dt blob: Copy from 0x%08x to 0x%08x size:0x%08x\r\n", CONFIG_SPINAND_DTB_ADDR, CONFIG_DTB_LOAD_ADDR, size);
-  spi_nand_read(&sunxi_spi0, (void *)CONFIG_DTB_LOAD_ADDR, (uint32_t)CONFIG_SPINAND_DTB_ADDR, (uint32_t)size);
+	int err = lfs_mount(&lfs, &lfs_cfg);
+	if (err)
+	goto _error;
 
-  /* get kernel size and read */
-  spi_nand_read(&sunxi_spi0, (void *)CONFIG_KERNEL_LOAD_ADDR, (uint32_t)CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)sizeof(struct linux_zimage_header));
-  struct linux_zimage_header *hdr = (struct linux_zimage_header *)CONFIG_KERNEL_LOAD_ADDR;
-  size = hdr->end - hdr->start;
-  debug("spi-nand: Image: Copy from 0x%08x to 0x%08x size:0x%08x\r\n", CONFIG_SPINAND_KERNEL_ADDR, CONFIG_KERNEL_LOAD_ADDR, size);
-  spi_nand_read(&sunxi_spi0, (void *)CONFIG_KERNEL_LOAD_ADDR, (uint32_t)CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)size);
+	struct lfs_info info;
+
+	ret = lfs_stat(&lfs, CONFIG_DTB_FILENAME, &info);
+	if (ret < 0)
+		goto _error;
+	lfs_file_opencfg(&lfs, &file, CONFIG_DTB_FILENAME, LFS_O_RDONLY, &file_cfg);
+	lfs_file_read(&lfs, &file, image.of_dest, info.size);
+	lfs_file_close(&lfs, &file);
+	debug("spi-nand: dt blob: Read %s size=%u addr=%x\r\n", CONFIG_DTB_FILENAME, info.size, image.of_dest);
+
+	ret = lfs_stat(&lfs, CONFIG_KERNEL_FILENAME, &info);
+	if (ret < 0)
+		goto _error;
+	lfs_file_opencfg(&lfs, &file, CONFIG_KERNEL_FILENAME, LFS_O_RDONLY, &file_cfg);
+	lfs_file_read(&lfs, &file, image.dest, info.size);
+	lfs_file_close(&lfs, &file);
+	debug("spi-nand: Image: Read Read %s size=%u addr=%x\r\n", CONFIG_KERNEL_FILENAME, info.size, image.dest);
 
   sunxi_spi_disable(&sunxi_spi0);
 #endif

@@ -4,13 +4,17 @@ Small linux bootloader for Allwinner T113-S3
 
 ## Building
 
+### Dependencies
+You will need the `gcc-arm-none-eabi` toolchain.  It is available [here](https://developer.arm.com/downloads/-/gnu-rm).  
+
+### Process
 Run `make`.  
 This will generate the bootloader with a valid EGON header, usable with the xfel tool or BOOTROM  
 
 ## Using
 
-You will need [xfel](https://github.com/xboot/xfel) for uploading the file to memory or SPI flash.  
-This it not needed for writing to an SD card.  
+### Dependencies for SPI Flash
+- [xfel](https://github.com/xboot/xfel) for uploading the file to memory or SPI flash.  
 
 ### FEL memory boot:
 ```
