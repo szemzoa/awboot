@@ -1,4 +1,4 @@
-ARCH:=$(TOPDIR)/arch
+ARCH := arch
 SOC:=$(ARCH)/arm32/mach-t113s3
 
 INCLUDE_DIRS += -I $(ARCH)/arm32/include -I $(SOC)/include -I $(SOC) -I $(SOC)/mmc
