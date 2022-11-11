@@ -182,14 +182,44 @@ static const struct lfs_config lfs_cfg = {
 	.lookahead_size = 16,
 	.block_cycles = 500,
 };
+
+
+int lfs_open_and_load(const char* filename, void *address) {
+	int ret;
+	struct lfs_info info;
+
+	ret = lfs_stat(&lfs, filename, &info);
+	if (ret < 0) {
+		debug("lfs: stat for %s failed with error code %d\r\n", filename, ret);
+		return ret;
+	}
+	ret = lfs_file_opencfg(&lfs, &file, filename, LFS_O_RDONLY, &file_cfg);
+	if (ret < 0) {
+		debug("lfs: open for %s failed with error code %d\r\n", filename, ret);
+		return ret;
+	}
+	ret = lfs_file_read(&lfs, &file, address, info.size);
+	if (ret < 0) {
+		debug("lfs: read failed for %s with error code %d\r\n", filename, ret);
+		return ret;
+	}
+	ret = lfs_file_close(&lfs, &file);
+	if (ret < 0) {
+		debug("lfs: close failed for %s  with error code %d\r\n", filename, ret);
+		return ret;
+	}
+	debug("lfs: Read %s size=%u addr=%x\r\n", filename, info.size, address);	
+
+	return 0;
+}
 #endif
 
 int main(void)
 {
-    unsigned int entry_point;
-    int ret;
-    uint32_t reg32;
-    void (*kernel_entry)(int zero, int arch, unsigned int params);
+	unsigned int entry_point;
+	int ret;
+	uint32_t reg32;
+	void (*kernel_entry)(int zero, int arch, unsigned int params);
 
   board_init();
 
@@ -223,32 +253,39 @@ int main(void)
   image.dest = (unsigned char *)CONFIG_KERNEL_LOAD_ADDR;
 
 #ifdef CONFIG_BOOT_SPINAND
-  sunxi_spi_init(&sunxi_spi0);
-
-  if (spi_nand_detect(&sunxi_spi0) != 0)
-    goto _error;
-
-	int err = lfs_mount(&lfs, &lfs_cfg);
-	if (err)
-	goto _error;
-
 	struct lfs_info info;
 
-	ret = lfs_stat(&lfs, CONFIG_DTB_FILENAME, &info);
-	if (ret < 0)
+	ret = sunxi_spi_init(&sunxi_spi0);
+	if (ret != 0)
+	{
+		debug("spi: init failed with error code %d\r\n", ret);
 		goto _error;
-	lfs_file_opencfg(&lfs, &file, CONFIG_DTB_FILENAME, LFS_O_RDONLY, &file_cfg);
-	lfs_file_read(&lfs, &file, image.of_dest, info.size);
-	lfs_file_close(&lfs, &file);
-	debug("spi-nand: dt blob: Read %s size=%u addr=%x\r\n", CONFIG_DTB_FILENAME, info.size, image.of_dest);
+	}
 
-	ret = lfs_stat(&lfs, CONFIG_KERNEL_FILENAME, &info);
-	if (ret < 0)
+	ret = spinand_detect(&sunxi_spi0);
+	if (ret != 0)
+	{
+		debug("spi-nand: detection failed with error code %d\r\n", ret);
 		goto _error;
-	lfs_file_opencfg(&lfs, &file, CONFIG_KERNEL_FILENAME, LFS_O_RDONLY, &file_cfg);
-	lfs_file_read(&lfs, &file, image.dest, info.size);
-	lfs_file_close(&lfs, &file);
-	debug("spi-nand: Image: Read Read %s size=%u addr=%x\r\n", CONFIG_KERNEL_FILENAME, info.size, image.dest);
+	}
+
+	ret = lfs_mount(&lfs, &lfs_cfg);
+	if (ret < 0) {
+		debug("lfs: mount failed with error code %d\r\n", ret);
+		goto _error;
+	}
+
+	ret = lfs_open_and_load(CONFIG_DTB_FILENAME, image.of_dest);
+	if (ret < 0)
+	{
+		goto _error;
+	}
+
+	ret = lfs_open_and_load(CONFIG_KERNEL_FILENAME, image.dest);
+	if (ret < 0)
+	{
+		goto _error;
+	}
 
   lfs_unmount(&lfs);
   sunxi_spi_disable(&sunxi_spi0);
