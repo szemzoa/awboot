@@ -43,6 +43,7 @@ struct sunxi_usart_t usart_dbg = {
 struct sunxi_spi_t sunxi_spi0 = {
 	.base 	= 0x04025000,
 	.id 	= 0,
+	.clk_rate = 50000000,
 	.gpio_cs = { GPIO_PIN(PORTC, 3), GPIO_PERIPH_MUX2 },
 	.gpio_sck = { GPIO_PIN(PORTC, 2), GPIO_PERIPH_MUX2 },
 	.gpio_mosi = { GPIO_PIN(PORTC, 4), GPIO_PERIPH_MUX2 },

@@ -28,6 +28,7 @@
 #include "div.h"
 #include "reg-ccu.h"
 #include "sunxi_spi.h"
+#include "sunxi_clk.h"
 #include "debug.h"
 
 enum {
@@ -46,10 +47,6 @@ enum {
 	SPI_RXD	= 0x300,
 };
 
-#define SPI0_CLK_DIV_NONE	0x0000
-#define SPI0_CLK_DIV_BY_2       0x1000
-#define SPI0_CLK_DIV_BY_4       0x1001
-
 enum {
 	OPCODE_RDID			= 0x9f,
 	OPCODE_GET_FEATURE		= 0x0f,
@@ -65,12 +62,6 @@ enum {
 	OPCODE_PROGRAM_EXEC		= 0x10,
 	OPCODE_RESET			= 0xff,
 };
-
-/*
-#define SPINAND_PAGE_BITS	(11)
-#define SPINAND_PAGE_MASK	((1 << SPINAND_PAGE_BITS) - 1)
-#define SPINAND_PAGE_SIZE	(1 << SPINAND_PAGE_BITS)
-*/
 
 #define SPINAND_ID(...)			{ .val = { __VA_ARGS__ }, .len = sizeof((uint8_t[]){ __VA_ARGS__ }) }
 
@@ -118,9 +109,116 @@ static const struct spinand_info_t spinand_infos[] = {
 	{ "MT29F8G01ADAFD",  SPINAND_ID(0x2c, 0x46),       4096, 256,  64, 2048, 1, 2 },
 };
 
-void sunxi_spi_init(struct sunxi_spi_t *spi)
+/* SPI Clock Control Register Bit Fields & Masks,default:0x0000_0002 */
+#define SPI_CLK_CTL_CDR2        (0xFF <<  0) /* Clock Divide Rate 2,master mode only : SPI_CLK = AHB_CLK/(2*(n+1)) */
+#define SPI_CLK_CTL_CDR1        (0xF  <<  8) /* Clock Divide Rate 1,master mode only : SPI_CLK = AHB_CLK/2^n */
+#define SPI_CLK_CTL_DRS         (0x1  << 12) /* Divide rate select,default,0:rate 1;1:rate 2 */
+
+#define SPI_MOD_CLK		200000000
+
+static void spi_set_clk(struct sunxi_spi_t *spi, u32 spi_clk, u32 ahb_clk, u32 cdr)
 {
-    uint32_t addr, val;
+    uint32_t reg_val = 0;
+    uint32_t div_clk = 0;
+
+        debug("spi-nand: set spi clock=%dMHz, mclk=%dMHz\r\n", spi_clk / 1000 / 1000, ahb_clk / 1000 / 1000);
+        reg_val = read32(spi->base + SPI_CCR);
+
+        /* CDR2 */
+        if (cdr) {
+                div_clk = ahb_clk / (spi_clk * 2) - 1;
+                reg_val &= ~SPI_CLK_CTL_CDR2;
+                reg_val |= (div_clk | SPI_CLK_CTL_DRS);
+                debug("CDR2 - n = %d\r\n", div_clk);
+        } else { /* CDR1 */
+                while (ahb_clk > spi_clk) {
+                        div_clk++;
+                        ahb_clk >>= 1;
+                }
+                reg_val &= ~(SPI_CLK_CTL_CDR1 | SPI_CLK_CTL_DRS);
+                reg_val |= (div_clk << 8);
+                debug("CDR1 - n = %d\r\n", div_clk);
+        }
+
+        write32(spi->base + SPI_CCR, reg_val);
+}
+
+
+static int spi_clk_init(uint32_t mod_clk)
+{
+    uint32_t rval;
+    uint32_t source_clk = 0;
+    uint32_t m, n, divi, factor_m;
+
+        /* SCLK = src/M/N */
+        /* N: 00:1 01:2 10:4 11:8 */
+        /* M: factor_m + 1 */
+        source_clk = sunxi_clk_get_peri1x_rate();
+
+        divi = div((source_clk + mod_clk - 1) , mod_clk);
+        divi = divi == 0 ? 1 : divi;
+        if (divi > 128) {
+                m = 1;
+                n = 0;
+                return -1;
+        } else if (divi > 64) {
+                n = 3;
+                m = divi >> 3;
+        } else if (divi > 32) {
+                n = 2;
+                m = divi >> 2;
+        } else if (divi > 16) {
+                n = 1;
+                m = divi >> 1;
+        } else {
+                n = 0;
+                m = divi;
+        }
+
+        factor_m = m - 1;
+        rval = (1U << 31) | (0x1 << 24) | (n << 8) | factor_m;
+
+        /**sclk_freq = source_clk / (1 << n) / m; */
+//        debug("spi-nand: parent_clk=%dMHz, div=%d, n=%d, m=%d\r\n", source_clk / 1000 / 1000, divi, n, m);
+	write32(T113_CCU_BASE + CCU_SPI0_CLK_REG, rval);
+
+        return 0;
+}
+
+#if 0
+int sunxi_get_spi_clk()
+{
+    u32 reg_val = 0;
+    u32 src = 0, clk = 0, sclk_freq = 0;
+    u32 n, m;
+
+        reg_val = read32(T113_CCU_BASE + CCU_SPI0_CLK_REG);
+        src = (reg_val >> 24) & 0x7;
+        n = (reg_val >> 8) & 0x3;
+        m = ((reg_val >> 0) & 0xf) + 1;
+
+        switch(src) {
+                case 0:
+                        clk = 24000000;
+                        break;
+                case 1:
+                        clk = sunxi_clk_get_peri1x_rate();
+                        break;
+                default:
+                        clk = 0;
+                        break;
+        }
+
+        sclk_freq = div(div(clk, (1 << n)), m);
+	debug("sclk_freq=%dMHz, reg_val: %x, n=%d, m=%d\r\n", sclk_freq / 1000 / 1000, reg_val, n, m);
+
+        return sclk_freq;
+}
+#endif
+
+int sunxi_spi_init(struct sunxi_spi_t *spi)
+{
+    uint32_t val;
 
         /* Config SPI pins */
         sunxi_gpio_init(spi->gpio_cs.pin, spi->gpio_cs.mux);
@@ -129,31 +227,22 @@ void sunxi_spi_init(struct sunxi_spi_t *spi)
         sunxi_gpio_init(spi->gpio_miso.pin, spi->gpio_miso.mux);
 
 	/* Deassert spi0 reset */
-	addr = T113_CCU_BASE + CCU_SPI_BGR_REG;
-	val = read32(addr);
+	val = read32(T113_CCU_BASE + CCU_SPI_BGR_REG);
 	val |= (1 << 16);
-	write32(addr, val);
+	write32(T113_CCU_BASE + CCU_SPI_BGR_REG, val);
 
 	/* Open the spi0 gate */
-	addr = T113_CCU_BASE + CCU_SPI0_CLK_REG;
-	val = read32(addr);
+	val = read32(T113_CCU_BASE + CCU_SPI_BGR_REG);
 	val |= (1 << 31);
-	write32(addr, val);
+	write32(T113_CCU_BASE + CCU_SPI_BGR_REG, val);
 
 	/* Open the spi0 bus gate */
-	addr = T113_CCU_BASE + CCU_SPI_BGR_REG;
-	val = read32(addr);
+	val = read32(T113_CCU_BASE + CCU_SPI_BGR_REG);
 	val |= (1 << 0);
-	write32(addr, val);
+	write32(T113_CCU_BASE + CCU_SPI_BGR_REG, val);
 
-	/* Select 24MHz for spi0 clk */
-	addr = T113_CCU_BASE + CCU_SPI0_CLK_REG;
-	val = read32(addr);
-	val &= ~(0x3 << 24);
-	write32(addr, val);
-
-	/* Set spi clock rate control register */
-	write32(spi->base + SPI_CCR, SPI0_CLK_DIV_NONE);
+	spi_clk_init(SPI_MOD_CLK);
+	spi_set_clk(spi, spi->clk_rate, SPI_MOD_CLK, 0);
 
 	/* Enable spi0 and do a soft reset */
 	val = read32(spi->base + SPI_GCR);
@@ -171,6 +260,8 @@ void sunxi_spi_init(struct sunxi_spi_t *spi)
 	val = read32(spi->base + SPI_FCR);
 	val |= (1 << 31) | (1 << 15);
 	write32(spi->base + SPI_FCR, val);
+
+	return 0;
 }
 
 void sunxi_spi_exit(struct sunxi_spi_t *spi)
@@ -383,10 +474,9 @@ int spinand_detect(struct sunxi_spi_t *spi)
     uint8_t val;
 
 	spinand_reset(spi);
+	spinand_wait_for_busy(spi);
 
 	if (spinand_info(spi) == 0) {
-//	    spinand_reset(spi);
-	    spinand_wait_for_busy(spi);
 
 	    if ((spinand_get_feature(spi, OPCODE_FEATURE_PROTECT, &val) == 0) && (val != 0x0)) {
 	    	spinand_set_feature(spi, OPCODE_FEATURE_PROTECT, 0x0);

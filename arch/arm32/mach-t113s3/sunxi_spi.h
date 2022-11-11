@@ -21,6 +21,7 @@ struct spinand_info_t {
 struct sunxi_spi_t {
 	uint32_t    base;
 	uint8_t     id;
+	uint32_t    clk_rate;
 	gpio_mux_t  gpio_cs;
 	gpio_mux_t  gpio_sck;
 	gpio_mux_t  gpio_miso;
@@ -29,7 +30,7 @@ struct sunxi_spi_t {
 	struct spinand_info_t info;
 };
 
-extern void sunxi_spi_init(struct sunxi_spi_t *spi);
+extern int sunxi_spi_init(struct sunxi_spi_t *spi);
 extern int spinand_detect(struct sunxi_spi_t *spi);
 extern uint64_t spinand_read(struct sunxi_spi_t *spi, uint8_t *buf, uint64_t offset, uint64_t count);
 
