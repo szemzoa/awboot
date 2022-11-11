@@ -13,7 +13,7 @@ This will generate the bootloader with a valid EGON header, usable with the xfel
 
 ## Using
 
-### Dependencies for SPI Flash
+### External dependencies for SPI Flash
 - [xfel](https://github.com/xboot/xfel) for uploading the file to memory or SPI flash.  
 
 ### FEL memory boot:
