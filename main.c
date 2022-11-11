@@ -140,7 +140,7 @@ int load_sdcard(struct image_info *image)
 }
 
 #ifdef CONFIG_BOOT_SPINAND
-static lfs_t lfs;
+static lfs_t lfs = {};
 static lfs_file_t file;
 static uint8_t file_buffer[2048];
 
@@ -176,9 +176,9 @@ static const struct lfs_config lfs_cfg = {
 	// block device configuration
 	.read_size = 16,
 	.prog_size = 16,
-	.block_size = 4096,
+	.block_size = 2048,
 	.block_count = 128,
-	.cache_size = 16,
+	.cache_size = sizeof(file_buffer),
 	.lookahead_size = 16,
 	.block_cycles = 500,
 };
@@ -250,6 +250,7 @@ int main(void)
 	lfs_file_close(&lfs, &file);
 	debug("spi-nand: Image: Read Read %s size=%u addr=%x\r\n", CONFIG_KERNEL_FILENAME, info.size, image.dest);
 
+  lfs_unmount(&lfs);
   sunxi_spi_disable(&sunxi_spi0);
 #endif
 
