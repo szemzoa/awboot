@@ -3,6 +3,10 @@
 *.bin
 *.elf
 *.map
+*.lfs
+
+build/*
 
 tools/mksunxi
 
+boot.img
