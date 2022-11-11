@@ -116,8 +116,6 @@ mkboot: build tools
 
 boot.img:
 	dd if=/dev/zero of=boot.img bs=1M count=16
-	parted -s boot.img mklabel msdos
-	parted -s boot.img mkpart primary 1M 15M
-	cd linux && ../tools/mklfs boot ./boot.img 16777216
-	dd if=$(TARGET)-boot.bin of=boot.img bs=1k seek=8
-	dd if=spi-boot.lfs of=boot.img bs=1k seek=1024
+	cd linux && ../tools/mklfs boot ./spi-boot.lfs 16752640
+	dd if=$(TARGET)-boot.bin of=boot.img bs=1k
+	dd if=spi-boot.lfs of=boot.img bs=1k seek=24
