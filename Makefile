@@ -13,7 +13,7 @@ LIBS := -lm -lgcc
 
 include	arch/arch.mk
 include	lib/fatfs/fatfs.mk
-include lib/littlefs/build.mk
+include lib/lfs/build.mk
 
 CFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
 CFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES) -flto -fPIC -DAWBOOT
@@ -63,7 +63,7 @@ build_revision:
 	@echo "---------------------------------------------------------------"
 
 
-.PHONY: tools
+.PHONY: tools boot.img
 .SILENT:
 
 build: $(TARGET)-boot.elf $(TARGET)-boot.bin $(TARGET)-fel.elf $(TARGET)-fel.bin
@@ -113,3 +113,11 @@ tools:
 mkboot: build tools
 	tools/mksunxi $(TARGET)-fel.bin
 	tools/mksunxi $(TARGET)-boot.bin
+
+boot.img:
+	dd if=/dev/zero of=boot.img bs=1M count=16
+	parted -s boot.img mklabel msdos
+	parted -s boot.img mkpart primary 1M 15M
+	cd linux && ../tools/mklfs boot ./boot.img 16777216
+	dd if=$(TARGET)-boot.bin of=boot.img bs=1k seek=8
+	dd if=spi-boot.lfs of=boot.img bs=1k seek=1024
