@@ -105,6 +105,8 @@ clean:
 	rm -f $(TARGET)-*.bin
 	rm -f $(TARGET)-*.map
 	rm -f $(TARGET)-*.elf
+	rm -f boot.img
+	rm -f linux/spi-boot.lfs
 	$(MAKE) -C tools clean
 
 tools:
