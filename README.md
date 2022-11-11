@@ -21,14 +21,14 @@ xfel exec 0x30000
 ### FEL SPI NOR boot:
 ```
 xfel spinor
-xfel spinor write 0 awboot-boot.bin
+xfel spinor write 0 boot.img
 xfel reset
 ```
 
 ### FEL SPI NAND boot:
 ```
 xfel spinand
-xfel spinand write 0 awboot-boot.bin
+xfel spinand write 0 boot.img
 xfel reset
 ```
 
