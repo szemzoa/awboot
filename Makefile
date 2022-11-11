@@ -114,7 +114,7 @@ mkboot: build tools
 	tools/mksunxi $(TARGET)-fel.bin
 	tools/mksunxi $(TARGET)-boot.bin
 
-boot.img:
+boot.img: mkboot
 	dd if=/dev/zero of=boot.img bs=1M count=16
 	cd linux && ../tools/mklfs boot ./spi-boot.lfs 16752640
 	dd if=$(TARGET)-boot.bin of=boot.img bs=1k
