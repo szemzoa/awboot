@@ -1,4 +1,4 @@
-FS_LITTLE := lib/littlefs
+FS_LITTLE := lib/lfs
 
 INCLUDE_DIRS += -I $(FS_LITTLE)/
 
