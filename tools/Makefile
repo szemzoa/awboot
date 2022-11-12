@@ -2,12 +2,11 @@
 BUILD_DIR=$(CURDIR)/build
 
 MKSUNXI = mksunxi
-MKLITTLEFS = mklittlefs
 
-CSRC    = ../lib/littlefs/lfs.c ../lib/littlefs/lfs_util.c
-CXXSRC  = mklittlefs.cpp
+CSRC    = mksunxi.c
+CXXSRC  =
 
-COBJS   = $(subst ../lib/littlefs,$(BUILD_DIR),$(CSRC:.c=.o))
+COBJS   = $(addprefix $(BUILD_DIR)/,$(CSRC:.c=.o))
 CXXOBJS = $(addprefix $(BUILD_DIR)/,$(CXXSRC:.cpp=.opp))
 
 INCLUDES = -I includes -I ../lib
@@ -18,7 +17,7 @@ CC  ?= gcc
 CXX ?= g++
 
 all: tools
-tools: $(BUILD_DIR) $(MKSUNXI) $(MKLITTLEFS)
+tools: $(BUILD_DIR) $(MKSUNXI)
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
@@ -26,11 +25,6 @@ $(BUILD_DIR):
 clean:
 	rm -rf build
 	rm -f $(MKSUNXI)
-	rm -f $(MKLITTLEFS)
-
-$(BUILD_DIR)/%.o : ../lib/littlefs/%.c
-	echo "  CC    $<"
-	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.o : %.c
 	echo "  CC    $<"
@@ -40,8 +34,5 @@ $(BUILD_DIR)/%.opp : %.cpp
 	echo "  CXX   $<"
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(MKSUNXI):
-	$(CC) $(CFLAGS) mksunxi.c -o $(MKSUNXI)
-
-$(MKLITTLEFS): $(COBJS) $(CXXOBJS)
-	g++ $(COBJS) $(CXXOBJS) $(CXXFLAGS) -o $@
+$(MKSUNXI): $(COBJS)
+	$(CC) $(CFLAGS) $(BUILD_DIR)/mksunxi.o -o $(MKSUNXI)

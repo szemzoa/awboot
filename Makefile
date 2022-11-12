@@ -13,7 +13,6 @@ LIBS := -lm -lgcc
 
 include	arch/arch.mk
 include	lib/fatfs/fatfs.mk
-include lib/lfs/build.mk
 
 CFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
 CFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES) -flto -fPIC -DAWBOOT
@@ -42,6 +41,9 @@ OBJ_DIR = build
 BUILD_OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 BUILD_OBJSA = $(ASRCS:%.S=$(OBJ_DIR)/%.o)
 OBJS = $(BUILD_OBJSA) $(BUILD_OBJS) $(EXT_OBJS)
+
+DTB ?= sun8i-t113-mangopi-dual.dtb
+KERNEL ?= zImage
 
 
 LBC_VERSION = $(shell grep LBC_APP_VERSION main.h | cut -d '"' -f 2)"-"$(shell /bin/cat .build_revision)
@@ -105,8 +107,7 @@ clean:
 	rm -f $(TARGET)-*.bin
 	rm -f $(TARGET)-*.map
 	rm -f $(TARGET)-*.elf
-	rm -f boot.img
-	rm -f linux/spi-boot.lfs
+	rm -f *-boot.img
 	$(MAKE) -C tools clean
 
 tools:
@@ -116,8 +117,9 @@ mkboot: build tools
 	tools/mksunxi $(TARGET)-fel.bin
 	tools/mksunxi $(TARGET)-boot.bin
 
-boot.img: mkboot
-	dd if=/dev/zero of=boot.img bs=1M count=16
-	cd linux && ../tools/mklfs boot ./spi-boot.lfs 16752640
-	dd if=$(TARGET)-boot.bin of=boot.img bs=1k
-	dd if=spi-boot.lfs of=boot.img bs=1k seek=24
+spi-boot.img: mkboot
+	rm -f spi-boot.img
+	dd if=/dev/zero of=spi-boot.img bs=1M count=16
+	dd if=$(TARGET)-boot.bin of=spi-boot.img bs=1k
+	dd if=linux/boot/$(DTB) of=spi-boot.img bs=1k seek=128
+	dd if=linux/boot/$(KERNEL) of=spi-boot.img bs=1k seek=256

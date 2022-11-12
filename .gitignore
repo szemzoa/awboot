@@ -9,4 +9,4 @@ build/*
 
 tools/mksunxi
 
-boot.img
+*boot.img

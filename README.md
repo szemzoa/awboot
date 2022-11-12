@@ -20,20 +20,22 @@ xfel exec 0x30000
 
 ### FEL SPI NOR boot:
 ```
+make spi-boot.img
 xfel spinor
-xfel spinor write 0 boot.img
+xfel spinor write 0 spi-boot.img
 xfel reset
 ```
 
 ### FEL SPI NAND boot:
 ```
+make spi-boot.img
 xfel spinand
-xfel spinand write 0 boot.img
+xfel spinand write 0 spi-boot.img
 xfel reset
 ```
 
 ### SD Card boot:
-- create an MBR partition table and a FAT32 partition with an offset of 40KB using fdisk.  
+- create an MBR partition table and a FAT32 partition with an offset of 40KB or more using fdisk.  
 ```
 sudo fdisk /dev/(your sd device)
 ```
