@@ -60,7 +60,6 @@
 
 #define DEFAULT_READ_SIZE 16
 #define DEFAULT_PROG_SIZE 16
-#define DEFAULT_CACHE_SIZE 64
 #define DEFAULT_LOOKAHEAD_SIZE 32
 #define DEFAULT_BLOCK_SIZE 2048
 #define DEFAULT_BLOCK_CYCLES 512
@@ -250,7 +249,6 @@ static void print_help(const char *prog) {
     printf("  -r, --read-size=SIZE          minimum size of a block read (default: %d)\n", DEFAULT_READ_SIZE);
     printf("  -p, --prog-size=SIZE          minimum size of a block program (default: %d)\n", DEFAULT_PROG_SIZE);
     printf("  -b, --block-size=SIZE         size of block in bytes (default: %d)\n", DEFAULT_BLOCK_SIZE);
-    printf("  -c, --cache-size=SIZE         size of block caches in bytes (default: %d)\n", DEFAULT_CACHE_SIZE);
     printf("  -L, --lookahead-size=SIZE     size of lookahead buffer in bytes (default: %d)\n", DEFAULT_LOOKAHEAD_SIZE);
     printf("\n");
     printf("Other options:\n");
@@ -278,7 +276,6 @@ int main(int argc, char **argv) {
     int read_size = DEFAULT_READ_SIZE;
     int prog_size = DEFAULT_PROG_SIZE;
     int block_size = DEFAULT_BLOCK_SIZE;
-    int cache_size = DEFAULT_CACHE_SIZE;
     int lookahead_size = DEFAULT_LOOKAHEAD_SIZE;
     int fs_size = 0;
     int err;
@@ -297,9 +294,6 @@ int main(int argc, char **argv) {
             break;
         case 'b':
             block_size = to_int(optarg);
-            break;
-        case 'c':
-            cache_size = to_int(optarg);
             break;
         case 'L':
             lookahead_size = to_int(optarg);
@@ -326,16 +320,18 @@ int main(int argc, char **argv) {
     dst = argv[optind + 1];
     fs_size = to_int(argv[optind + 2]);
 
-    if (read_size <= 0 || prog_size <= 0 || block_size <= 0 || cache_size <= 0 ||
+    if (read_size <= 0 || prog_size <= 0 || block_size <= 0 ||
         lookahead_size <= 0 || fs_size <= 0) {
         print_help(argv[0]);
         return -1;
     }
 
     printf("Making littlefs image...\n");
-    printf("  source: %s\n", src);
-    printf("  target: %s\n", dst);
-    printf("  size  : %d\n", fs_size);
+    printf("  source      : %s\n", src);
+    printf("  target      : %s\n", dst);
+    printf("  size        : %d\n", fs_size);
+    printf("  block size  : %d\n", block_size);
+    printf("  block count : %d\n", fs_size / block_size);
     printf("\n");
 
     // Mount the file system
@@ -349,7 +345,7 @@ int main(int argc, char **argv) {
     cfg.block_size = block_size;
     cfg.block_count = fs_size / cfg.block_size;
     cfg.block_cycles = -1; // disable leveling since we're making image locally
-    cfg.cache_size = cache_size;
+    cfg.cache_size = block_size;
     cfg.lookahead_size = lookahead_size;
     cfg.context = NULL;
 

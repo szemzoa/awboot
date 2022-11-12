@@ -140,17 +140,22 @@ int load_sdcard(struct image_info *image)
 }
 
 #ifdef CONFIG_BOOT_SPINAND
-static lfs_t lfs = {};
-static lfs_file_t file;
-static uint8_t file_buffer[2048];
-
-static struct lfs_file_config file_cfg = {
-	.buffer = file_buffer
-};
+static lfs_t lfs;
+#define FS_SIZE (8*1024*1024)
+#define BLOCK_SIZE 2048
+#define BLOCK_COUNT (FS_SIZE/BLOCK_SIZE)
+#define CACHE_SIZE BLOCK_SIZE
+static uint8_t file_buffer[CACHE_SIZE];
+static uint8_t read_buffer[CACHE_SIZE];
+static uint8_t prog_buffer[32];
+static uint8_t lookahead_buffer[256] __attribute__((aligned(8)));
 
 static int lfs_spi_read(const struct lfs_config *cfg, lfs_block_t block,
 		lfs_off_t off, void *buffer, lfs_size_t size) {
 		int rc = -1;
+
+		// our LFS partition starts at +128K
+		off += (128*1024);
 
 		// check if read is valid
 		LFS_ASSERT(off  % cfg->read_size == 0);
@@ -159,10 +164,13 @@ static int lfs_spi_read(const struct lfs_config *cfg, lfs_block_t block,
 
     // read data
     rc = spinand_read(&sunxi_spi0, buffer, off, size);
-		if (rc < 0)
+		if (rc < 0) {
+			LFS_ERROR("spinand_read failed with error code %d\r\n", rc);
 			return rc;
+		}
 
-		return rc;
+		LFS_TRACE("spinand_read offset 0x%x size %d len %d\r\n", off, size, rc);
+		return !(rc == size);
 }
 
 // configuration of the filesystem is provided by this struct
@@ -174,41 +182,78 @@ static const struct lfs_config lfs_cfg = {
 	.sync  = 0,
 
 	// block device configuration
-	.read_size = 16,
-	.prog_size = 16,
-	.block_size = 2048,
-	.block_count = 128,
-	.cache_size = sizeof(file_buffer),
-	.lookahead_size = 16,
+	.read_size = BLOCK_SIZE,
+	.prog_size = BLOCK_SIZE,
+	.block_size = BLOCK_SIZE,
+	.block_count = BLOCK_COUNT,
+	.read_buffer = read_buffer, // Size must be == cache_size
+	.prog_buffer = prog_buffer, // Size must be == cache_size but we're readonly so ignore it
+	.lookahead_buffer = lookahead_buffer,
+	.lookahead_size = sizeof(lookahead_buffer),
+	.cache_size = CACHE_SIZE,
 	.block_cycles = 500,
 };
 
+static const char * lfs_err_str(int errcode) {
 
-int lfs_open_and_load(const char* filename, void *address) {
+	switch (errcode) {
+		case   0: return "OK";
+		case  -5: return "IO";
+		case -84: return "CORRUPT";
+		case  -2: return "NOENT";
+		case -17: return "EXIST";
+		case -20: return "NOTDIR";
+		case -21: return "ISDIR";
+		case -39: return "NOTEMPTY";
+		case  -9: return "BADF";
+		case -27: return "FBIG";
+		case -22: return "INVAL";
+		case -28: return "NOSPC";
+		case -12: return "NOMEM";
+		case -61: return "NOATTR";
+		case -36: return "NAMETOOLONG";
+
+		default: return "UNKNOWN";
+	};
+
+}
+
+static int lfs_open_and_load(const char* filename, void *address) {
 	int ret;
 	struct lfs_info info;
+	struct lfs_file file;
+	const struct lfs_file_config file_cfg = {
+		.buffer = file_buffer
+	};
+	memset(file_buffer, 0, sizeof(file_buffer));
+
+	debug("lfs: loading %s\r\n", filename);
 
 	ret = lfs_stat(&lfs, filename, &info);
 	if (ret < 0) {
-		debug("lfs: stat for %s failed with error code %d\r\n", filename, ret);
+		debug("lfs: stat failed with error %s\r\n", lfs_err_str(ret));
 		return ret;
 	}
+
 	ret = lfs_file_opencfg(&lfs, &file, filename, LFS_O_RDONLY, &file_cfg);
 	if (ret < 0) {
-		debug("lfs: open for %s failed with error code %d\r\n", filename, ret);
+		debug("lfs: open failed with error %s\r\n", lfs_err_str(ret));
 		return ret;
 	}
+
 	ret = lfs_file_read(&lfs, &file, address, info.size);
 	if (ret < 0) {
-		debug("lfs: read failed for %s with error code %d\r\n", filename, ret);
+		debug("lfs: read failed with error %s\r\n", lfs_err_str(ret));
 		return ret;
 	}
+	debug("lfs: Read %s size=%u read=%u addr=0x%x\r\n", filename, info.size, ret, address);
+
 	ret = lfs_file_close(&lfs, &file);
 	if (ret < 0) {
-		debug("lfs: close failed for %s  with error code %d\r\n", filename, ret);
+		debug("lfs: close failed with error %s\r\n", lfs_err_str(ret));
 		return ret;
 	}
-	debug("lfs: Read %s size=%u addr=%x\r\n", filename, info.size, address);	
+
 
 	return 0;
 }
@@ -258,22 +303,48 @@ int main(void)
 	ret = sunxi_spi_init(&sunxi_spi0);
 	if (ret != 0)
 	{
-		debug("spi: init failed with error code %d\r\n", ret);
+		debug("spi: init failed with error %s\r\n", lfs_err_str(ret));
 		goto _error;
 	}
 
 	ret = spinand_detect(&sunxi_spi0);
 	if (ret != 0)
 	{
-		debug("spi-nand: detection failed with error code %d\r\n", ret);
+		debug("spi-nand: detection failed with error %s\r\n", lfs_err_str(ret));
 		goto _error;
 	}
 
 	ret = lfs_mount(&lfs, &lfs_cfg);
 	if (ret < 0) {
-		debug("lfs: mount failed with error code %d\r\n", ret);
+		debug("lfs: mount failed with error %s\r\n", lfs_err_str(ret));
 		goto _error;
 	}
+	debug("lfs: mounted\r\n");
+
+	// lfs_dir_t dir;
+	// struct lfs_info dir_info;
+	// ret = lfs_dir_open(&lfs, &dir, "/");
+	// if (ret < 0) {
+	// 	debug("lfs: root folder open failed with error %s\r\n", lfs_err_str(ret));
+	// 	goto _error;
+	// }
+
+	// while (true) {
+	// 	ret = lfs_dir_read(&lfs, &dir, &info);
+	// 	if (ret < 0) {
+	// 			lfs_dir_close(&lfs, &dir);
+	// 			debug("lfs: root folder read failed with error %s\r\n", lfs_err_str(ret));
+	// 			goto _error;
+	// 	}
+		
+	// 	if (!ret) {
+	// 			break;
+	// 	}
+	// 	if (info.type == LFS_TYPE_DIR)
+	// 		debug("lfs: /%s %s\r\n", info.name, "dir");
+	// 	else if (info.type == LFS_TYPE_REG)
+	// 		debug("lfs: /%s %s\r\n", info.name, "file");
+	// }
 
 	ret = lfs_open_and_load(CONFIG_DTB_FILENAME, image.of_dest);
 	if (ret < 0)
@@ -287,8 +358,9 @@ int main(void)
 		goto _error;
 	}
 
-  lfs_unmount(&lfs);
-  sunxi_spi_disable(&sunxi_spi0);
+	lfs_unmount(&lfs);
+	debug("lfs: unmounted\r\n");
+	sunxi_spi_disable(&sunxi_spi0);
 #endif
 
 #ifdef CONFIG_BOOT_SDCARD
