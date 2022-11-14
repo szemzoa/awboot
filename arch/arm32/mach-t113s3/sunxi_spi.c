@@ -446,6 +446,7 @@ static void spi_set_io_mode(sunxi_spi_t *spi, spi_io_mode_t mode)
 	case SPI_IO_MODE_DUAL_RX:
 		bcc |= SPI_BCC_DUAL_RX;
 		break;
+	case SPI_IO_MODE_QUAD_RX:
 	case SPI_IO_MODE_QUAD_IO:
 		bcc |= SPI_BCC_QUAD_IO;
 		break;
