@@ -4,7 +4,7 @@
 #include "main.h"
 #include "sunxi_gpio.h"
 
-struct spinand_info_t {
+typedef struct {
 	char *name;
 	struct {
 		uint8_t val[4];
@@ -16,9 +16,9 @@ struct spinand_info_t {
 	uint32_t blocks_per_die;
 	uint32_t planes_per_die;
 	uint32_t ndies;
-};
+} spi_nand_info_t;
 
-struct sunxi_spi_t {
+typedef struct {
 	uint32_t    base;
 	uint8_t     id;
 	uint32_t    clk_rate;
@@ -26,12 +26,23 @@ struct sunxi_spi_t {
 	gpio_mux_t  gpio_sck;
 	gpio_mux_t  gpio_miso;
 	gpio_mux_t  gpio_mosi;
+	gpio_mux_t  gpio_wp;
+	gpio_mux_t  gpio_hold;
 
-	struct spinand_info_t info;
-};
+	spi_nand_info_t info;
+} sunxi_spi_t;
 
-extern int sunxi_spi_init(struct sunxi_spi_t *spi);
-extern int spinand_detect(struct sunxi_spi_t *spi);
-extern uint64_t spinand_read(struct sunxi_spi_t *spi, uint8_t *buf, uint64_t offset, uint64_t count);
+typedef enum {
+	SPI_IO_MODE_SINGLE = 0x00,
+	SPI_IO_MODE_DUAL_RX,
+	SPI_IO_MODE_DUAL_IO,
+	SPI_IO_MODE_QUAD_RX,
+	SPI_IO_MODE_QUAD_IO,
+} spi_io_mode_t;
+
+int sunxi_spi_init(sunxi_spi_t *spi);
+void sunxi_spi_disable(sunxi_spi_t *spi);
+int spi_nand_detect(sunxi_spi_t *spi);
+uint64_t spi_nand_read(sunxi_spi_t *spi, spi_io_mode_t mode, uint8_t *buf, uint64_t offset, uint64_t count);
 
 #endif

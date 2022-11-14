@@ -4,7 +4,7 @@
 #include "sunxi_usart.h"
 #include "reg-ccu.h"
 
-void sunxi_usart_init(struct sunxi_usart_t *usart)
+void sunxi_usart_init(sunxi_usart_t *usart)
 {
 	uint32_t addr;
 	uint32_t val;
@@ -47,7 +47,7 @@ void sunxi_usart_init(struct sunxi_usart_t *usart)
 
 void sunxi_usart_putc(void *arg, char c)
 {
-    struct sunxi_usart_t *usart = (struct sunxi_usart_t *)arg;
+    sunxi_usart_t *usart = (sunxi_usart_t *)arg;
 
 	while((read32(usart->base + 0x7c) & (0x1 << 1)) == 0);
 	write32(usart->base + 0x00, c);

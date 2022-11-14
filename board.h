@@ -2,6 +2,9 @@
 #define __BOARD_H__
 
 #include "dram_v2.h"
+#include "sunxi_spi.h"
+#include "sunxi_usart.h"
+#include "sunxi_sdhci.h"
 
 #define CONFIG_BOOT_SPINAND
 //#define CONFIG_BOOT_SDCARD
@@ -20,8 +23,8 @@
 #define CONFIG_SPINAND_KERNEL_ADDR	0x40000
 
 extern dram_para_t ddr_param;
-extern struct sunxi_usart_t usart_dbg;
-extern struct sunxi_spi_t sunxi_spi0;
+extern sunxi_usart_t usart_dbg;
+extern sunxi_spi_t sunxi_spi0;
 
 extern void board_init(void);
 extern int board_sdhci_init(void);

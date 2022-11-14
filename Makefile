@@ -119,7 +119,6 @@ mkboot: build tools
 
 spi-boot.img: mkboot
 	rm -f spi-boot.img
-	dd if=/dev/zero of=spi-boot.img bs=1M count=16
 	dd if=$(TARGET)-boot.bin of=spi-boot.img bs=1k
 	dd if=linux/boot/$(DTB) of=spi-boot.img bs=1k seek=128
 	dd if=linux/boot/$(KERNEL) of=spi-boot.img bs=1k seek=256
