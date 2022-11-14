@@ -1,6 +1,5 @@
 # Target
 TARGET = awboot
-TOPDIR=$(shell pwd)
 
 # Build revision
 BUILD_REVISION_H = "build_revision.h"
@@ -8,20 +7,20 @@ BUILD_REVISION_D = "BUILD_REVISION"
 
 SRCS =  main.c board.c lib/debug.c lib/xformat.c lib/div.c lib/fdt.c lib/string.c
 
-INCLUDE_DIRS= -I . -I include -I lib
-LIB_DIR= -L ./
-LIBS= -lm
+INCLUDE_DIRS :=-I . -I include -I lib
+LIB_DIR := -L ./
+LIBS := -lm -lgcc
 
 include	arch/arch.mk
 include	lib/fatfs/fatfs.mk
 
-CFLAGS += -march=armv7-a -mtune=cortex-a7  -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
-CFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES)
+CFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
+CFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES) -flto -fPIC -DAWBOOT
 
 ASFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
-ASFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES)
+ASFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES) -flto -fPIC
 
-LDFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
+LDFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux -flto -fPIC
 
 STRIP=arm-none-eabi-strip
 CC=arm-none-eabi-gcc
@@ -35,13 +34,17 @@ ECHO=/bin/echo
 WORKDIR=$(/bin/pwd)
 MAKE=make
 OPENOCD = openocd
-MKSUNXI = ./tools/mksunxi
 
 # Objects
 EXT_OBJS =
-BUILD_OBJS = $(SRCS:.c=.o)
-BUILD_OBJSA = $(ASRCS:.S=.o)
+OBJ_DIR = build
+BUILD_OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
+BUILD_OBJSA = $(ASRCS:%.S=$(OBJ_DIR)/%.o)
 OBJS = $(BUILD_OBJSA) $(BUILD_OBJS) $(EXT_OBJS)
+
+DTB ?= sun8i-t113-mangopi-dual.dtb
+KERNEL ?= zImage
+
 
 LBC_VERSION = $(shell grep LBC_APP_VERSION main.h | cut -d '"' -f 2)"-"$(shell /bin/cat .build_revision)
 
@@ -62,6 +65,7 @@ build_revision:
 	@echo "---------------------------------------------------------------"
 
 
+.PHONY: tools boot.img
 .SILENT:
 
 build: $(TARGET)-boot.elf $(TARGET)-boot.bin $(TARGET)-fel.elf $(TARGET)-fel.bin
@@ -87,32 +91,35 @@ $(TARGET)-boot.bin: $(TARGET)-boot.elf
 	$(OBJCOPY) -O binary $< $@
 	$(SIZE) $(TARGET)-boot.elf
 
-%.o : %.c
+$(OBJ_DIR)/%.o : %.c
 	echo "  CC    $<"
-	$(CC) $(CFLAGS) -c $< -o $@ $(INCLUDE_DIRS)
+	mkdir -p $(@D)
+	$(CC) $(CFLAGS) $(INCLUDE_DIRS) -c $< -o $@
 
-%.o : %.S
+$(OBJ_DIR)/%.o : %.S
 	echo "  CC    $<"
-	$(CC) $(ASFLAGS) -c $< -o $@ $(INCLUDE_DIRS)
+	mkdir -p $(@D)
+	$(CC) $(ASFLAGS) $(INCLUDE_DIRS) -c $< -o $@
 
 clean:
-	echo "RM  $(OBJS)"
-	rm -f $(OBJS)
-	rm -f *.o
-	echo "  CC    $<"
+	rm -rf $(OBJ_DIR)
 	rm -f $(TARGET)
-	rm -f $(TARGET).bin
-	rm -f $(TARGET).map
-	rm -f $(TARGET).elf
-	rm -f .deps
-	rm -f .dep/*.d
-	rm -f $(MKSUNXI)
+	rm -f $(TARGET)-*.bin
+	rm -f $(TARGET)-*.map
+	rm -f $(TARGET)-*.elf
+	rm -f *-boot.img
+	$(MAKE) -C tools clean
 
-mksunxi:
-	gcc $(MKSUNXI).c -o $(MKSUNXI)
+tools:
+	$(MAKE) -C tools all
 
-mkboot: mksunxi build
-	$(MKSUNXI) $(TOPDIR)/$(TARGET)-fel.bin
-	$(MKSUNXI) $(TOPDIR)/$(TARGET)-boot.bin
+mkboot: build tools
+	tools/mksunxi $(TARGET)-fel.bin
+	tools/mksunxi $(TARGET)-boot.bin
 
--include $(shell mkdir .dep 2>/dev/null) $(wildcard .dep/*)
+spi-boot.img: mkboot
+	rm -f spi-boot.img
+	dd if=/dev/zero of=spi-boot.img bs=1M count=16
+	dd if=$(TARGET)-boot.bin of=spi-boot.img bs=1k
+	dd if=linux/boot/$(DTB) of=spi-boot.img bs=1k seek=128
+	dd if=linux/boot/$(KERNEL) of=spi-boot.img bs=1k seek=256

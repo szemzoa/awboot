@@ -3,8 +3,8 @@
 
 #include "dram_v2.h"
 
-//#define CONFIG_BOOT_SPINAND
-#define CONFIG_BOOT_SDCARD
+#define CONFIG_BOOT_SPINAND
+//#define CONFIG_BOOT_SDCARD
 
 #define CONFIG_CPU_FREQ         1200000000
 
