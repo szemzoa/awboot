@@ -5,11 +5,13 @@
 #include "sunxi_gpio.h"
 
 typedef struct {
+	uint8_t mfr;
+	uint16_t dev;
+} __attribute__((packed)) spi_nand_id_t;
+
+typedef struct {
 	char *name;
-	struct {
-		uint8_t val[4];
-		uint8_t len;
-	} id;
+	spi_nand_id_t id;
 	uint32_t page_size;
 	uint32_t spare_size;
 	uint32_t pages_per_block;
@@ -33,16 +35,15 @@ typedef struct {
 } sunxi_spi_t;
 
 typedef enum {
-	SPI_IO_MODE_SINGLE = 0x00,
-	SPI_IO_MODE_DUAL_RX,
-	SPI_IO_MODE_DUAL_IO,
-	SPI_IO_MODE_QUAD_RX,
-	SPI_IO_MODE_QUAD_IO,
+	SPI_IO_SINGLE = 0x00,
+	SPI_IO_DUAL_RX,
+	SPI_IO_QUAD_RX,
+	SPI_IO_QUAD_IO,
 } spi_io_mode_t;
 
 int sunxi_spi_init(sunxi_spi_t *spi);
 void sunxi_spi_disable(sunxi_spi_t *spi);
 int spi_nand_detect(sunxi_spi_t *spi);
-uint64_t spi_nand_read(sunxi_spi_t *spi, spi_io_mode_t mode, uint8_t *buf, uint64_t offset, uint64_t count);
+uint32_t spi_nand_read(sunxi_spi_t *spi, spi_io_mode_t mode, uint8_t *buf, uint32_t addr, uint32_t rxlen);
 
 #endif
