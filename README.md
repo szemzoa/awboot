@@ -29,8 +29,8 @@ xfel reset
 ### FEL SPI NAND boot:
 ```
 make spi-boot.img
-xfel spinand
-xfel spinand write 0 spi-boot.img
+xfel spi_nand
+xfel spi_nand write 0 spi-boot.img
 xfel reset
 ```
 

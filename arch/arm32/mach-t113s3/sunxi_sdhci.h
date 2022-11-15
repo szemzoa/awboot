@@ -3,22 +3,22 @@
 
 #include "sunxi_gpio.h"
 
-struct sdhci_cmd_t {
+typedef struct {
 	u32_t cmdidx;
 	u32_t cmdarg;
 	u32_t resptype;
 	u32_t response[4];
-};
+} sdhci_cmd_t;
 
-struct sdhci_data_t {
+typedef struct {
 	u8_t * buf;
 	u32_t flag;
 	u32_t blksz;
 	u32_t blkcnt;
-};
+} sdhci_data_t;
 
-struct sdhci_t
-{
+
+typedef struct {
 	char *name;
 	uint32_t addr;
 	uint32_t pclk;
@@ -37,16 +37,16 @@ struct sdhci_t
 	gpio_mux_t gpio_clk;
 
 	void * sdcard;
-};
+} sdhci_t;
 
-extern struct sdhci_t sdhci0;
+extern sdhci_t sdhci0;
 
 
-extern bool_t sdhci_reset(struct sdhci_t * hci);
-extern bool_t sdhci_set_voltage(struct sdhci_t * hci, u32_t voltage);
-extern bool_t sdhci_set_width(struct sdhci_t * hci, u32_t width);
-extern bool_t sdhci_set_clock(struct sdhci_t * hci, u32_t clock);
-extern bool_t sdhci_transfer(struct sdhci_t * hci, struct sdhci_cmd_t * cmd, struct sdhci_data_t * dat);
-extern int sunxi_sdhci_init(struct sdhci_t *sdhci);
+extern bool_t sdhci_reset(sdhci_t * hci);
+extern bool_t sdhci_set_voltage(sdhci_t * hci, u32_t voltage);
+extern bool_t sdhci_set_width(sdhci_t * hci, u32_t width);
+extern bool_t sdhci_set_clock(sdhci_t * hci, u32_t clock);
+extern bool_t sdhci_transfer(sdhci_t * hci, sdhci_cmd_t * cmd, sdhci_data_t * dat);
+extern int sunxi_sdhci_init(sdhci_t *sdhci);
 
 #endif /* __SDHCI_H__ */

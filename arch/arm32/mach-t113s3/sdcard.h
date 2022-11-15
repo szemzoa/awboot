@@ -167,7 +167,7 @@ struct sdcard_t {
 
 extern struct sdcard_pdata_t sdcard0;
 
-extern int sdcard_init(struct sdcard_pdata_t *card, struct sdhci_t *hci);
+extern int sdcard_init(struct sdcard_pdata_t *card, sdhci_t *hci);
 extern u64_t sdcard_blk_read(struct sdcard_pdata_t *card, u8_t *buf, u64_t blkno, u64_t blkcnt);
 
 #endif /* __SDCARD_H__ */

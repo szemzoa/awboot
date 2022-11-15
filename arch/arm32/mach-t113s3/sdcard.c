@@ -36,7 +36,7 @@
 
 struct sdcard_pdata_t {
 	struct sdcard_t card;
-	struct sdhci_t *hci;
+	sdhci_t *hci;
 	u8_t			buf[512];
 	bool_t			online;
 };
@@ -68,9 +68,9 @@ static const unsigned char tran_speed_time[] = {
 	0, 10, 12, 13, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80,
 };
 
-static bool_t go_idle_state(struct sdhci_t *hci)
+static bool_t go_idle_state(sdhci_t *hci)
 {
-	struct sdhci_cmd_t cmd = {0};
+	sdhci_cmd_t cmd = {0};
 
 	cmd.cmdidx			   = MMC_GO_IDLE_STATE;
 	cmd.cmdarg			   = 0;
@@ -81,9 +81,9 @@ static bool_t go_idle_state(struct sdhci_t *hci)
 	return sdhci_transfer(hci, &cmd, NULL);
 }
 
-static bool_t sd_send_if_cond(struct sdhci_t *hci, struct sdcard_t *card)
+static bool_t sd_send_if_cond(sdhci_t *hci, struct sdcard_t *card)
 {
-	struct sdhci_cmd_t cmd = {0};
+	sdhci_cmd_t cmd = {0};
 
 	cmd.cmdidx			   = SD_CMD_SEND_IF_COND;
 	if (hci->voltage & MMC_VDD_27_36)
@@ -103,9 +103,9 @@ static bool_t sd_send_if_cond(struct sdhci_t *hci, struct sdcard_t *card)
 	return TRUE;
 }
 
-static bool_t sd_send_op_cond(struct sdhci_t *hci, struct sdcard_t *card)
+static bool_t sd_send_op_cond(sdhci_t *hci, struct sdcard_t *card)
 {
-	struct sdhci_cmd_t cmd	   = {0};
+	sdhci_cmd_t cmd	   = {0};
 	int				   retries = 100;
 
 	do {
@@ -157,9 +157,9 @@ static bool_t sd_send_op_cond(struct sdhci_t *hci, struct sdcard_t *card)
 	return TRUE;
 }
 
-static bool_t mmc_send_op_cond(struct sdhci_t *hci, struct sdcard_t *card)
+static bool_t mmc_send_op_cond(sdhci_t *hci, struct sdcard_t *card)
 {
-	struct sdhci_cmd_t cmd	   = {0};
+	sdhci_cmd_t cmd	   = {0};
 	int				   retries = 100;
 
 	if (!go_idle_state(hci))
@@ -197,9 +197,9 @@ static bool_t mmc_send_op_cond(struct sdhci_t *hci, struct sdcard_t *card)
 	return TRUE;
 }
 
-static int mmc_status(struct sdhci_t *hci, struct sdcard_t *card)
+static int mmc_status(sdhci_t *hci, struct sdcard_t *card)
 {
-	struct sdhci_cmd_t cmd	   = {0};
+	sdhci_cmd_t cmd	   = {0};
 	int				   retries = 100;
 
 	cmd.cmdidx				   = MMC_SEND_STATUS;
@@ -217,10 +217,10 @@ static int mmc_status(struct sdhci_t *hci, struct sdcard_t *card)
 	return -1;
 }
 
-u64_t mmc_read_blocks(struct sdhci_t *hci, struct sdcard_t *card, u8_t *buf, u64_t start, u64_t blkcnt)
+u64_t mmc_read_blocks(sdhci_t *hci, struct sdcard_t *card, u8_t *buf, u64_t start, u64_t blkcnt)
 {
-	struct sdhci_cmd_t	cmd = {0};
-	struct sdhci_data_t dat = {0};
+	sdhci_cmd_t	cmd = {0};
+	sdhci_data_t dat = {0};
 	int					status;
 
 	if (blkcnt > 1)
@@ -261,10 +261,10 @@ u64_t mmc_read_blocks(struct sdhci_t *hci, struct sdcard_t *card, u8_t *buf, u64
 	return blkcnt;
 }
 
-static bool_t sdcard_detect(struct sdhci_t *hci, struct sdcard_t *card)
+static bool_t sdcard_detect(sdhci_t *hci, struct sdcard_t *card)
 {
-	struct sdhci_cmd_t	cmd = {0};
-	struct sdhci_data_t dat = {0};
+	sdhci_cmd_t	cmd = {0};
+	sdhci_data_t dat = {0};
 	u64_t				csize, cmult;
 	u32_t				unit, time;
 	int					width;
@@ -525,7 +525,7 @@ u64_t sdcard_blk_read(struct sdcard_pdata_t *card, u8_t *buf, u64_t blkno, u64_t
 	return blkcnt;
 }
 
-int sdcard_init(struct sdcard_pdata_t *card, struct sdhci_t *hci)
+int sdcard_init(struct sdcard_pdata_t *card, sdhci_t *hci)
 {
 	card->hci	 = hci;
 	card->online = FALSE;
