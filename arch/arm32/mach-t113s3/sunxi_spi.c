@@ -508,7 +508,7 @@ static int spi_nand_info(sunxi_spi_t *spi)
 	spi_nand_info_t *info;
 	spi_nand_id_t id;
 	uint8_t tx[1];
-	uint8_t rx[4];
+	uint8_t rx[4], *rxp;
 	int i, r;
 
 	tx[0] = OPCODE_READ_ID;
@@ -517,22 +517,20 @@ static int spi_nand_info(sunxi_spi_t *spi)
 		return r;
 
 	if (rx[0] == 0xff) {
-		id.mfr = rx[1];
-		if (id.dlen == 2)
-	    	    id.dev = (((uint16_t)rx[2]) << 8 | rx[3]);
-	    	else 
-	    	    id.dev = rx[2];
+		rxp = rx+1; // Dummy data, shift by one byte
 	} else {
-		id.mfr = rx[0];
-		if (id.dlen == 2)
-		    id.dev = (((uint16_t)rx[1]) << 8 | rx[2]);
-		else 
-	    	    id.dev = rx[1];
+		rxp = rx;
 	}
 
+	id.mfr = rxp[0];
 	for(i = 0; i < ARRAY_SIZE(spi_nand_infos); i++)
 	{
 		info = (spi_nand_info_t *)&spi_nand_infos[i];
+		if (info->id.dlen == 2) {
+			id.dev = (((uint16_t)rxp[1]) << 8 | rxp[2]);
+		} else {
+			id.dev = rxp[1];
+		}
 		if(info->id.mfr == id.mfr && info->id.dev == id.dev)
 		{
 			memcpy((void *)&spi->info, info, sizeof(spi_nand_info_t));
@@ -694,35 +692,32 @@ uint32_t spi_nand_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t r
 	}
 
 	if (spi->info.id.mfr == SPI_NAND_MFR_GIGADEVICE) {
+		while(cnt > 0) {
 
-	    while(cnt > 0) {
+			ca = address & (spi->info.page_size - 1);
+			n = cnt > (spi->info.page_size - ca) ? (spi->info.page_size - ca) : cnt;
 
-		ca = address & (spi->info.page_size - 1);
-		n = cnt > (spi->info.page_size - ca) ? (spi->info.page_size - ca) : cnt;
+			spi_nand_load_page(spi, address);
 
-		spi_nand_load_page(spi, address);
+			tx[0] = read_opcode;
+			tx[1] = (uint8_t)(ca >> 8);
+			tx[2] = (uint8_t)(ca >> 0);
+			tx[3] = 0x0;
 
-		tx[0] = read_opcode;
-		tx[1] = (uint8_t)(ca >> 8);
-		tx[2] = (uint8_t)(ca >> 0);
-		tx[3] = 0x0;
+			spi_transfer(spi, spi->info.mode, tx, 4, buf, n);
 
-		spi_transfer(spi, spi->info.mode, tx, 4, buf, n);
-
-		address += n;
-		buf += n;
-		len += n;
-		cnt -= n;
-	    }
-
+			address += n;
+			buf += n;
+			len += n;
+			cnt -= n;
+		}
 	} else {
-
 	    spi_nand_load_page(spi, addr);
 
 	    // With Winbond, we use continuous mode which has 1 more dummy
 	    // This allows us to not load each page
 	    if (spi->info.id.mfr == SPI_NAND_MFR_WINBOND) {
-		txlen++;
+				txlen++;
 	    }
 
 	    tx[0] = read_opcode;
