@@ -183,17 +183,17 @@ int main(void)
     goto _error;
 
   /* get dtb size and read */
-  spi_nand_read(&sunxi_spi0, SPI_IO_MODE_QUAD_RX, (void *)CONFIG_DTB_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_DTB_ADDR, (uint64_t)sizeof(struct boot_param_header));
+  spi_nand_read(&sunxi_spi0, SPI_IO_QUAD_RX, (void *)CONFIG_DTB_LOAD_ADDR, (uint32_t)CONFIG_SPINAND_DTB_ADDR, (uint32_t)sizeof(struct boot_param_header));
   size = of_get_dt_total_size((void *)CONFIG_DTB_LOAD_ADDR);
   debug("spi-nand: dt blob: Copy from 0x%08x to 0x%08x size:0x%08x\r\n", CONFIG_SPINAND_DTB_ADDR, CONFIG_SPINAND_DTB_ADDR, size);
-  spi_nand_read(&sunxi_spi0, SPI_IO_MODE_QUAD_RX, (void *)CONFIG_DTB_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_DTB_ADDR, (uint64_t)size);
+  spi_nand_read(&sunxi_spi0, SPI_IO_QUAD_RX, (void *)CONFIG_DTB_LOAD_ADDR, (uint32_t)CONFIG_SPINAND_DTB_ADDR, (uint32_t)size);
 
   /* get kernel size and read */
-  spi_nand_read(&sunxi_spi0, SPI_IO_MODE_QUAD_RX, (void *)CONFIG_KERNEL_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_KERNEL_ADDR, (uint64_t)sizeof(struct linux_zimage_header));
+  spi_nand_read(&sunxi_spi0, SPI_IO_QUAD_RX, (void *)CONFIG_KERNEL_LOAD_ADDR, (uint32_t)CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)sizeof(struct linux_zimage_header));
   struct linux_zimage_header *hdr = (struct linux_zimage_header *)CONFIG_KERNEL_LOAD_ADDR;
   size = hdr->end - hdr->start;
   debug("spi-nand: Image: Copy from 0x%08x to 0x%08x size:0x%08x\r\n", CONFIG_KERNEL_LOAD_ADDR, CONFIG_SPINAND_KERNEL_ADDR, size);
-  spi_nand_read(&sunxi_spi0, SPI_IO_MODE_QUAD_RX, (void *)CONFIG_KERNEL_LOAD_ADDR, (uint64_t)CONFIG_SPINAND_KERNEL_ADDR, (uint64_t)size);
+  spi_nand_read(&sunxi_spi0, SPI_IO_QUAD_RX, (void *)CONFIG_KERNEL_LOAD_ADDR, (uint32_t)CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)size);
 
   sunxi_spi_disable(&sunxi_spi0);
 #endif
