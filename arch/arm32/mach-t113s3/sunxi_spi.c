@@ -155,19 +155,19 @@ static const spi_nand_info_t spi_nand_infos[] = {
 	{ "W25N02KV",        {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa22, 2 }, 2048, 128,  64, 2048, 1, 1, SPI_IO_QUAD_RX },
 
 	/* Gigadevice */
-	{ "GD5F1GQ4UAWxx",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x10, 1 },       2048,  64,  64, 1024, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F1GQ5UExxG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x51, 1},       2048, 128,  64, 1024, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F1GQ4UExIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xd1, 1},       2048, 128,  64, 1024, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F1GQ4UExxH",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xd9, 1},       2048,  64,  64, 1024, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F1GQ4xAYIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xf1, 1},       2048,  64,  64, 1024, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F2GQ4UExIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xd2, 1},       2048, 128,  64, 2048, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F2GQ5UExxH",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x32, 1},       2048,  64,  64, 2048, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F2GQ4xAYIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xf2, 1},       2048,  64,  64, 2048, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F4GQ4UBxIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xd4, 1},       4096, 256,  64, 2048, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F4GQ4xAYIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xf4, 1},       2048,  64,  64, 4096, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F2GQ5UExxG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x52, 1},       2048, 128,  64, 2048, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F4GQ4UCxIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xb4, 1},       4096, 256,  64, 2048, 1, 1, SPI_IO_DUAL_RX },
-	{ "GD5F4GQ4RCxIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xa4, 1},       4096, 256,  64, 2048, 1, 1, SPI_IO_DUAL_RX },
+	{ "GD5F1GQ4UAWxx",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x10, 1 },       2048,  64,  64, 1024, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F1GQ5UExxG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x51, 1},       2048, 128,  64, 1024, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F1GQ4UExIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xd1, 1},       2048, 128,  64, 1024, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F1GQ4UExxH",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xd9, 1},       2048,  64,  64, 1024, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F1GQ4xAYIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xf1, 1},       2048,  64,  64, 1024, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F2GQ4UExIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xd2, 1},       2048, 128,  64, 2048, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F2GQ5UExxH",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x32, 1},       2048,  64,  64, 2048, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F2GQ4xAYIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xf2, 1},       2048,  64,  64, 2048, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F4GQ4UBxIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xd4, 1},       4096, 256,  64, 2048, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F4GQ4xAYIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xf4, 1},       2048,  64,  64, 4096, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F2GQ5UExxG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x52, 1},       2048, 128,  64, 2048, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F4GQ4UCxIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xb4, 1},       4096, 256,  64, 2048, 1, 1, SPI_IO_QUAD_RX },
+	{ "GD5F4GQ4RCxIG",   {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xa4, 1},       4096, 256,  64, 2048, 1, 1, SPI_IO_QUAD_RX },
 
 	/* Macronix */
 	{ "MX35LF1GE4AB",    {.mfr = SPI_NAND_MFR_MACRONIX, .dev = 0x12, 1},       2048,  64,  64, 1024, 1, 1, SPI_IO_DUAL_RX },
@@ -626,6 +626,15 @@ int spi_nand_detect(sunxi_spi_t *spi)
 				spi_nand_wait_while_busy(spi);
 			}
 		}
+
+        if (spi->info.id.mfr == (uint8_t)SPI_NAND_MFR_GIGADEVICE) {
+			if ((spi_nand_get_config(spi, CONFIG_ADDR_OTP, &val) == 0) && !(val & 0x01)) {
+				// debug("spi-nand: enable Gigadevice Quad mode\r\n");
+            	val |= (1 << 0);
+                spi_nand_set_config(spi, CONFIG_ADDR_OTP, val);
+                spi_nand_wait_while_busy(spi);
+            }
+        }
 
 		debug("spi-nand: %s detected\r\n", spi->info.name);
 
