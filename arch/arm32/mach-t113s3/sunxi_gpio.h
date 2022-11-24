@@ -34,11 +34,11 @@ enum gpio_pull_t {
 typedef uint32_t gpio_t;
 #define PIO_NUM_IO_BITS 5
 
-#define GPIO_PIN(x, y)	(((uint32_t)(x << PIO_NUM_IO_BITS)) | y)
+#define GPIO_PIN(x, y) (((uint32_t)(x << PIO_NUM_IO_BITS)) | y)
 
 typedef struct {
-    gpio_t	pin;
-    uint8_t	mux;
+	gpio_t	pin;
+	uint8_t mux;
 } gpio_mux_t;
 
 extern void sunxi_gpio_init(gpio_t pin, int cfg);

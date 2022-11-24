@@ -30,8 +30,5 @@
 
 extern unsigned int div(unsigned int dividend, unsigned int divisor);
 extern unsigned int mod(unsigned int dividend, unsigned int divisor);
-extern int division(unsigned int dividend,
-		unsigned int divisor,
-		unsigned int *quotient,
-		unsigned int *remainder);
+extern int division(unsigned int dividend, unsigned int divisor, unsigned int *quotient, unsigned int *remainder);
 #endif

@@ -183,10 +183,10 @@ int auto_cal_timing(unsigned int time, unsigned int freq)
 //
 void auto_set_timing_para(dram_para_t *para) // s5
 {
-	unsigned int   freq; // s4
-	unsigned int   type; // s8
-	unsigned int   tpr13; // 80(sp)
-	unsigned int   reg_val;
+	unsigned int freq; // s4
+	unsigned int type; // s8
+	unsigned int tpr13; // 80(sp)
+	unsigned int reg_val;
 
 	unsigned char  tccd; // 88(sp)
 	unsigned char  trrd; // s7
@@ -262,8 +262,7 @@ void auto_set_timing_para(dram_para_t *para) // s5
 				trp	 = trcd; // 14
 			}
 #if 1
-		} 
-		else if (type == 2) {
+		} else if (type == 2) {
 			// DDR2
 			tfaw  = auto_cal_timing(50, frq2);
 			trrd  = auto_cal_timing(10, frq2);
@@ -351,7 +350,7 @@ void auto_set_timing_para(dram_para_t *para) // s5
 		para->dram_tpr1 = (tras << 0) | (trp << 6) | (twr << 11) | (trtp << 15) | (twtr << 20) | (txp << 23);
 		para->dram_tpr2 = (trefi << 0) | (trfc << 12);
 
-		uint32_t tref	= (para->dram_tpr4 << 0x10) >> 0x1c;
+		uint32_t tref = (para->dram_tpr4 << 0x10) >> 0x1c;
 		if (tref == 1) {
 			trace("trefi:3.9ms\r\n");
 		} else if (tref == 2) {
@@ -442,9 +441,9 @@ void auto_set_timing_para(dram_para_t *para) // s5
 				mr2		   = 32;
 			}
 
-			twtp	= tcwl + 2 + twtr; // WL+BL/2+tWTR
-			trd2wr	= tcwl + 2 + twr; // WL+BL/2+tWR
-			twr2rd	= tcwl + twtr; // WL+tWTR
+			twtp   = tcwl + 2 + twtr; // WL+BL/2+tWTR
+			trd2wr = tcwl + 2 + twr; // WL+BL/2+tWR
+			twr2rd = tcwl + twtr; // WL+tWTR
 
 			tdinit0 = 500 * freq + 1; // 500 us
 			tdinit1 = 360 * freq / 1000 + 1; // 360 ns
@@ -626,7 +625,7 @@ int ccm_set_pll_ddr_clk(int index, dram_para_t *para)
 	clk = (para->dram_tpr13 & (1 << 6)) ? para->dram_tpr9 : para->dram_clk;
 
 	// set VCO clock divider
-	n	= (clk * 2) / 24;
+	n = (clk * 2) / 24;
 
 	val = read32(0x2001010);
 	val &= 0xfff800fc; // clear dividers
@@ -785,7 +784,7 @@ void mctl_com_init(dram_para_t *para)
 // It is unclear which lines are being remapped. It seems to pick
 // table cfg7 for the Nezha board.
 //
-char cfg0[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+char		cfg0[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 static char cfg1[] = {1, 9, 3, 7, 8, 18, 4, 13, 5, 6, 10, 2, 14, 12, 0, 0, 21, 17, 20, 19, 11, 22};
 static char cfg2[] = {4, 9, 3, 7, 8, 18, 1, 13, 2, 6, 10, 5, 14, 12, 0, 0, 21, 17, 20, 19, 11, 22};
 static char cfg3[] = {1, 7, 8, 12, 10, 18, 4, 13, 5, 6, 3, 2, 9, 0, 0, 0, 21, 17, 20, 19, 11, 22};
@@ -1133,7 +1132,7 @@ int DRAMC_get_dram_size(void)
 	temp -= 14; // 1MB = 20 bits, minus above 6 = 14
 	size0 = 1 << temp;
 
-	temp  = rval & 0x3; // rank count = 0? -> done
+	temp = rval & 0x3; // rank count = 0? -> done
 	if (temp == 0) {
 		return size0;
 	}
@@ -1203,7 +1202,7 @@ int dqs_gate_detect(dram_para_t *para)
 	return 1;
 }
 
-#define uint	   unsigned int
+#define uint unsigned int
 
 int dramc_simple_wr_test(uint mem_mb, int len)
 {
@@ -1460,10 +1459,10 @@ int auto_scan_dram_rank_width(dram_para_t *para)
 	unsigned int v;
 
 	para->dram_para1 = 0x00b000b0;
-	v = (para->dram_para2 & 0xfffffff0) | 0x1000;
+	v				 = (para->dram_para2 & 0xfffffff0) | 0x1000;
 	para->dram_para2 = v;
 
-	v = (s1 & 0xfffffff7) | 0x5; // set DQS probe mode
+	v				 = (s1 & 0xfffffff7) | 0x5; // set DQS probe mode
 	para->dram_tpr13 = v;
 
 	mctl_core_init(para);
@@ -1582,9 +1581,9 @@ int init_DRAM(int type, dram_para_t *para) // s0
 		trace("Enable Auto SR");
 	} else {
 #endif
-		write32(0x31030a0, read32(0x31030a0) & 0xffff0000);
-		write32(0x3103004, read32(0x3103004) & (~0x1));
-//	}
+	write32(0x31030a0, read32(0x31030a0) & 0xffff0000);
+	write32(0x3103004, read32(0x3103004) & (~0x1));
+	//	}
 
 	// Pupose ??
 	rc = read32(0x3103100) & ~(0xf000);

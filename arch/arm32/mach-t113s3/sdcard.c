@@ -36,18 +36,18 @@
 
 sdcard_pdata_t sdcard0;
 
-#define UNSTUFF_BITS(resp, start, size)                           \
-	({                                                            \
-		const int	__size = size;                                \
+#define UNSTUFF_BITS(resp, start, size)                              \
+	({                                                               \
+		const int	   __size = size;                                \
 		const uint32_t __mask = (__size < 32 ? 1 << __size : 0) - 1; \
-		const int	__off  = 3 - ((start) / 32);                  \
-		const int	__shft = (start)&31;                          \
-		uint32_t		__res;                                        \
-                                                                  \
-		__res = resp[__off] >> __shft;                            \
-		if (__size + __shft > 32)                                 \
-			__res |= resp[__off - 1] << ((32 - __shft) % 32);     \
-		__res &__mask;                                            \
+		const int	   __off  = 3 - ((start) / 32);                  \
+		const int	   __shft = (start)&31;                          \
+		uint32_t	   __res;                                        \
+                                                                     \
+		__res = resp[__off] >> __shft;                               \
+		if (__size + __shft > 32)                                    \
+			__res |= resp[__off - 1] << ((32 - __shft) % 32);        \
+		__res &__mask;                                               \
 	})
 
 static const unsigned tran_speed_unit[] = {
@@ -66,9 +66,9 @@ static bool_t go_idle_state(sdhci_t *hci)
 	sdhci_cmd_t cmd = {0};
 
 	// CMD0 0x0 for user partition
-	cmd.idx			   = MMC_GO_IDLE_STATE;
-	cmd.arg			   = 0;
-	cmd.resptype		   = hci->isspi ? MMC_RSP_R1 : MMC_RSP_NONE;
+	cmd.idx		 = MMC_GO_IDLE_STATE;
+	cmd.arg		 = 0;
+	cmd.resptype = hci->isspi ? MMC_RSP_R1 : MMC_RSP_NONE;
 
 	return sdhci_transfer(hci, &cmd, NULL);
 }
@@ -77,7 +77,7 @@ static bool_t sd_send_if_cond(sdhci_t *hci, sdcard_t *card)
 {
 	sdhci_cmd_t cmd = {0};
 
-	cmd.idx			   = SD_CMD_SEND_IF_COND;
+	cmd.idx = SD_CMD_SEND_IF_COND;
 	if (hci->voltage & MMC_VDD_27_36)
 		cmd.arg = (0x1 << 8);
 	else if (hci->voltage & MMC_VDD_165_195)
@@ -97,16 +97,16 @@ static bool_t sd_send_if_cond(sdhci_t *hci, sdcard_t *card)
 
 static bool_t sd_send_op_cond(sdhci_t *hci, sdcard_t *card)
 {
-	sdhci_cmd_t cmd = {0};
-	int retries = 50;
+	sdhci_cmd_t cmd		= {0};
+	int			retries = 50;
 
 	if (!sd_send_if_cond(hci, card)) {
 		return FALSE;
 	}
 
 	do {
-		cmd.idx	 = MMC_APP_CMD;
-		cmd.arg	 = 0;
+		cmd.idx		 = MMC_APP_CMD;
+		cmd.arg		 = 0;
 		cmd.resptype = MMC_RSP_R1;
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			continue;
@@ -140,8 +140,8 @@ static bool_t sd_send_op_cond(sdhci_t *hci, sdcard_t *card)
 	if (card->version != SD_VERSION_2)
 		card->version = SD_VERSION_1_0;
 	if (hci->isspi) {
-		cmd.idx	 = MMC_SPI_READ_OCR;
-		cmd.arg	 = 0;
+		cmd.idx		 = MMC_SPI_READ_OCR;
+		cmd.arg		 = 0;
 		cmd.resptype = MMC_RSP_R3;
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			return FALSE;
@@ -155,13 +155,13 @@ static bool_t sd_send_op_cond(sdhci_t *hci, sdcard_t *card)
 
 static bool_t mmc_send_op_cond(sdhci_t *hci, sdcard_t *card)
 {
-	sdhci_cmd_t cmd = {0};
-	int retries = 100;
+	sdhci_cmd_t cmd		= {0};
+	int			retries = 100;
 
 	do {
-		cmd.idx = MMC_SEND_OP_COND;
-		cmd.resptype = MMC_RSP_R3;
-		cmd.arg = 0xC0FF8080; // size > 2GB mode, mandatory for Samsung
+		cmd.idx			= MMC_SEND_OP_COND;
+		cmd.resptype	= MMC_RSP_R3;
+		cmd.arg			= 0xC0FF8080; // size > 2GB mode, mandatory for Samsung
 		cmd.response[0] = 0;
 		if (!sdhci_transfer(hci, &cmd, NULL)) {
 			return FALSE;
@@ -173,8 +173,8 @@ static bool_t mmc_send_op_cond(sdhci_t *hci, sdcard_t *card)
 		return FALSE;
 
 	if (hci->isspi) {
-		cmd.idx	 = MMC_SPI_READ_OCR;
-		cmd.arg	 = 0;
+		cmd.idx		 = MMC_SPI_READ_OCR;
+		cmd.arg		 = 0;
 		cmd.resptype = MMC_RSP_R3;
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			return FALSE;
@@ -188,12 +188,12 @@ static bool_t mmc_send_op_cond(sdhci_t *hci, sdcard_t *card)
 
 static int mmc_status(sdhci_t *hci, sdcard_t *card)
 {
-	sdhci_cmd_t cmd	   = {0};
-	int				   retries = 100;
+	sdhci_cmd_t cmd		= {0};
+	int			retries = 100;
 
-	cmd.idx				   = MMC_SEND_STATUS;
-	cmd.resptype			   = MMC_RSP_R1;
-	cmd.arg				   = card->rca << 16;
+	cmd.idx		 = MMC_SEND_STATUS;
+	cmd.resptype = MMC_RSP_R1;
+	cmd.arg		 = card->rca << 16;
 	do {
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			continue;
@@ -209,9 +209,9 @@ static int mmc_status(sdhci_t *hci, sdcard_t *card)
 
 uint64_t mmc_read_blocks(sdhci_t *hci, sdcard_t *card, uint8_t *buf, uint64_t start, uint64_t blkcnt)
 {
-	sdhci_cmd_t	cmd = {0};
+	sdhci_cmd_t	 cmd = {0};
 	sdhci_data_t dat = {0};
-	int status;
+	int			 status;
 
 	if (blkcnt > 1)
 		cmd.idx = MMC_READ_MULTIPLE_BLOCK;
@@ -225,7 +225,7 @@ uint64_t mmc_read_blocks(sdhci_t *hci, sdcard_t *card, uint8_t *buf, uint64_t st
 	dat.buf		 = buf;
 	dat.flag	 = MMC_DATA_READ;
 	dat.blksz	 = card->read_bl_len;
-	dat.blkcnt = blkcnt;
+	dat.blkcnt	 = blkcnt;
 
 	if (!sdhci_transfer(hci, &cmd, &dat)) {
 		warning("SMHC: read failed\r\n");
@@ -242,8 +242,8 @@ uint64_t mmc_read_blocks(sdhci_t *hci, sdcard_t *card, uint8_t *buf, uint64_t st
 	}
 
 	if (blkcnt > 1) {
-		cmd.idx	 = MMC_STOP_TRANSMISSION;
-		cmd.arg	 = 0;
+		cmd.idx		 = MMC_STOP_TRANSMISSION;
+		cmd.arg		 = 0;
 		cmd.resptype = MMC_RSP_R1B;
 		if (!sdhci_transfer(hci, &cmd, NULL)) {
 			warning("SMHC: transfer stop failed\r\n");
@@ -255,12 +255,12 @@ uint64_t mmc_read_blocks(sdhci_t *hci, sdcard_t *card, uint8_t *buf, uint64_t st
 
 static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 {
-	sdhci_cmd_t	cmd = {0};
+	sdhci_cmd_t	 cmd = {0};
 	sdhci_data_t dat = {0};
-	uint64_t				csize, cmult;
-	uint32_t				unit, time;
-	int					width;
-	int					status;
+	uint64_t	 csize, cmult;
+	uint32_t	 unit, time;
+	int			 width;
+	int			 status;
 
 	sdhci_reset(hci);
 	sdhci_set_clock(hci, 400 * 1000);
@@ -286,8 +286,8 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 	}
 
 	if (hci->isspi) {
-		cmd.idx	 = MMC_SEND_CID;
-		cmd.arg	 = 0;
+		cmd.idx		 = MMC_SEND_CID;
+		cmd.arg		 = 0;
 		cmd.resptype = MMC_RSP_R1;
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			return FALSE;
@@ -296,8 +296,8 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		card->cid[2] = cmd.response[2];
 		card->cid[3] = cmd.response[3];
 
-		cmd.idx	 = MMC_SEND_CSD;
-		cmd.arg	 = 0;
+		cmd.idx		 = MMC_SEND_CSD;
+		cmd.arg		 = 0;
 		cmd.resptype = MMC_RSP_R1;
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			return FALSE;
@@ -306,8 +306,8 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		card->csd[2] = cmd.response[2];
 		card->csd[3] = cmd.response[3];
 	} else {
-		cmd.idx	 = MMC_ALL_SEND_CID;
-		cmd.arg	 = 0;
+		cmd.idx		 = MMC_ALL_SEND_CID;
+		cmd.arg		 = 0;
 		cmd.resptype = MMC_RSP_R2;
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			return FALSE;
@@ -316,16 +316,16 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		card->cid[2] = cmd.response[2];
 		card->cid[3] = cmd.response[3];
 
-		cmd.idx	 = SD_CMD_SEND_RELATIVE_ADDR;
-		cmd.arg	 = card->rca << 16;
+		cmd.idx		 = SD_CMD_SEND_RELATIVE_ADDR;
+		cmd.arg		 = card->rca << 16;
 		cmd.resptype = MMC_RSP_R6;
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			return FALSE;
 		if (card->version & SD_VERSION_SD)
 			card->rca = (cmd.response[0] >> 16) & 0xffff;
 
-		cmd.idx	 = MMC_SEND_CSD;
-		cmd.arg	 = card->rca << 16;
+		cmd.idx		 = MMC_SEND_CSD;
+		cmd.arg		 = card->rca << 16;
 		cmd.resptype = MMC_RSP_R2;
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			return FALSE;
@@ -334,8 +334,8 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		card->csd[2] = cmd.response[2];
 		card->csd[3] = cmd.response[3];
 
-		cmd.idx	 = MMC_SELECT_CARD;
-		cmd.arg	 = card->rca << 16;
+		cmd.idx		 = MMC_SELECT_CARD;
+		cmd.arg		 = card->rca << 16;
 		cmd.resptype = MMC_RSP_R1;
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			return FALSE;
@@ -369,10 +369,10 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		};
 	}
 
-	unit			  = tran_speed_unit[(card->csd[0] & 0x7)];
-	time			  = tran_speed_time[((card->csd[0] >> 3) & 0xf)];
-	card->tran_speed  = time * unit;
-	card->dsr_imp	  = UNSTUFF_BITS(card->csd, 76, 1);
+	unit			 = tran_speed_unit[(card->csd[0] & 0x7)];
+	time			 = tran_speed_time[((card->csd[0] >> 3) & 0xf)];
+	card->tran_speed = time * unit;
+	card->dsr_imp	 = UNSTUFF_BITS(card->csd, 76, 1);
 
 	card->read_bl_len = 1 << UNSTUFF_BITS(card->csd, 80, 4);
 	if (card->version & SD_VERSION_SD)
@@ -385,8 +385,8 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		card->write_bl_len = 512;
 
 	if ((card->version & MMC_VERSION_MMC) && (card->version >= MMC_VERSION_4)) {
-		cmd.idx	 = MMC_SEND_EXT_CSD;
-		cmd.arg	 = 0;
+		cmd.idx		 = MMC_SEND_EXT_CSD;
+		cmd.arg		 = 0;
 		cmd.resptype = MMC_RSP_R1;
 		dat.buf		 = card->extcsd;
 		dat.flag	 = MMC_DATA_READ;
@@ -401,35 +401,35 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 					return FALSE;
 			} while (status != MMC_STATUS_TRAN);
 		}
-		const char * strver = "unknown";
+		const char *strver = "unknown";
 		switch (card->extcsd[192]) {
 			case 1:
 				card->version = MMC_VERSION_4_1;
-				strver = "4.1";
+				strver		  = "4.1";
 				break;
 			case 2:
 				card->version = MMC_VERSION_4_2;
-				strver = "4.2";
+				strver		  = "4.2";
 				break;
 			case 3:
 				card->version = MMC_VERSION_4_3;
-				strver = "4.3";
+				strver		  = "4.3";
 				break;
 			case 5:
 				card->version = MMC_VERSION_4_41;
-				strver = "4.41";
+				strver		  = "4.41";
 				break;
 			case 6:
 				card->version = MMC_VERSION_4_5;
-				strver = "4.5";
+				strver		  = "4.5";
 				break;
 			case 7:
 				card->version = MMC_VERSION_5_0;
-				strver = "5.0";
+				strver		  = "5.0";
 				break;
 			case 8:
 				card->version = MMC_VERSION_5_1;
-				strver = "5.1";
+				strver		  = "5.1";
 				break;
 			default:
 				break;
@@ -451,7 +451,7 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		card->capacity = (csize + 1) << (cmult + 2);
 	}
 	card->capacity *= 1 << UNSTUFF_BITS(card->csd, 80, 4);
-	debug("SMHC: capacity %luGB\r\n", (uint32_t)(card->capacity/1024u/1024u/1024u));
+	debug("SMHC: capacity %luGB\r\n", (uint32_t)(card->capacity / 1024u / 1024u / 1024u));
 
 	if (hci->isspi) {
 		sdhci_set_clock(hci, min(card->tran_speed, hci->clock));
@@ -463,14 +463,14 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 			else
 				width = 0;
 
-			cmd.idx	 = MMC_APP_CMD;
-			cmd.arg	 = card->rca << 16;
+			cmd.idx		 = MMC_APP_CMD;
+			cmd.arg		 = card->rca << 16;
 			cmd.resptype = MMC_RSP_R5;
 			if (!sdhci_transfer(hci, &cmd, NULL))
 				return FALSE;
 
-			cmd.idx	 = SD_CMD_SWITCH_FUNC;
-			cmd.arg	 = width;
+			cmd.idx		 = SD_CMD_SWITCH_FUNC;
+			cmd.arg		 = width;
 			cmd.resptype = MMC_RSP_R1;
 			if (!sdhci_transfer(hci, &cmd, NULL))
 				return FALSE;
@@ -483,9 +483,9 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 				width = 0;
 
 			// Write EXT_CSD register 183 (width) with our value
-			cmd.idx	 = SD_CMD_SWITCH_FUNC;
+			cmd.idx		 = SD_CMD_SWITCH_FUNC;
 			cmd.resptype = MMC_RSP_R1;
-			cmd.arg = (3 << 24) | (183 << 16) | (width << 8) | 1;
+			cmd.arg		 = (3 << 24) | (183 << 16) | (width << 8) | 1;
 			if (!sdhci_transfer(hci, &cmd, NULL))
 				return FALSE;
 
@@ -498,8 +498,8 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 			sdhci_set_width(hci, MMC_BUS_WIDTH_1);
 	}
 
-	cmd.idx	 = MMC_SET_BLOCKLEN;
-	cmd.arg	 = card->read_bl_len;
+	cmd.idx		 = MMC_SET_BLOCKLEN;
+	cmd.arg		 = card->read_bl_len;
 	cmd.resptype = MMC_RSP_R1;
 	if (!sdhci_transfer(hci, &cmd, NULL))
 		return FALSE;
@@ -509,7 +509,7 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 
 uint64_t sdcard_blk_read(sdcard_pdata_t *data, uint8_t *buf, uint64_t blkno, uint64_t blkcnt)
 {
-	uint64_t			 cnt, blks = blkcnt;
+	uint64_t  cnt, blks = blkcnt;
 	sdcard_t *sdcard = &data->card;
 
 	while (blks > 0) {

@@ -1,6 +1,6 @@
 /*
  * (C) Copyright 2007-2013
-* SPDX-License-Identifier:	GPL-2.0+
+ * SPDX-License-Identifier:	GPL-2.0+
  * Allwinner Technology Co., Ltd. <www.allwinnertech.com>
  * Jerry Wang <wangflord@allwinnertech.com>
  *
@@ -23,49 +23,46 @@
  * MA 02111-1307 USA
  */
 
-#ifndef  __dram_head_h__
-#define  __dram_head_h__
+#ifndef __dram_head_h__
+#define __dram_head_h__
 
 #define SDRAM_BASE (0x40000000)
 
-typedef struct __DRAM_PARA
-{
-	//normal configuration
-	unsigned int        dram_clk;
-	unsigned int        dram_type;		//dram_type			DDR2: 2				DDR3: 3		LPDDR2: 6	LPDDR3: 7	DDR3L: 31
-	//unsigned int        lpddr2_type;	//LPDDR2 type		S4:0	S2:1 	NVM:2
-	unsigned int        dram_zq;		//do not need
-	unsigned int		dram_odt_en;
+typedef struct __DRAM_PARA {
+	// normal configuration
+	unsigned int dram_clk;
+	unsigned int dram_type; // dram_type			DDR2: 2				DDR3: 3		LPDDR2: 6	LPDDR3: 7	DDR3L: 31
+	// unsigned int        lpddr2_type;	//LPDDR2 type		S4:0	S2:1 	NVM:2
+	unsigned int dram_zq; // do not need
+	unsigned int dram_odt_en;
 
-	//control configuration
-	unsigned int		dram_para1;
-	unsigned int		dram_para2;
+	// control configuration
+	unsigned int dram_para1;
+	unsigned int dram_para2;
 
-	//timing configuration
-	unsigned int		dram_mr0;
-	unsigned int		dram_mr1;
-	unsigned int		dram_mr2;
-	unsigned int		dram_mr3;
-	unsigned int		dram_tpr0;	//DRAMTMG0
-	unsigned int		dram_tpr1;	//DRAMTMG1
-	unsigned int		dram_tpr2;	//DRAMTMG2
-	unsigned int		dram_tpr3;	//DRAMTMG3
-	unsigned int		dram_tpr4;	//DRAMTMG4
-	unsigned int		dram_tpr5;	//DRAMTMG5
-   	unsigned int		dram_tpr6;	//DRAMTMG8
-	//reserved for future use
-	unsigned int		dram_tpr7;
-	unsigned int		dram_tpr8;
-	unsigned int		dram_tpr9;
-	unsigned int		dram_tpr10;
-	unsigned int		dram_tpr11;
-	unsigned int		dram_tpr12;
-	unsigned int		dram_tpr13;
+	// timing configuration
+	unsigned int dram_mr0;
+	unsigned int dram_mr1;
+	unsigned int dram_mr2;
+	unsigned int dram_mr3;
+	unsigned int dram_tpr0; // DRAMTMG0
+	unsigned int dram_tpr1; // DRAMTMG1
+	unsigned int dram_tpr2; // DRAMTMG2
+	unsigned int dram_tpr3; // DRAMTMG3
+	unsigned int dram_tpr4; // DRAMTMG4
+	unsigned int dram_tpr5; // DRAMTMG5
+	unsigned int dram_tpr6; // DRAMTMG8
+	// reserved for future use
+	unsigned int dram_tpr7;
+	unsigned int dram_tpr8;
+	unsigned int dram_tpr9;
+	unsigned int dram_tpr10;
+	unsigned int dram_tpr11;
+	unsigned int dram_tpr12;
+	unsigned int dram_tpr13;
 
-}dram_para_t;
+} dram_para_t;
 
 int init_DRAM(int type, dram_para_t *para);
 
 #endif
-
-

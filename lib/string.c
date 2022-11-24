@@ -7,14 +7,14 @@
 
 void *memcpy(void *dst, const void *src, int cnt)
 {
-	char *d;
+	char		 *d;
 	const char *s;
 	struct chunk {
 		unsigned long val[2];
 	};
 
-	const struct chunk *csrc = (const struct chunk *) src;
-	struct chunk *cdst = (struct chunk *)dst;
+	const struct chunk *csrc = (const struct chunk *)src;
+	struct chunk		 *cdst = (struct chunk *)dst;
 
 	if (((unsigned long)src & 0xf) == 0 && ((unsigned long)dst & 0xf) == 0) {
 		while (cnt >= sizeof(struct chunk)) {
@@ -23,8 +23,8 @@ void *memcpy(void *dst, const void *src, int cnt)
 		}
 	}
 
-	d = (char *) cdst;
-	s = (const char *) csrc;
+	d = (char *)cdst;
+	s = (const char *)csrc;
 
 	while (cnt--)
 		*d++ = *s++;
@@ -46,9 +46,10 @@ int memcmp(const void *dst, const void *src, unsigned int cnt)
 {
 	const char *d = (const char *)dst;
 	const char *s = (const char *)src;
-	int r = 0;
+	int			r = 0;
 
-	while (cnt-- && (r = *d++ - *s++) == 0) ;
+	while (cnt-- && (r = *d++ - *s++) == 0)
+		;
 
 	return r;
 }
@@ -57,7 +58,8 @@ unsigned int strlen(const char *str)
 {
 	int i = 0;
 
-	while (str[i++] != '\0') ;
+	while (str[i++] != '\0')
+		;
 
 	return i - 1;
 }
@@ -66,7 +68,8 @@ char *strcpy(char *dst, const char *src)
 {
 	char *bak = dst;
 
-	while ((*dst++ = *src++) != '\0') ;
+	while ((*dst++ = *src++) != '\0')
+		;
 
 	return bak;
 }
@@ -78,7 +81,8 @@ char *strcat(char *dst, const char *src)
 	while (*dst != '\0')
 		dst++;
 
-	while ((*dst++ = *src++) != '\0') ;
+	while ((*dst++ = *src++) != '\0')
+		;
 
 	return p;
 }
@@ -119,7 +123,7 @@ int strncmp(const char *p1, const char *p2, unsigned int cnt)
 
 char *strchr(const char *s, int c)
 {
-	for (; *s != (char) c; ++s)
+	for (; *s != (char)c; ++s)
 		if (*s == '\0')
 			return NULL;
 
@@ -135,7 +139,8 @@ char *strstr(const char *s1, const char *s2)
 
 	do {
 		if (!*p) {
-			return (char *) s1;;
+			return (char *)s1;
+			;
 		}
 		if (*p == *s) {
 			++p;
@@ -176,13 +181,12 @@ void *memmove(void *dst, const void *src, unsigned int cnt)
 		s = (char *)src;
 		while (cnt--)
 			*p++ = *s++;
-		}
-	else {
+	} else {
 		p = (char *)dst + cnt;
 		s = (char *)src + cnt;
 		while (cnt--)
 			*--p = *--s;
-		}
+	}
 
 	return dst;
 }

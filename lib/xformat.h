@@ -2,11 +2,11 @@
  * @file        xformatc.h
  *
  * @brief       Printf C declaration.
- * 
+ *
  * @author      Mario Viara
- * 
+ *
  * @version     1.01
- * 
+ *
  * @copyright   Copyright Mario Viara 2014  - License Open Source (LGPL)
  * This is a free software and is opened for education, research and commercial
  * developments under license policy of following terms:
@@ -31,16 +31,16 @@
 /**
  * Define XCFG_FORMAT_FLOAT=0 to remove floating point support
  */
-#define XCFG_FORMAT_FLOAT    0
+#define XCFG_FORMAT_FLOAT 0
 
 /**
  * Define to 0 to support long long type (prefix ll)
  */
 #ifndef XCFG_FORMAT_LONGLONG
-#define XCFG_FORMAT_LONGLONG    0
+#define XCFG_FORMAT_LONGLONG 0
 #endif
 
-unsigned xvformat(void (*outchar)(void *arg,char),void *arg,const char * fmt,va_list args);
-unsigned xformat(void (*outchar)(void *arg,char),void *arg,const char * fmt,...);
+unsigned xvformat(void (*outchar)(void *arg, char), void *arg, const char *fmt, va_list args);
+unsigned xformat(void (*outchar)(void *arg, char), void *arg, const char *fmt, ...);
 
 #endif

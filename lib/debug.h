@@ -10,13 +10,13 @@
 #define LOG_TRACE 50
 
 #if LOG_LEVEL >= LOG_TRACE
-#define trace(fmt, ...) message("[T] " fmt,  ##__VA_ARGS__)
+#define trace(fmt, ...) message("[T] " fmt, ##__VA_ARGS__)
 #else
 #define trace(...)
 #endif
 
 #if LOG_LEVEL >= LOG_DEBUG
-#define debug(fmt, ...) message("[D] " fmt,  ##__VA_ARGS__)
+#define debug(fmt, ...) message("[D] " fmt, ##__VA_ARGS__)
 #else
 #define debug(...)
 #endif
@@ -39,7 +39,12 @@
 #define error(...)
 #endif
 
-#define fatal(fmt, ...) { message("[F] " fmt, ##__VA_ARGS__); while (1); }
+#define fatal(fmt, ...)                     \
+	{                                       \
+		message("[F] " fmt, ##__VA_ARGS__); \
+		while (1)                           \
+			;                               \
+	}
 
 void message(const char *fmt, ...);
 

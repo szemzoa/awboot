@@ -28,9 +28,7 @@
 #ifndef __MEDIA_H__
 #define __MEDIA_H__
 
-extern int sdcard_initialize(void);
-extern unsigned int sdcard_block_read(unsigned int start,
-					unsigned int blkcnt,
-					void *dest);
+extern int			sdcard_initialize(void);
+extern unsigned int sdcard_block_read(unsigned int start, unsigned int blkcnt, void *dest);
 
 #endif

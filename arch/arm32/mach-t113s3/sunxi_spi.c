@@ -149,10 +149,10 @@ typedef enum {
 
 static const spi_nand_info_t spi_nand_infos[] = {
 	/* Winbond */
-	{ "W25N512GV", {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa20, 2}, 2048,  64, 64, 512,  1, 1, SPI_IO_QUAD_RX},
-	{ "W25N01GV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa21, 2}, 2048,  64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
-	{ "W25M02GV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xab21, 2}, 2048,  64, 64, 1024, 1, 2, SPI_IO_QUAD_RX},
-	{ "W25N02KV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa22, 2}, 2048, 128, 64, 2048, 1, 1, SPI_IO_QUAD_RX},
+	{	 "W25N512GV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa20, 2}, 2048,	 64, 64,	 512, 1, 1, SPI_IO_QUAD_RX},
+	{	  "W25N01GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa21, 2}, 2048,	64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
+	{	  "W25M02GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xab21, 2}, 2048,	64, 64, 1024, 1, 2, SPI_IO_QUAD_RX},
+	{	  "W25N02KV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa22, 2}, 2048, 128, 64, 2048, 1, 1, SPI_IO_QUAD_RX},
 
  /* Gigadevice */
 	{ "GD5F1GQ4UAWxx", {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x10, 1}, 2048,  64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
@@ -196,7 +196,7 @@ static const spi_nand_info_t spi_nand_infos[] = {
 #define SPI_CLK_CTL_CDR1 (0xF << 8) /* Clock Divide Rate 1,master mode only : SPI_CLK = AHB_CLK/2^n */
 #define SPI_CLK_CTL_DRS	 (0x1 << 12) /* Divide rate select,default,0:rate 1;1:rate 2 */
 
-#define SPI_MOD_CLK		 200000000
+#define SPI_MOD_CLK 200000000
 
 static void spi_set_clk(sunxi_spi_t *spi, u32 spi_clk, u32 ahb_clk, u32 cdr)
 {
@@ -236,8 +236,8 @@ static int spi_clk_init(uint32_t mod_clk)
 	/* M: factor_m + 1 */
 	source_clk = sunxi_clk_get_peri1x_rate();
 
-	divi	   = div((source_clk + mod_clk - 1), mod_clk);
-	divi	   = divi == 0 ? 1 : divi;
+	divi = div((source_clk + mod_clk - 1), mod_clk);
+	divi = divi == 0 ? 1 : divi;
 	if (divi > 128) {
 		m = 1;
 		n = 0;
@@ -658,7 +658,7 @@ static int spi_nand_load_page(sunxi_spi_t *spi, uint32_t offset)
 	uint32_t pa;
 	uint8_t	 tx[4];
 
-	pa	  = offset / spi->info.page_size;
+	pa = offset / spi->info.page_size;
 
 	tx[0] = OPCODE_READ_PAGE;
 	tx[1] = (uint8_t)(pa >> 16);
@@ -681,7 +681,7 @@ uint32_t spi_nand_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t r
 	uint32_t txlen = 4;
 	uint8_t	 tx[6];
 
-	int		 read_opcode = OPCODE_READ;
+	int read_opcode = OPCODE_READ;
 	switch (spi->info.mode) {
 		case SPI_IO_SINGLE:
 			read_opcode = OPCODE_READ;

@@ -16,16 +16,17 @@
 //------------------------------------------------------------------------------
 //         Internal variables
 
-static volatile DSTATUS Stat = STA_NOINIT;	/* Disk status */
+static volatile DSTATUS Stat = STA_NOINIT; /* Disk status */
 
 //------------------------------------------------------------------------------
 /* Initialize a Drive                                                    */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS disk_initialize(BYTE drv        /* Physical drive number (0..) */
-    )
+DSTATUS disk_initialize(BYTE drv /* Physical drive number (0..) */
+)
 {
-	if (drv) return STA_NOINIT;
+	if (drv)
+		return STA_NOINIT;
 
 	Stat &= ~STA_NOINIT;
 
@@ -36,10 +37,11 @@ DSTATUS disk_initialize(BYTE drv        /* Physical drive number (0..) */
 /* Return Disk Status                                                    */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS disk_status(BYTE drv    /* Physical drive number (0..) */
-    )
+DSTATUS disk_status(BYTE drv /* Physical drive number (0..) */
+)
 {
-	if (drv) return STA_NOINIT;
+	if (drv)
+		return STA_NOINIT;
 
 	return Stat;
 }
@@ -48,25 +50,26 @@ DSTATUS disk_status(BYTE drv    /* Physical drive number (0..) */
 /* Read Sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
 
-DRESULT disk_read (
-	BYTE drv,		/* Physical drive nmuber to identify the drive */
-	BYTE *buff,		/* Data buffer to store read data */
-	LBA_t sector,	/* Start sector in LBA */
-	UINT count		/* Number of sectors to read */
+DRESULT disk_read(BYTE	drv, /* Physical drive nmuber to identify the drive */
+				  BYTE *buff, /* Data buffer to store read data */
+				  LBA_t sector, /* Start sector in LBA */
+				  UINT	count /* Number of sectors to read */
 )
 {
-  unsigned int blk, blkcnt, blkread;
+	unsigned int blk, blkcnt, blkread;
 
-	if (drv || !count) return RES_PARERR;
-	if (Stat & STA_NOINIT) return RES_NOTRDY;
+	if (drv || !count)
+		return RES_PARERR;
+	if (Stat & STA_NOINIT)
+		return RES_NOTRDY;
 
-	blk = sector;
+	blk	   = sector;
 	blkcnt = count;
 
 	blkread = sdcard_blk_read(&sdcard0, buff, blk, blkcnt);
 
 	if (blkread == blkcnt)
-	    return RES_OK;
+		return RES_OK;
 
 	warning("FATFS: MMC read %u/%u blocks\r\n", blkread, blkcnt);
 	return RES_ERROR;
@@ -77,25 +80,24 @@ DRESULT disk_read (
 /*-----------------------------------------------------------------------*/
 
 #if _READONLY == 0
-DRESULT disk_write (
-	BYTE drv,			/* Physical drive nmuber to identify the drive */
-	const BYTE *buff,	/* Data to be written */
-	LBA_t sector,		/* Start sector in LBA */
-	UINT count			/* Number of sectors to write */
+DRESULT disk_write(BYTE		   drv, /* Physical drive nmuber to identify the drive */
+				   const BYTE *buff, /* Data to be written */
+				   LBA_t	   sector, /* Start sector in LBA */
+				   UINT		   count /* Number of sectors to write */
 )
 {
-    return RES_ERROR;
+	return RES_ERROR;
 }
-#endif  /* _READONLY */
+#endif /* _READONLY */
 
 /*-----------------------------------------------------------------------*/
 /* Miscellaneous drive controls other than data read/write               */
 /*-----------------------------------------------------------------------*/
 #if _USE_IOCTL == 1
-DRESULT disk_ioctl(BYTE drv,    /* Physical drive number (0..) */
-                   BYTE ctrl,   /* Control code */
-                   void *buff   /* Buffer to send/receive control data */
-    )
+DRESULT disk_ioctl(BYTE	 drv, /* Physical drive number (0..) */
+				   BYTE	 ctrl, /* Control code */
+				   void *buff /* Buffer to send/receive control data */
+)
 {
 }
 #endif
@@ -114,14 +116,9 @@ DRESULT disk_ioctl(BYTE drv,    /* Physical drive number (0..) */
 
 DWORD get_fattime(void)
 {
-    DWORD time;
+	DWORD time;
 
-    time = ((2009 - 1980) << 25)
-        | (9 << 21)
-        | (15 << 16)
-        | (17 << 11)
-        | (45 << 5)
-        | ((59 / 2) << 0);
+	time = ((2009 - 1980) << 25) | (9 << 21) | (15 << 16) | (17 << 11) | (45 << 5) | ((59 / 2) << 0);
 
-    return time;
+	return time;
 }
