@@ -37,7 +37,7 @@ static inline unsigned int swap_uint32(unsigned int data)
 }
 
 #define FILENAME_MAX_LEN        64
-struct image_info
+typedef struct
 {
         unsigned int offset;
         unsigned int length;
@@ -48,7 +48,7 @@ struct image_info
 
         char filename[FILENAME_MAX_LEN];
         char of_filename[FILENAME_MAX_LEN];
-};
+} image_info_t;
 
 extern void udelay(unsigned long us);
 extern void sdelay(unsigned long loops);

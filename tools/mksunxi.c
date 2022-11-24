@@ -42,12 +42,20 @@ int main (int argc, char *argv[])
 	int buflen, filelen;
 	uint32_t * p;
 	uint32_t sum;
-	int i, l, loop;
+	int i, l, loop, padding;
 	
-	if(argc != 2)
+	if(argc != 3)
 	{
-		printf("Usage: mksunxi <bootloader>\n");
+		printf("Usage: mksunxi <bootloader> <padding>\n");
 		return -1;
+	}
+
+	padding = atoi(argv[2]);
+	printf("padding: %d\n", padding);
+
+	if (padding != 512 && padding != 8192) {
+		printf("padding must be 512 (block devices) or 8192 (flash)\n");
+		exit(1);
 	}
 
 	fp = fopen(argv[1], "r+b");
@@ -67,7 +75,7 @@ int main (int argc, char *argv[])
 		return -1;
 	}
 
-	buflen = ALIGN(filelen, 8192);
+	buflen = ALIGN(filelen, padding);
 	buffer = malloc(buflen);
 	memset(buffer, 0, buflen);
 	if(fread(buffer, 1, filelen, fp) != filelen)
@@ -82,7 +90,7 @@ int main (int argc, char *argv[])
 	p = (uint32_t *)h;
 	l = le32_to_cpu(h->length);
 	printf("len: %u\n", l);
-	l = ALIGN(l, 8192);
+	l = ALIGN(l, padding);
 	h->length = cpu_to_le32(l);
 	h->checksum = cpu_to_le32(0x5F0A6C39);
 	loop = l >> 2;

@@ -149,25 +149,32 @@ enum {
 	MMC_VERSION_5_1		= (MMC_VERSION_MMC | 0x501),
 };
 
-struct sdcard_t {
-	u32_t version;
-	u32_t ocr;
-	u32_t rca;
-	u32_t cid[4];
-	u32_t csd[4];
-	u8_t  extcsd[512];
+typedef struct {
+	uint32_t version;
+	uint32_t ocr;
+	uint32_t rca;
+	uint32_t cid[4];
+	uint32_t csd[4];
+	uint8_t  extcsd[512];
 
-	u32_t high_capacity;
-	u32_t tran_speed;
-	u32_t dsr_imp;
-	u32_t read_bl_len;
-	u32_t write_bl_len;
-	u64_t capacity;
-};
+	uint32_t high_capacity;
+	uint32_t tran_speed;
+	uint32_t dsr_imp;
+	uint32_t read_bl_len;
+	uint32_t write_bl_len;
+	uint64_t capacity;
+} sdcard_t;
 
-extern struct sdcard_pdata_t sdcard0;
+typedef struct {
+	sdcard_t card;
+	sdhci_t  *hci;
+	uint8_t     buf[512];
+	bool_t   online;
+} sdcard_pdata_t;
 
-extern int sdcard_init(struct sdcard_pdata_t *card, sdhci_t *hci);
-extern u64_t sdcard_blk_read(struct sdcard_pdata_t *card, u8_t *buf, u64_t blkno, u64_t blkcnt);
+extern sdcard_pdata_t sdcard0;
+
+int sdcard_init(sdcard_pdata_t *data, sdhci_t *hci);
+uint64_t sdcard_blk_read(sdcard_pdata_t *data, uint8_t *buf, uint64_t blkno, uint64_t blkcnt);
 
 #endif /* __SDCARD_H__ */

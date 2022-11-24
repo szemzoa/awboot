@@ -149,10 +149,10 @@ typedef enum {
 
 static const spi_nand_info_t spi_nand_infos[] = {
 	/* Winbond */
-	{	 "W25N512GV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa20, 2}, 2048,	 64, 64,	 512, 1, 1, SPI_IO_QUAD_RX},
-	{		 "W25N01GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa21, 2}, 2048,	64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
-	{		 "W25M02GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xab21, 2}, 2048,	64, 64, 1024, 1, 2, SPI_IO_QUAD_RX},
-	{		 "W25N02KV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa22, 2}, 2048, 128, 64, 2048, 1, 1, SPI_IO_QUAD_RX},
+	{ "W25N512GV", {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa20, 2}, 2048,  64, 64, 512,  1, 1, SPI_IO_QUAD_RX},
+	{ "W25N01GV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa21, 2}, 2048,  64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
+	{ "W25M02GV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xab21, 2}, 2048,  64, 64, 1024, 1, 2, SPI_IO_QUAD_RX},
+	{ "W25N02KV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa22, 2}, 2048, 128, 64, 2048, 1, 1, SPI_IO_QUAD_RX},
 
  /* Gigadevice */
 	{ "GD5F1GQ4UAWxx", {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x10, 1}, 2048,  64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
@@ -203,7 +203,7 @@ static void spi_set_clk(sunxi_spi_t *spi, u32 spi_clk, u32 ahb_clk, u32 cdr)
 	uint32_t reg_val = 0;
 	uint32_t div_clk = 0;
 
-	debug("spi-nand: set spi clock=%dMHz, mclk=%dMHz\r\n", spi_clk / 1000 / 1000, ahb_clk / 1000 / 1000);
+	debug("SPI: set spi clock=%dMHz, mclk=%dMHz\r\n", spi_clk / 1000 / 1000, ahb_clk / 1000 / 1000);
 	reg_val = read32(spi->base + SPI_CCR);
 
 	/* CDR2 */
@@ -211,7 +211,7 @@ static void spi_set_clk(sunxi_spi_t *spi, u32 spi_clk, u32 ahb_clk, u32 cdr)
 		div_clk = ahb_clk / (spi_clk * 2) - 1;
 		reg_val &= ~SPI_CLK_CTL_CDR2;
 		reg_val |= (div_clk | SPI_CLK_CTL_DRS);
-		debug("CDR2 - n = %d\r\n", div_clk);
+		trace("SPI: CDR2 - n = %lu\r\n", div_clk);
 	} else { /* CDR1 */
 		while (ahb_clk > spi_clk) {
 			div_clk++;
@@ -219,7 +219,7 @@ static void spi_set_clk(sunxi_spi_t *spi, u32 spi_clk, u32 ahb_clk, u32 cdr)
 		}
 		reg_val &= ~(SPI_CLK_CTL_CDR1 | SPI_CLK_CTL_DRS);
 		reg_val |= (div_clk << 8);
-		debug("CDR1 - n = %d\r\n", div_clk);
+		trace("SPI: CDR1 - n = %lu\r\n", div_clk);
 	}
 
 	write32(spi->base + SPI_CCR, reg_val);
@@ -260,7 +260,7 @@ static int spi_clk_init(uint32_t mod_clk)
 	rval	 = (1U << 31) | (0x1 << 24) | (n << 8) | factor_m;
 
 	/**sclk_freq = source_clk / (1 << n) / m; */
-	//        debug("spi-nand: parent_clk=%dMHz, div=%d, n=%d, m=%d\r\n", source_clk / 1000 / 1000, divi, n, m);
+	//        trace("SPI: parent_clk=%dMHz, div=%d, n=%d, m=%d\r\n", source_clk / 1000 / 1000, divi, n, m);
 	write32(T113_CCU_BASE + CCU_SPI0_CLK_REG, rval);
 
 	return 0;
@@ -547,7 +547,7 @@ static int spi_nand_info(sunxi_spi_t *spi)
 		}
 	}
 
-	debug("spi-nand unknown mfr:0x%02x dev:0x%04x\r\n", id.mfr, id.dev);
+	error("SPI-NAND: unknown mfr:0x%02x dev:0x%04x\r\n", id.mfr, id.dev);
 
 	return -1;
 }
@@ -637,19 +637,19 @@ int spi_nand_detect(sunxi_spi_t *spi)
 
 		if (spi->info.id.mfr == (uint8_t)SPI_NAND_MFR_GIGADEVICE) {
 			if ((spi_nand_get_config(spi, CONFIG_ADDR_OTP, &val) == 0) && !(val & 0x01)) {
-				// debug("spi-nand: enable Gigadevice Quad mode\r\n");
+				debug("SPI-NAND: enable Gigadevice Quad mode\r\n");
 				val |= (1 << 0);
 				spi_nand_set_config(spi, CONFIG_ADDR_OTP, val);
 				spi_nand_wait_while_busy(spi);
 			}
 		}
 
-		debug("spi-nand: %s detected\r\n", spi->info.name);
+		info("SPI-NAND: %s detected\r\n", spi->info.name);
 
 		return 0;
 	}
 
-	debug("spi-nand: flash not found\r\n");
+	error("SPI-NAND: flash not found\r\n");
 	return -1;
 }
 
@@ -698,12 +698,12 @@ uint32_t spi_nand_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t r
 			break;
 
 		default:
-			debug("spi_nand: invalid mode\r\n");
+			error("spi_nand: invalid mode\r\n");
 			return -1;
 	};
 
 	if (addr % spi->info.page_size) {
-		debug("spi_nand: address is not page-aligned\r\n");
+		error("spi_nand: address is not page-aligned\r\n");
 		return -1;
 	}
 

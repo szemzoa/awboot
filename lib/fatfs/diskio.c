@@ -11,6 +11,7 @@
 
 #include "main.h"
 #include "sdcard.h"
+#include "debug.h"
 
 //------------------------------------------------------------------------------
 //         Internal variables
@@ -47,23 +48,27 @@ DSTATUS disk_status(BYTE drv    /* Physical drive number (0..) */
 /* Read Sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
 
-DRESULT disk_read(BYTE drv,     /* Physical drive number (0..) */
-                  BYTE *buff,  /* Data buffer to store read data */
-                  DWORD sector, /* Start sector number (LBA) */
-                  BYTE count    /* Sector count (1..255) */
-    )
+DRESULT disk_read (
+	BYTE drv,		/* Physical drive nmuber to identify the drive */
+	BYTE *buff,		/* Data buffer to store read data */
+	LBA_t sector,	/* Start sector in LBA */
+	UINT count		/* Number of sectors to read */
+)
 {
-    uint64_t blk, blkcnt;
+  unsigned int blk, blkcnt, blkread;
 
 	if (drv || !count) return RES_PARERR;
 	if (Stat & STA_NOINIT) return RES_NOTRDY;
 
-	blk = (uint64_t)sector;
-	blkcnt = (uint64_t)count;
+	blk = sector;
+	blkcnt = count;
 
-	if (sdcard_blk_read(&sdcard0, buff, blk, blkcnt) == blkcnt)
+	blkread = sdcard_blk_read(&sdcard0, buff, blk, blkcnt);
+
+	if (blkread == blkcnt)
 	    return RES_OK;
 
+	warning("FATFS: MMC read %u/%u blocks\r\n", blkread, blkcnt);
 	return RES_ERROR;
 }
 
@@ -72,12 +77,14 @@ DRESULT disk_read(BYTE drv,     /* Physical drive number (0..) */
 /*-----------------------------------------------------------------------*/
 
 #if _READONLY == 0
-DRESULT disk_write(BYTE drv,    /* Physical drive number (0..) */
-                   const BYTE * buff,   /* Data to be written */
-                   DWORD sector,        /* Sector number (LBA) */
-                   BYTE count   /* Sector count (1..255) */
-    )
+DRESULT disk_write (
+	BYTE drv,			/* Physical drive nmuber to identify the drive */
+	const BYTE *buff,	/* Data to be written */
+	LBA_t sector,		/* Start sector in LBA */
+	UINT count			/* Number of sectors to write */
+)
 {
+    return RES_ERROR;
 }
 #endif  /* _READONLY */
 
