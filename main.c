@@ -245,13 +245,13 @@ int main(void)
 
 #ifdef CONFIG_BOOT_SPINAND
 _spi:
-  debug("SPI init...\r\n");
+  debug("SPI: init...\r\n");
   if (sunxi_spi_init(&sunxi_spi0) != 0) {
-    fatal("spi: init failed\r\n");
+    fatal("SPI: init failed\r\n");
   }
 
   if (load_spi_nand(&sunxi_spi0, &image) != 0) {
-    fatal("SPI-NAND: lading failed\r\n");
+    fatal("SPI-NAND: loading failed\r\n");
   }
 
   sunxi_spi_disable(&sunxi_spi0);
