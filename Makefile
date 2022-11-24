@@ -5,22 +5,26 @@ TARGET = awboot
 BUILD_REVISION_H = "build_revision.h"
 BUILD_REVISION_D = "BUILD_REVISION"
 
+# Log level defaults to info
+LOG_LEVEL ?= 30
+
 SRCS =  main.c board.c lib/debug.c lib/xformat.c lib/div.c lib/fdt.c lib/string.c
 
 INCLUDE_DIRS :=-I . -I include -I lib
 LIB_DIR := -L ./
-LIBS := -lm -lgcc
+LIBS := -lm -lgcc -nostdlib
+DEFINES := -DLOG_LEVEL=$(LOG_LEVEL)
 
 include	arch/arch.mk
 include	lib/fatfs/fatfs.mk
 
 CFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
-CFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES) -flto -fPIC -DAWBOOT
+CFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES) $(DEFINES) -flto -fPIC
 
 ASFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux
-ASFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES) -flto -fPIC
+ASFLAGS += -Os -std=gnu99 -Wall -g $(INCLUDES) $(DEFINES) -flto -fPIC
 
-LDFLAGS += -march=armv7-a -mtune=cortex-a7 -mthumb-interwork -mno-unaligned-access -mabi=aapcs-linux -flto -fPIC
+LDFLAGS += $(CFLAGS)
 
 STRIP=arm-none-eabi-strip
 CC=arm-none-eabi-gcc
@@ -107,18 +111,26 @@ clean:
 	rm -f $(TARGET)-*.bin
 	rm -f $(TARGET)-*.map
 	rm -f $(TARGET)-*.elf
-	rm -f *-boot.img
+	rm -f *.img
 	$(MAKE) -C tools clean
+
+format:
+	find . -iname "*.h" -o -iname "*.c" | xargs clang-format -i
 
 tools:
 	$(MAKE) -C tools all
 
 mkboot: build tools
-	tools/mksunxi $(TARGET)-fel.bin
-	tools/mksunxi $(TARGET)-boot.bin
+	cp $(TARGET)-boot.bin $(TARGET)-boot-spi.bin
+	cp $(TARGET)-boot.bin $(TARGET)-boot-sd.bin
+	tools/mksunxi $(TARGET)-fel.bin 8192
+	tools/mksunxi $(TARGET)-boot-spi.bin 8192
+	tools/mksunxi $(TARGET)-boot-sd.bin 512
 
 spi-boot.img: mkboot
 	rm -f spi-boot.img
-	dd if=$(TARGET)-boot.bin of=spi-boot.img bs=1k
-	dd if=linux/boot/$(DTB) of=spi-boot.img bs=1k seek=128
-	dd if=linux/boot/$(KERNEL) of=spi-boot.img bs=1k seek=256
+	dd if=$(TARGET)-boot-spi.bin of=spi-boot.img bs=2k
+	dd if=$(TARGET)-boot-spi.bin of=spi-boot.img bs=2k seek=32 # Second copy on page 32
+	dd if=$(TARGET)-boot-spi.bin of=spi-boot.img bs=2k seek=64 # Third copy on page 64
+	# dd if=linux/boot/$(DTB) of=spi-boot.img bs=2k seek=128 # DTB on page 128
+	# dd if=linux/boot/$(KERNEL) of=spi-boot.img bs=2k seek=256 # Kernel on page 256

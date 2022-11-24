@@ -259,7 +259,7 @@ void sunxi_clk_dump()
 		p1 = 1;
 	    }
 
-	    debug("CPU freq=%u MHz\r\n", div((((reg32 >> 8) & 0xff) + 1) * 24, p1));
+	    debug("CPU freq: %u MHz\r\n", div((((reg32 >> 8) & 0xff) + 1) * 24, p1));
 
 //	} else {
 //	    debug("disabled\r\n");

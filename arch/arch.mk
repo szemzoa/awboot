@@ -13,5 +13,6 @@ SRCS	+=  $(SOC)/sunxi_gpio.c
 SRCS	+=  $(SOC)/sdcard.c
 SRCS	+=  $(SOC)/sunxi_sdhci.c
 SRCS	+=  $(SOC)/sunxi_clk.c
+SRCS	+=  $(SOC)/exception.c
 ASRCS	+=  $(SOC)/start.S
 

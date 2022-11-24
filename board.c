@@ -74,8 +74,8 @@ gpio_t	led_blue = GPIO_PIN(PORTD, 22);
 
 void board_init_led(gpio_t led)
 {
-        sunxi_gpio_init(led, GPIO_OUTPUT);
-        sunxi_gpio_set_value(led, 0);
+	sunxi_gpio_init(led, GPIO_OUTPUT);
+	sunxi_gpio_set_value(led, 0);
 }
 
 int board_sdhci_init()

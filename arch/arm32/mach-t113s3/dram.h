@@ -26,6 +26,8 @@
 #ifndef  __dram_head_h__
 #define  __dram_head_h__
 
+#define SDRAM_BASE (0x40000000)
+
 typedef struct __DRAM_PARA
 {
 	//normal configuration
@@ -62,7 +64,7 @@ typedef struct __DRAM_PARA
 
 }dram_para_t;
 
-extern int init_DRAM( int type, dram_para_t *buff );
+int init_DRAM(int type, dram_para_t *para);
 
 #endif
 

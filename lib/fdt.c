@@ -30,39 +30,36 @@
 #include "fdt.h"
 #include "debug.h"
 
-/* see linux document: ./Documentation/devicetree/booting-without-of.txt */
-#define OF_DT_MAGIC	0xd00dfeed
-
 #define OF_DT_TOKEN_NODE_BEGIN	0x00000001 /* Start node */
 #define OF_DT_TOKEN_NODE_END	0x00000002 /* End node */
 #define OF_DT_TOKEN_PROP	0x00000003 /* Property */
 #define OF_DT_TOKEN_NOP		0x00000004
 #define OF_DT_END		0x00000009
 
-static inline unsigned int of_get_magic_number(void *blob)
+inline unsigned int of_get_magic_number(void *blob)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	return swap_uint32(header->magic_number);
 }
 
 static inline unsigned int of_get_format_version(void *blob)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	return swap_uint32(header->format_version);
 }
 
 static inline unsigned int of_get_offset_dt_strings(void *blob)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	return swap_uint32(header->offset_dt_strings);
 }
 
 static inline void of_set_offset_dt_strings(void *blob, unsigned int offset)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	header->offset_dt_strings = swap_uint32(offset);
 }
@@ -75,7 +72,7 @@ static inline char *of_get_string_by_offset(void *blob, unsigned int offset)
 
 static inline unsigned int of_get_offset_dt_struct(void *blob)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	return swap_uint32(header->offset_dt_struct);
 }
@@ -87,42 +84,42 @@ static inline unsigned int of_dt_struct_offset(void *blob, unsigned int offset)
 
 unsigned int of_get_dt_total_size(void *blob)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	return swap_uint32(header->total_size);
 }
 
 static inline void of_set_dt_total_size(void *blob, unsigned int size)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	header->total_size = swap_uint32(size);
 }
 
 static inline unsigned int of_get_dt_strings_len(void *blob)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	return swap_uint32(header->dt_strings_len);
 }
 
 static inline void of_set_dt_strings_len(void *blob, unsigned int len)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	header->dt_strings_len = swap_uint32(len);
 }
 
 static inline unsigned int of_get_dt_struct_len(void *blob)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	return swap_uint32(header->dt_struct_len);
 }
 
 static inline void of_set_dt_struct_len(void *blob, unsigned int len)
 {
-	struct boot_param_header *header = (struct boot_param_header *)blob;
+	boot_param_header_t *header = (boot_param_header_t *)blob;
 
 	header->dt_struct_len = swap_uint32(len);
 }
