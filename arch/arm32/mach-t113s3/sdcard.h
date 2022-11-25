@@ -155,7 +155,7 @@ typedef struct {
 	uint32_t rca;
 	uint32_t cid[4];
 	uint32_t csd[4];
-	uint8_t  extcsd[512];
+	uint8_t	 extcsd[512];
 
 	uint32_t high_capacity;
 	uint32_t tran_speed;
@@ -167,14 +167,14 @@ typedef struct {
 
 typedef struct {
 	sdcard_t card;
-	sdhci_t  *hci;
-	uint8_t     buf[512];
-	bool_t   online;
+	sdhci_t *hci;
+	uint8_t	 buf[512];
+	bool_t	 online;
 } sdcard_pdata_t;
 
 extern sdcard_pdata_t sdcard0;
 
-int sdcard_init(sdcard_pdata_t *data, sdhci_t *hci);
+int		 sdcard_init(sdcard_pdata_t *data, sdhci_t *hci);
 uint64_t sdcard_blk_read(sdcard_pdata_t *data, uint8_t *buf, uint64_t blkno, uint64_t blkcnt);
 
 #endif /* __SDCARD_H__ */

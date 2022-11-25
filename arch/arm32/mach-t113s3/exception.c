@@ -38,55 +38,55 @@ struct arm_regs_t {
 	uint32_t pc;
 };
 
-static void show_regs(struct arm_regs_t * regs)
+static void show_regs(struct arm_regs_t *regs)
 {
 	int i;
 
 	error("pc : [<%08lx>] lr : [<%08lx>] cpsr: %08lx\r\n", regs->pc, regs->lr, regs->cpsr);
 	error("sp : %08lx esp : %08lx\r\n", regs->sp, regs->esp);
-	for(i = 12; i >= 0; i--)
+	for (i = 12; i >= 0; i--)
 		error("r%-2d: %08lx\r\n", i, regs->r[i]);
 	error("\r\n");
 }
 
-void arm32_do_undefined_instruction(struct arm_regs_t * regs)
+void arm32_do_undefined_instruction(struct arm_regs_t *regs)
 {
 	show_regs(regs);
 	// regs->pc += 4;
-  fatal("undefined_instruction\r\n");
+	fatal("undefined_instruction\r\n");
 }
 
-void arm32_do_software_interrupt(struct arm_regs_t * regs)
+void arm32_do_software_interrupt(struct arm_regs_t *regs)
 {
 	show_regs(regs);
 	// regs->pc += 4;
-  fatal("software_interrupt\r\n");
+	fatal("software_interrupt\r\n");
 }
 
-void arm32_do_prefetch_abort(struct arm_regs_t * regs)
+void arm32_do_prefetch_abort(struct arm_regs_t *regs)
 {
 	show_regs(regs);
 	// regs->pc += 4;
-  fatal("prefetch_abort\r\n");
+	fatal("prefetch_abort\r\n");
 }
 
-void arm32_do_data_abort(struct arm_regs_t * regs)
+void arm32_do_data_abort(struct arm_regs_t *regs)
 {
 	show_regs(regs);
 	// regs->pc += 4;
-  fatal("data_abort\r\n");
+	fatal("data_abort\r\n");
 }
 
-void arm32_do_irq(struct arm_regs_t * regs)
+void arm32_do_irq(struct arm_regs_t *regs)
 {
 	show_regs(regs);
 	// regs->pc += 4;
-  fatal("undefined IRQ\r\n");
+	fatal("undefined IRQ\r\n");
 }
 
-void arm32_do_fiq(struct arm_regs_t * regs)
+void arm32_do_fiq(struct arm_regs_t *regs)
 {
 	show_regs(regs);
 	// regs->pc += 4;
-  fatal("undefined FIQ\r\n");
+	fatal("undefined FIQ\r\n");
 }

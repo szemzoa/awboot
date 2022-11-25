@@ -15,13 +15,13 @@ void sunxi_usart_init(sunxi_usart_t *usart)
 
 	/* Open the clock gate for usart */
 	addr = T113_CCU_BASE + CCU_USART_BGR_REG;
-	val = read32(addr);
+	val	 = read32(addr);
 	val |= 1 << usart->id;
 	write32(addr, val);
 
 	/* Deassert USART reset */
 	addr = T113_CCU_BASE + CCU_USART_BGR_REG;
-	val = read32(addr);
+	val	 = read32(addr);
 	val |= 1 << (16 + usart->id);
 	write32(addr, val);
 
@@ -42,14 +42,15 @@ void sunxi_usart_init(sunxi_usart_t *usart)
 	val &= ~0x1f;
 	val |= (0x3 << 0) | (0 << 2) | (0x0 << 3);
 	write32(addr + 0x0c, val);
-
 }
 
 void sunxi_usart_putc(void *arg, char c)
 {
-    sunxi_usart_t *usart = (sunxi_usart_t *)arg;
+	sunxi_usart_t *usart = (sunxi_usart_t *)arg;
 
-	while((read32(usart->base + 0x7c) & (0x1 << 1)) == 0);
+	while ((read32(usart->base + 0x7c) & (0x1 << 1)) == 0)
+		;
 	write32(usart->base + 0x00, c);
-	while((read32(usart->base + 0x7c) & (0x1 << 0)) == 1);
+	while ((read32(usart->base + 0x7c) & (0x1 << 0)) == 1)
+		;
 }

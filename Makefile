@@ -52,7 +52,7 @@ KERNEL ?= zImage
 
 LBC_VERSION = $(shell grep LBC_APP_VERSION main.h | cut -d '"' -f 2)"-"$(shell /bin/cat .build_revision)
 
-all: begin build_revision build mkboot
+all: git begin build_revision build mkboot
 
 begin:
 	@echo "---------------------------------------------------------------"
@@ -71,6 +71,9 @@ build_revision:
 
 .PHONY: tools boot.img
 .SILENT:
+
+git:
+	cp -f tools/hooks/* .git/hooks/
 
 build: $(TARGET)-boot.elf $(TARGET)-boot.bin $(TARGET)-fel.elf $(TARGET)-fel.bin
 #$(STRIP) $(TARGET)
@@ -115,7 +118,7 @@ clean:
 	$(MAKE) -C tools clean
 
 format:
-	find . -iname "*.h" -o -iname "*.c" | xargs clang-format -i
+	find . -iname "*.h" -o -iname "*.c" | xargs clang-format --verbose -i
 
 tools:
 	$(MAKE) -C tools all

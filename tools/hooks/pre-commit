@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -e
+
+for i in `git diff --name-only | grep -E ".+\.(h|hpp|c|cpp)$"`
+do
+  clang-format --verbose -i $i
+done
