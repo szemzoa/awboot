@@ -185,7 +185,7 @@ enum {
 #define SDXC_SEND_AUTO_STOPCCSD	  (1 << 9)
 #define SDXC_CEATA_DEV_IRQ_ENABLE (1 << 10)
 
-extern uint32_t get_sys_ticks();
+extern uint32_t time_ms();
 
 static bool_t t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 {
@@ -196,10 +196,10 @@ static bool_t t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_
 	trace("SMHC: CMD%u 0x%x dlen:%u\r\n", cmd->idx, cmd->arg, dat ? dat->blkcnt * dat->blksz : 0);
 
 	if (cmd->idx == MMC_STOP_TRANSMISSION) {
-		timeout = get_sys_ticks();
+		timeout = time_ms();
 		do {
 			status = read32(pdat->addr + SD_STAR);
-			if (get_sys_ticks() - timeout > 10) {
+			if (time_ms() - timeout > 10) {
 				write32(pdat->addr + SD_GCTL, SDXC_HARDWARE_RESET);
 				write32(pdat->addr + SD_RISR, 0xffffffff);
 				warning("SMHC: stop timeout\r\n");
@@ -232,10 +232,10 @@ static bool_t t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_
 		write32(pdat->addr + SD_GCTL, read32(pdat->addr + SD_GCTL) | 0x80000000);
 	write32(pdat->addr + SD_CMDR, cmdval | cmd->idx);
 
-	timeout = get_sys_ticks();
+	timeout = time_ms();
 	do {
 		status = read32(pdat->addr + SD_RISR);
-		if ((get_sys_ticks() - timeout > 10) || (status & SDXC_INTERRUPT_ERROR_BIT)) {
+		if ((time_ms() - timeout > 10) || (status & SDXC_INTERRUPT_ERROR_BIT)) {
 			write32(pdat->addr + SD_GCTL, SDXC_HARDWARE_RESET);
 			write32(pdat->addr + SD_RISR, 0xffffffff);
 			warning("SMHC: timeout\r\n");
@@ -244,10 +244,10 @@ static bool_t t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_
 	} while (!(status & SDXC_COMMAND_DONE));
 
 	if (cmd->resptype & MMC_RSP_BUSY) {
-		timeout = get_sys_ticks();
+		timeout = time_ms();
 		do {
 			status = read32(pdat->addr + SD_STAR);
-			if (get_sys_ticks() - timeout > 10) {
+			if (time_ms() - timeout > 10) {
 				write32(pdat->addr + SD_GCTL, SDXC_HARDWARE_RESET);
 				write32(pdat->addr + SD_RISR, 0xffffffff);
 				warning("SMHC: response timeout\r\n");
@@ -407,9 +407,9 @@ static bool_t sdhci_t113_update_clk(sdhci_t *pdat)
 	uint32_t cmd = (1U << 31) | (1 << 21) | (1 << 13);
 
 	write32(pdat->addr + SD_CMDR, cmd);
-	uint32_t timeout = get_sys_ticks();
+	uint32_t timeout = time_ms();
 	do {
-		if (get_sys_ticks() - timeout > 10)
+		if (time_ms() - timeout > 10)
 			return FALSE;
 	} while (read32(pdat->addr + SD_CMDR) & 0x80000000);
 	write32(pdat->addr + SD_RISR, read32(pdat->addr + SD_RISR));

@@ -13,7 +13,7 @@
  * 64bit arch timer.CNTPCT
  * Freq = 24000000Hz
  */
-static inline uint64_t get_arch_counter(void)
+int64_t get_arch_counter(void)
 {
 	uint32_t low = 0, high = 0;
 	asm volatile("mrrc p15, 0, %0, %1, c14" : "=r"(low), "=r"(high) : : "memory");
@@ -23,9 +23,17 @@ static inline uint64_t get_arch_counter(void)
 /*
  * get current time.(millisecond)
  */
-uint32_t get_sys_ticks(void)
+uint32_t time_ms(void)
 {
 	return (uint32_t)get_arch_counter() / 24000;
+}
+
+/*
+ * get current time.(microsecond)
+ */
+uint64_t time_us(void)
+{
+	return (uint32_t)get_arch_counter() / 24;
 }
 
 void udelay(unsigned long us)

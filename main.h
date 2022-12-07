@@ -48,7 +48,12 @@ typedef struct {
 	char of_filename[FILENAME_MAX_LEN];
 } image_info_t;
 
-extern void udelay(unsigned long us);
-extern void sdelay(unsigned long loops);
+void	 udelay(unsigned long us);
+void	 sdelay(unsigned long loops);
+uint32_t time_ms(void);
+uint64_t time_us(void);
+int64_t	 get_arch_counter(void);
+void	 init_sp_irq(uint32_t addr);
+void	 reset();
 
 #endif
