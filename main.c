@@ -183,7 +183,8 @@ int main(void)
 
 	board_init();
 
-	info("AWBoot starting\r\n");
+	message("\r\n");
+	info("AWBoot r%u starting\r\n", (u32)BUILD_REVISION);
 	sunxi_clk_init();
 
 	/* ?? */
