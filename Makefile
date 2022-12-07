@@ -5,7 +5,7 @@ CROSS_COMPILE ?= arm-none-eabi
 # Log level defaults to info
 LOG_LEVEL ?= 30
 
-SRCS := main.c board.c lib/debug.c lib/xformat.c lib/div.c lib/fdt.c lib/string.c
+SRCS := main.c board.c lib/debug.c lib/xformat.c lib/fdt.c lib/string.c
 
 INCLUDE_DIRS :=-I . -I include -I lib
 LIB_DIR := -L ./

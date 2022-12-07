@@ -29,8 +29,6 @@
  *
  */
 #include "xformat.h"
-#include "div.h"
-
 /**
  * Default largest int is long
  */
@@ -290,9 +288,9 @@ static void ulong2a(struct param_s *param)
 			default:
 			case 10:
 				//				digit = param->values.lvalue % 10;
-				digit = mod(param->values.lvalue, 10);
+				digit = param->values.lvalue % 10;
 				//				param->values.lvalue /= 10;
-				param->values.lvalue = div(param->values.lvalue, 10);
+				param->values.lvalue = param->values.lvalue / 10;
 				break;
 		}
 

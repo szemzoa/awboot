@@ -3,7 +3,6 @@
 #include <inttypes.h>
 #include "dram.h"
 #include "debug.h"
-#include "div.h"
 #include "main.h"
 
 char *memcpy_self(char *dst, char *src, int len)
@@ -174,7 +173,7 @@ void eye_delay_compensation(dram_para_t *para) // s1
 int auto_cal_timing(unsigned int time, unsigned int freq)
 {
 	unsigned int t = time * freq;
-	return div(t, 1000) + (((mod(t, 1000)) != 0) ? 1 : 0);
+	return (t / 1000) + (((t % 1000) != 0) ? 1 : 0);
 }
 
 // Main purpose of the auto_set_timing routine seems to be to calculate all
@@ -1222,19 +1221,19 @@ int dramc_simple_wr_test(uint mem_mb, int len)
 		v1 = read32((virtual_addr_t)(addr + i));
 		v2 = patt1 + i;
 		if (v1 != v2) {
-			debug("DRAM simple test FAIL.\r\n");
+			debug("DRAM: simple test FAIL.\r\n");
 			trace("%x != %x at address %x\r\n", v1, v2, addr + i);
 			return 1;
 		}
 		v1 = read32((virtual_addr_t)(addr + offs + i));
 		v2 = patt2 + i;
 		if (v1 != v2) {
-			debug("DRAM simple test FAIL.\r\n");
+			debug("DRAM: simple test FAIL.\r\n");
 			trace("%x != %x at address %x\r\n", v1, v2, addr + offs + i);
 			return 1;
 		}
 	}
-	debug("DRAM simple test OK.\r\n");
+	debug("DRAM: simple test OK.\r\n");
 	return 0;
 }
 
@@ -1563,7 +1562,7 @@ int init_DRAM(int type, dram_para_t *para) // s0
 		rc = (rc & 0x7fff0000U) >> 16;
 	} else {
 		rc = DRAMC_get_dram_size();
-		debug("DRAM size: %dM\r\n", rc);
+		debug("DRAM: size=%dMB\r\n", rc);
 		para->dram_para2 = (para->dram_para2 & 0xffffu) | rc << 16;
 	}
 	mem_size = rc;
