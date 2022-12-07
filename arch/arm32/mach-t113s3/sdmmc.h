@@ -163,18 +163,18 @@ typedef struct {
 	uint32_t read_bl_len;
 	uint32_t write_bl_len;
 	uint64_t capacity;
-} sdcard_t;
+} sdmmc_t;
 
 typedef struct {
-	sdcard_t card;
+	sdmmc_t	 card;
 	sdhci_t *hci;
 	uint8_t	 buf[512];
 	bool_t	 online;
-} sdcard_pdata_t;
+} sdmmc_pdata_t;
 
-extern sdcard_pdata_t sdcard0;
+extern sdmmc_pdata_t card0;
 
-int		 sdcard_init(sdcard_pdata_t *data, sdhci_t *hci);
-uint64_t sdcard_blk_read(sdcard_pdata_t *data, uint8_t *buf, uint64_t blkno, uint64_t blkcnt);
+int		 sdmmc_init(sdmmc_pdata_t *data, sdhci_t *hci);
+uint64_t sdmmc_blk_read(sdmmc_pdata_t *data, uint8_t *buf, uint64_t blkno, uint64_t blkcnt);
 
 #endif /* __SDCARD_H__ */

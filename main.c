@@ -6,7 +6,7 @@
 #include "sunxi_spi.h"
 #include "sunxi_clk.h"
 #include "sunxi_dma.h"
-#include "sdcard.h"
+#include "sdmmc.h"
 #include "arm32.h"
 #include "reg-ccu.h"
 #include "debug.h"
@@ -201,7 +201,7 @@ int main(void)
 	} else {
 		info("SMHC: %s controller initialized\r\n", sdhci0.name);
 	}
-	if (sdcard_init(&sdcard0, &sdhci0) != 0) {
+	if (sdmmc_init(&card0, &sdhci0) != 0) {
 #ifdef CONFIG_BOOT_SPINAND
 		warning("SMHC: init failed, trying SPI\r\n");
 		goto _spi;

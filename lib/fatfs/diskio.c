@@ -10,7 +10,7 @@
 #include "media.h"
 
 #include "main.h"
-#include "sdcard.h"
+#include "sdmmc.h"
 #include "debug.h"
 
 //------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ DRESULT disk_read(BYTE	drv, /* Physical drive nmuber to identify the drive */
 	blk	   = sector;
 	blkcnt = count;
 
-	blkread = sdcard_blk_read(&sdcard0, buff, blk, blkcnt);
+	blkread = sdmmc_blk_read(&card0, buff, blk, blkcnt);
 
 	if (blkread == blkcnt)
 		return RES_OK;

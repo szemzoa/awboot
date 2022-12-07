@@ -4,7 +4,7 @@
 #include "sunxi_sdhci.h"
 #include "sunxi_usart.h"
 #include "sunxi_spi.h"
-#include "sdcard.h"
+#include "sdmmc.h"
 
 dram_para_t ddr_param = {
 	.dram_clk	 = 792,
@@ -80,7 +80,7 @@ void board_init_led(gpio_t led)
 int board_sdhci_init()
 {
 	sunxi_sdhci_init(&sdhci0);
-	return sdcard_init(&sdcard0, &sdhci0);
+	return sdmmc_init(&card0, &sdhci0);
 }
 
 void board_init()

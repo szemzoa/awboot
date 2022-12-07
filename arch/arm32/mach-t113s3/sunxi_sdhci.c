@@ -27,8 +27,7 @@
  */
 
 #include "main.h"
-#include "div.h"
-#include "sdcard.h"
+#include "sdmmc.h"
 #include "debug.h"
 #include "sunxi_sdhci.h"
 #include "sunxi_gpio.h"
@@ -185,7 +184,7 @@ enum {
 #define SDXC_SEND_AUTO_STOPCCSD	  (1 << 9)
 #define SDXC_CEATA_DEV_IRQ_ENABLE (1 << 10)
 
-extern uint32_t time_ms();
+extern uint32_t get_sys_ticks();
 
 static bool_t t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 {
@@ -238,7 +237,7 @@ static bool_t t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_
 		if ((time_ms() - timeout > 10) || (status & SDXC_INTERRUPT_ERROR_BIT)) {
 			write32(pdat->addr + SD_GCTL, SDXC_HARDWARE_RESET);
 			write32(pdat->addr + SD_RISR, 0xffffffff);
-			warning("SMHC: timeout\r\n");
+			warning("SMHC: transfer timeout\r\n");
 			return FALSE;
 		}
 	} while (!(status & SDXC_COMMAND_DONE));
@@ -418,9 +417,13 @@ static bool_t sdhci_t113_update_clk(sdhci_t *pdat)
 
 bool_t sdhci_set_clock(sdhci_t *sdhci, uint32_t clock)
 {
-	uint32_t ratio = div(sdhci->pclk + 2 * clock - 1, (2 * clock));
+	uint32_t ratio = (sdhci->pclk + 2 * clock - 1 / (2 * clock));
 
-	trace("SMHC: set clock at %uHz\r\n", clock);
+	if (clock <= 1000000) {
+		debug("SMHC: set clock at %uKHz\r\n", clock / 1000);
+	} else {
+		debug("SMHC: set clock at %uMHz\r\n", clock / 1000000);
+	}
 
 	if ((ratio & 0xff) != ratio)
 		return FALSE;
@@ -475,7 +478,7 @@ int sunxi_sdhci_init(sdhci_t *sdhci)
 	val |= (1 << 31) | (1 << 24) | 11; /* 50MHz */
 	write32(addr, val);
 
-	sdhci->pclk = div(sunxi_clk_get_peri1x_rate(), 12);
+	sdhci->pclk = sunxi_clk_get_peri1x_rate() / 12;
 
 	/* sdhc0 clock gate pass */
 	addr = 0x0200184c;

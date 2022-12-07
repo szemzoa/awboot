@@ -29,12 +29,13 @@
 #include "main.h"
 #include "debug.h"
 #include "sunxi_sdhci.h"
-#include "sdcard.h"
+#include "sdmmc.h"
+#include "board.h"
 
 #define FALSE 0
 #define TRUE  1
 
-sdcard_pdata_t sdcard0;
+sdmmc_pdata_t card0;
 
 #define UNSTUFF_BITS(resp, start, size)                              \
 	({                                                               \
@@ -73,7 +74,7 @@ static bool_t go_idle_state(sdhci_t *hci)
 	return sdhci_transfer(hci, &cmd, NULL);
 }
 
-static bool_t sd_send_if_cond(sdhci_t *hci, sdcard_t *card)
+static bool_t sd_send_if_cond(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd = {0};
 
@@ -95,7 +96,7 @@ static bool_t sd_send_if_cond(sdhci_t *hci, sdcard_t *card)
 	return TRUE;
 }
 
-static bool_t sd_send_op_cond(sdhci_t *hci, sdcard_t *card)
+static bool_t sd_send_op_cond(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd		= {0};
 	int			retries = 50;
@@ -153,21 +154,27 @@ static bool_t sd_send_op_cond(sdhci_t *hci, sdcard_t *card)
 	return TRUE;
 }
 
-static bool_t mmc_send_op_cond(sdhci_t *hci, sdcard_t *card)
+static bool_t mmc_send_op_cond(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd		= {0};
-	int			retries = 100;
+	int			retries = 50;
+
+	cmd.idx		 = MMC_SEND_OP_COND;
+	cmd.resptype = MMC_RSP_R3;
+	if (hci->voltage == MMC_VDD_27_36) {
+		cmd.arg = 0x40FF8000; // Sector access mode, 2.7-3.6v VCCQ
+	} else if (hci->voltage == MMC_VDD_165_195) {
+		cmd.arg = 0x40FF0080; // Sector access mode, 1.65-1.95v VCCQ
+	}
 
 	do {
-		cmd.idx			= MMC_SEND_OP_COND;
-		cmd.resptype	= MMC_RSP_R3;
-		cmd.arg			= 0xC0FF8080; // size > 2GB mode, mandatory for Samsung
 		cmd.response[0] = 0;
 		if (!sdhci_transfer(hci, &cmd, NULL)) {
 			return FALSE;
 		}
 		udelay(5000);
 	} while (!(cmd.response[0] & OCR_BUSY) && retries--);
+	debug("SHMC: op_cond 0x%x\r\n", cmd.response[0]);
 
 	if (retries <= 0)
 		return FALSE;
@@ -186,7 +193,7 @@ static bool_t mmc_send_op_cond(sdhci_t *hci, sdcard_t *card)
 	return TRUE;
 }
 
-static int mmc_status(sdhci_t *hci, sdcard_t *card)
+static int mmc_status(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd		= {0};
 	int			retries = 100;
@@ -207,7 +214,7 @@ static int mmc_status(sdhci_t *hci, sdcard_t *card)
 	return -1;
 }
 
-uint64_t mmc_read_blocks(sdhci_t *hci, sdcard_t *card, uint8_t *buf, uint64_t start, uint64_t blkcnt)
+uint64_t mmc_read_blocks(sdhci_t *hci, sdmmc_t *card, uint8_t *buf, uint64_t start, uint64_t blkcnt)
 {
 	sdhci_cmd_t	 cmd = {0};
 	sdhci_data_t dat = {0};
@@ -253,7 +260,7 @@ uint64_t mmc_read_blocks(sdhci_t *hci, sdcard_t *card, uint8_t *buf, uint64_t st
 	return blkcnt;
 }
 
-static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
+static bool_t sdmmc_detect(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t	 cmd = {0};
 	sdhci_data_t dat = {0};
@@ -270,20 +277,50 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		error("SMHC: set idle state failed\r\n");
 		return FALSE;
 	}
-	udelay(5000); // 1ms + 74 clocks @ 400KHz
+	udelay(2000); // 1ms + 74 clocks @ 400KHz (185us)
 
+// Both SD & MMC: try SD first
+// Only SD: ignore MMC
+#ifdef CONFIG_BOOT_SDCARD
 	if (!sd_send_op_cond(hci, card)) {
 		debug("SMHC: SD detect failed\r\n");
-
+#ifdef CONFIG_BOOT_MMC
 		sdhci_reset(hci);
 		sdhci_set_clock(hci, 400 * 1000);
 		sdhci_set_width(hci, MMC_BUS_WIDTH_1);
+
+		if (!go_idle_state(hci)) {
+			error("SMHC: set idle state failed\r\n");
+			return FALSE;
+		}
+		udelay(2000); // 1ms + 74 clocks @ 400KHz (185us)
 
 		if (!mmc_send_op_cond(hci, card)) {
 			debug("SMHC: MMC detect failed\r\n");
 			return FALSE;
 		}
+#else
+		return FALSE;
+#endif
 	}
+// Only MMC
+#elif defined(CONFIG_BOOT_MMC)
+	// Workaround for eMMC starting in alternative boot mode
+	sdhci_reset(hci);
+	sdhci_set_clock(hci, 400 * 1000);
+	sdhci_set_width(hci, MMC_BUS_WIDTH_1);
+
+	if (!go_idle_state(hci)) {
+		error("SMHC: set idle state failed\r\n");
+		return FALSE;
+	}
+	udelay(2000); // 1ms + 74 clocks @ 400KHz (185us)
+
+	if (!mmc_send_op_cond(hci, card)) {
+		debug("SMHC: MMC detect failed\r\n");
+		return FALSE;
+	}
+#endif
 
 	if (hci->isspi) {
 		cmd.idx		 = MMC_SEND_CID;
@@ -385,13 +422,14 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		card->write_bl_len = 512;
 
 	if ((card->version & MMC_VERSION_MMC) && (card->version >= MMC_VERSION_4)) {
-		cmd.idx		 = MMC_SEND_EXT_CSD;
-		cmd.arg		 = 0;
-		cmd.resptype = MMC_RSP_R1;
-		dat.buf		 = card->extcsd;
-		dat.flag	 = MMC_DATA_READ;
-		dat.blksz	 = 512;
-		dat.blkcnt	 = 1;
+		card->tran_speed = 52000000;
+		cmd.idx			 = MMC_SEND_EXT_CSD;
+		cmd.arg			 = 0;
+		cmd.resptype	 = MMC_RSP_R1;
+		dat.buf			 = card->extcsd;
+		dat.flag		 = MMC_DATA_READ;
+		dat.blksz		 = 512;
+		dat.blkcnt		 = 1;
 		if (!sdhci_transfer(hci, &cmd, &dat))
 			return FALSE;
 		if (!hci->isspi) {
@@ -451,7 +489,7 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		card->capacity = (csize + 1) << (cmult + 2);
 	}
 	card->capacity *= 1 << UNSTUFF_BITS(card->csd, 80, 4);
-	debug("SMHC: capacity %luGB\r\n", (uint32_t)(card->capacity / 1024u / 1024u / 1024u));
+	debug("SMHC: capacity %luGB\r\n", (uint32_t)(card->capacity / 1000000000llu));
 
 	if (hci->isspi) {
 		sdhci_set_clock(hci, min(card->tran_speed, hci->clock));
@@ -507,10 +545,10 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 	return TRUE;
 }
 
-uint64_t sdcard_blk_read(sdcard_pdata_t *data, uint8_t *buf, uint64_t blkno, uint64_t blkcnt)
+uint64_t sdmmc_blk_read(sdmmc_pdata_t *data, uint8_t *buf, uint64_t blkno, uint64_t blkcnt)
 {
-	uint64_t  cnt, blks = blkcnt;
-	sdcard_t *sdcard = &data->card;
+	uint64_t cnt, blks = blkcnt;
+	sdmmc_t *sdcard = &data->card;
 
 	while (blks > 0) {
 		cnt = (blks > 127) ? 127 : blks;
@@ -523,12 +561,12 @@ uint64_t sdcard_blk_read(sdcard_pdata_t *data, uint8_t *buf, uint64_t blkno, uin
 	return blkcnt;
 }
 
-int sdcard_init(sdcard_pdata_t *data, sdhci_t *hci)
+int sdmmc_init(sdmmc_pdata_t *data, sdhci_t *hci)
 {
 	data->hci	 = hci;
 	data->online = FALSE;
 
-	if (sdcard_detect(data->hci, &data->card) == TRUE) {
+	if (sdmmc_detect(data->hci, &data->card) == TRUE) {
 		info("SHMC: %s card detected\r\n", data->card.version & SD_VERSION_SD ? "SD" : "MMC");
 		return 0;
 	}
