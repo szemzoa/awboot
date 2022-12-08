@@ -166,8 +166,7 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 
 int main(void)
 {
-	unsigned int entry_point;
-	uint32_t	 reg32;
+	unsigned int entry_point = 0;
 	void (*kernel_entry)(int zero, int arch, unsigned int params);
 
 	board_init();

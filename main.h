@@ -50,6 +50,7 @@ typedef struct {
 } image_info_t;
 
 void	 udelay(uint64_t us);
+void	 mdelay(uint32_t ms);
 void	 sdelay(uint32_t loops);
 uint32_t time_ms(void);
 uint64_t time_us(void);

@@ -38,48 +38,6 @@
 #define FALSE 0
 #define TRUE  1
 
-enum {
-	SD_GCTL		 = 0x00,
-	SD_CKCR		 = 0x04,
-	SD_TMOR		 = 0x08,
-	SD_BWDR		 = 0x0c,
-	SD_BKSR		 = 0x10,
-	SD_BYCR		 = 0x14,
-	SD_CMDR		 = 0x18,
-	SD_CAGR		 = 0x1c,
-	SD_RESP0	 = 0x20,
-	SD_RESP1	 = 0x24,
-	SD_RESP2	 = 0x28,
-	SD_RESP3	 = 0x2c,
-	SD_IMKR		 = 0x30,
-	SD_MISR		 = 0x34,
-	SD_RISR		 = 0x38,
-	SD_STAR		 = 0x3c,
-	SD_FWLR		 = 0x40,
-	SD_FUNS		 = 0x44,
-	SD_A12A		 = 0x58,
-	SD_NTSR		 = 0x5c,
-	SD_SDBG		 = 0x60,
-	SD_HWRST	 = 0x78,
-	SD_DMAC		 = 0x80,
-	SD_DLBA		 = 0x84,
-	SD_IDST		 = 0x88,
-	SD_IDIE		 = 0x8c,
-	SD_THLDC	 = 0x100,
-	SD_DSBD		 = 0x10c,
-	SD_RES_CRC	 = 0x110,
-	SD_DATA7_CRC = 0x114,
-	SD_DATA6_CRC = 0x118,
-	SD_DATA5_CRC = 0x11c,
-	SD_DATA4_CRC = 0x120,
-	SD_DATA3_CRC = 0x124,
-	SD_DATA2_CRC = 0x128,
-	SD_DATA1_CRC = 0x12c,
-	SD_DATA0_CRC = 0x130,
-	SD_CRC_STA	 = 0x134,
-	SD_FIFO		 = 0x200,
-};
-
 /*
  * Global control register bits
  */
@@ -108,7 +66,6 @@ enum {
  */
 #define SDXC_WIDTH1 (0)
 #define SDXC_WIDTH4 (1)
-#define SDXC_WIDTH8 (2)
 
 /*
  * Smc command bits
@@ -184,7 +141,7 @@ enum {
 #define SDXC_SEND_AUTO_STOPCCSD	  (1 << 9)
 #define SDXC_CEATA_DEV_IRQ_ENABLE (1 << 10)
 
-static bool t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t *dat)
+static bool t113_transfer_command(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 {
 	uint32_t cmdval = SDXC_START;
 	uint32_t status = 0;
@@ -195,10 +152,10 @@ static bool t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t 
 	if (cmd->idx == MMC_STOP_TRANSMISSION) {
 		timeout = time_ms();
 		do {
-			status = read32(pdat->addr + SD_STAR);
+			status = sdhci->reg->status;
 			if (time_ms() - timeout > 10) {
-				write32(pdat->addr + SD_GCTL, SDXC_HARDWARE_RESET);
-				write32(pdat->addr + SD_RISR, 0xffffffff);
+				sdhci->reg->gctrl = SDXC_HARDWARE_RESET;
+				sdhci->reg->rint  = 0xffffffff;
 				warning("SMHC: stop timeout\r\n");
 				return FALSE;
 			}
@@ -223,18 +180,18 @@ static bool t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t 
 	if (cmd->idx == MMC_WRITE_MULTIPLE_BLOCK || cmd->idx == MMC_READ_MULTIPLE_BLOCK)
 		cmdval |= SDXC_SEND_AUTO_STOP;
 
-	write32(pdat->addr + SD_CAGR, cmd->arg);
+	sdhci->reg->arg = cmd->arg;
 
 	if (dat)
-		write32(pdat->addr + SD_GCTL, read32(pdat->addr + SD_GCTL) | 0x80000000);
-	write32(pdat->addr + SD_CMDR, cmdval | cmd->idx);
+		sdhci->reg->gctrl = sdhci->reg->gctrl | 0x80000000;
+	sdhci->reg->cmd = cmdval | cmd->idx;
 
 	timeout = time_ms();
 	do {
-		status = read32(pdat->addr + SD_RISR);
+		status = sdhci->reg->rint;
 		if ((time_ms() - timeout > 100) || (status & SDXC_INTERRUPT_ERROR_BIT)) {
-			write32(pdat->addr + SD_GCTL, SDXC_HARDWARE_RESET);
-			write32(pdat->addr + SD_RISR, 0xffffffff);
+			sdhci->reg->gctrl = SDXC_HARDWARE_RESET;
+			sdhci->reg->rint  = 0xffffffff;
 			warning("SMHC: transfer timeout\r\n");
 			return FALSE;
 		}
@@ -243,10 +200,10 @@ static bool t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t 
 	if (cmd->resptype & MMC_RSP_BUSY) {
 		timeout = time_ms();
 		do {
-			status = read32(pdat->addr + SD_STAR);
+			status = sdhci->reg->status;
 			if (time_ms() - timeout > 10) {
-				write32(pdat->addr + SD_GCTL, SDXC_HARDWARE_RESET);
-				write32(pdat->addr + SD_RISR, 0xffffffff);
+				sdhci->reg->gctrl = SDXC_HARDWARE_RESET;
+				sdhci->reg->rint  = 0xffffffff;
 				warning("SMHC: response timeout\r\n");
 				return FALSE;
 			}
@@ -254,20 +211,20 @@ static bool t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t 
 	}
 
 	if (cmd->resptype & MMC_RSP_136) {
-		cmd->response[0] = read32(pdat->addr + SD_RESP3);
-		cmd->response[1] = read32(pdat->addr + SD_RESP2);
-		cmd->response[2] = read32(pdat->addr + SD_RESP1);
-		cmd->response[3] = read32(pdat->addr + SD_RESP0);
+		cmd->response[0] = sdhci->reg->resp3;
+		cmd->response[1] = sdhci->reg->resp2;
+		cmd->response[2] = sdhci->reg->resp1;
+		cmd->response[3] = sdhci->reg->resp0;
 	} else {
-		cmd->response[0] = read32(pdat->addr + SD_RESP0);
+		cmd->response[0] = sdhci->reg->resp0;
 	}
 
-	write32(pdat->addr + SD_RISR, 0xffffffff);
+	sdhci->reg->rint = 0xffffffff;
 
 	return TRUE;
 }
 
-static bool read_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_t blksize)
+static bool read_bytes(sdhci_t *sdhci, uint32_t *buf, uint32_t blkcount, uint32_t blksize)
 {
 	uint64_t  count = blkcount * blksize;
 	uint32_t *tmp	= buf;
@@ -275,23 +232,23 @@ static bool read_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_t
 
 	trace("SMHC: read %u\r\n", blkcount * blksize);
 
-	status = read32(pdat->addr + SD_STAR);
-	err	   = read32(pdat->addr + SD_RISR) & SDXC_INTERRUPT_ERROR_BIT;
+	status = sdhci->reg->status;
+	err	   = sdhci->reg->rint & SDXC_INTERRUPT_ERROR_BIT;
 	if (err)
 		warning("SMHC: interrupt error 0x%x status 0x%x\r\n", err & SDXC_INTERRUPT_ERROR_BIT, status);
 
 	while ((!err) && (count >= sizeof(uint32_t))) {
 		if (!(status & SDXC_FIFO_EMPTY)) {
-			*(tmp) = read32(pdat->addr + SD_FIFO);
+			*(tmp) = sdhci->reg->fifo;
 			tmp++;
 			count -= sizeof(uint32_t);
 		}
-		status = read32(pdat->addr + SD_STAR);
-		err	   = read32(pdat->addr + SD_RISR) & SDXC_INTERRUPT_ERROR_BIT;
+		status = sdhci->reg->status;
+		err	   = sdhci->reg->rint & SDXC_INTERRUPT_ERROR_BIT;
 	}
 
 	do {
-		status = read32(pdat->addr + SD_RISR);
+		status = sdhci->reg->rint;
 
 		err = status & SDXC_INTERRUPT_ERROR_BIT;
 		if (blkcount > 1)
@@ -305,7 +262,7 @@ static bool read_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_t
 		warning("SMHC: interrupt error 0x%x status 0x%x\r\n", err & SDXC_INTERRUPT_ERROR_BIT, status);
 		return FALSE;
 	}
-	write32(pdat->addr + SD_RISR, 0xffffffff);
+	sdhci->reg->rint = 0xffffffff;
 
 	if (count) {
 		warning("SMHC: read %u leftover\r\n", count);
@@ -314,7 +271,7 @@ static bool read_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_t
 	return TRUE;
 }
 
-static bool write_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_t blksize)
+static bool write_bytes(sdhci_t *sdhci, uint32_t *buf, uint32_t blkcount, uint32_t blksize)
 {
 	uint64_t  count = blkcount * blksize;
 	uint32_t *tmp	= buf;
@@ -322,20 +279,20 @@ static bool write_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_
 
 	trace("SMHC: write %u\r\n", blkcount);
 
-	status = read32(pdat->addr + SD_STAR);
-	err	   = read32(pdat->addr + SD_RISR) & SDXC_INTERRUPT_ERROR_BIT;
+	status = sdhci->reg->status;
+	err	   = sdhci->reg->rint & SDXC_INTERRUPT_ERROR_BIT;
 	while (!err && count) {
 		if (!(status & SDXC_FIFO_FULL)) {
-			write32(pdat->addr + SD_FIFO, *tmp);
+			sdhci->reg->fifo = *tmp;
 			tmp++;
 			count -= sizeof(uint32_t);
 		}
-		status = read32(pdat->addr + SD_STAR);
-		err	   = read32(pdat->addr + SD_RISR) & SDXC_INTERRUPT_ERROR_BIT;
+		status = sdhci->reg->status;
+		err	   = sdhci->reg->rint & SDXC_INTERRUPT_ERROR_BIT;
 	}
 
 	do {
-		status = read32(pdat->addr + SD_RISR);
+		status = sdhci->reg->rint;
 		err	   = status & SDXC_INTERRUPT_ERROR_BIT;
 		if (blkcount > 1)
 			done = status & SDXC_AUTO_COMMAND_DONE;
@@ -345,91 +302,97 @@ static bool write_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_
 
 	if (err & SDXC_INTERRUPT_ERROR_BIT)
 		return FALSE;
-	write32(pdat->addr + SD_GCTL, read32(pdat->addr + SD_GCTL) | SDXC_FIFO_RESET);
-	write32(pdat->addr + SD_RISR, 0xffffffff);
+	sdhci->reg->gctrl |= SDXC_FIFO_RESET;
+	sdhci->reg->rint = 0xffffffff;
 
 	if (count)
 		return FALSE;
 	return TRUE;
 }
 
-static bool t113_transfer_data(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t *dat)
+static bool t113_transfer_data(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 {
 	uint32_t dlen = (uint32_t)(dat->blkcnt * dat->blksz);
 	bool	 ret  = FALSE;
 
-	write32(pdat->addr + SD_BKSR, dat->blksz);
-	write32(pdat->addr + SD_BYCR, dlen);
+	sdhci->reg->blksz	= dat->blksz;
+	sdhci->reg->bytecnt = dlen;
 
 	if (dat->flag & MMC_DATA_READ) {
-		if (!t113_transfer_command(pdat, cmd, dat))
+		if (!t113_transfer_command(sdhci, cmd, dat))
 			return FALSE;
-		ret = read_bytes(pdat, (uint32_t *)dat->buf, dat->blkcnt, dat->blksz);
+		ret = read_bytes(sdhci, (uint32_t *)dat->buf, dat->blkcnt, dat->blksz);
 	} else if (dat->flag & MMC_DATA_WRITE) {
-		if (!t113_transfer_command(pdat, cmd, dat))
+		if (!t113_transfer_command(sdhci, cmd, dat))
 			return FALSE;
-		ret = write_bytes(pdat, (uint32_t *)dat->buf, dat->blkcnt, dat->blksz);
+		ret = write_bytes(sdhci, (uint32_t *)dat->buf, dat->blkcnt, dat->blksz);
 	}
 	return ret;
 }
 
 bool sdhci_reset(sdhci_t *sdhci)
 {
-	write32(sdhci->addr + SD_GCTL, SDXC_HARDWARE_RESET);
+	sdhci->reg->gctrl = SDXC_HARDWARE_RESET;
 	return TRUE;
 }
 
 bool sdhci_set_width(sdhci_t *sdhci, uint32_t width)
 {
+	const char *mode = "1 bit";
 	switch (width) {
 		case MMC_BUS_WIDTH_1:
-			write32(sdhci->addr + SD_BWDR, SDXC_WIDTH1);
+			sdhci->reg->width = SDXC_WIDTH1;
+			sdhci->reg->gctrl &= ~SDXC_DDR_MODE;
 			break;
 		case MMC_BUS_WIDTH_4:
-			write32(sdhci->addr + SD_BWDR, SDXC_WIDTH4);
+			sdhci->reg->width = SDXC_WIDTH4;
+			sdhci->reg->gctrl &= ~SDXC_DDR_MODE;
+			mode = "4 bit";
 			break;
-		case MMC_BUS_WIDTH_8:
-			write32(sdhci->addr + SD_BWDR, SDXC_WIDTH8);
+		case MMC_BUS_WIDTH_4_DDR:
+			sdhci->reg->width = SDXC_WIDTH4;
+			sdhci->reg->gctrl |= SDXC_DDR_MODE;
+			mode = "4 bit DDR";
 			break;
 		default:
-			error("SMHC: %u bit width invalid\r\n", width);
+			error("SMHC: %u width value invalid\r\n", width);
 			return FALSE;
 	}
-	trace("SMHC: set %u bit mode\r\n", width);
+	trace("SMHC: set width to %s\r\n", mode);
 	return TRUE;
 }
 
-static bool sdhci_t113_update_clk(sdhci_t *pdat)
+static bool sdhci_t113_update_clk(sdhci_t *sdhci)
 {
 	uint32_t cmd = (1U << 31) | (1 << 21) | (1 << 13);
 
-	write32(pdat->addr + SD_CMDR, cmd);
+	sdhci->reg->cmd	 = cmd;
 	uint32_t timeout = time_ms();
 	do {
 		if (time_ms() - timeout > 10)
 			return FALSE;
-	} while (read32(pdat->addr + SD_CMDR) & 0x80000000);
-	write32(pdat->addr + SD_RISR, read32(pdat->addr + SD_RISR));
+	} while (sdhci->reg->cmd & 0x80000000);
+	sdhci->reg->rint = sdhci->reg->rint;
 	return TRUE;
 }
 
 bool sdhci_set_clock(sdhci_t *sdhci, uint32_t clock)
 {
-	uint32_t ratio = (sdhci->pclk / (clock));
+	uint32_t ratio = (sdhci->pclk / clock);
 
 	if (clock <= 1000000) {
-		trace("SMHC: set clock at %uKHz (%u/%u)\r\n", clock / 1000, sdhci->pclk, ratio);
+		trace("SMHC: set clock to %.2fKHz\r\n", (f32)((f32)clock / 1000.0));
 	} else {
-		trace("SMHC: set clock at %uMHz (%u/%u)\r\n", clock / 1000000, sdhci->pclk, ratio);
+		trace("SMHC: set clock to %.2fMHz\r\n", (f32)((f32)clock / 1000000.0));
 	}
 
 	if ((ratio & 0xff) != ratio)
 		return FALSE;
-	write32(sdhci->addr + SD_CKCR, read32(sdhci->addr + SD_CKCR) & ~(1 << 16));
-	write32(sdhci->addr + SD_CKCR, ratio & 0xff);
+	sdhci->reg->clkcr &= ~(1 << 16);
+	sdhci->reg->clkcr = ratio & 0xff;
 	if (!sdhci_t113_update_clk(sdhci))
 		return FALSE;
-	write32(sdhci->addr + SD_CKCR, read32(sdhci->addr + SD_CKCR) | (3 << 16));
+	sdhci->reg->clkcr |= (3 << 16);
 	if (!sdhci_t113_update_clk(sdhci))
 		return FALSE;
 	return TRUE;
@@ -487,8 +450,8 @@ int sunxi_sdhci_init(sdhci_t *sdhci)
 
 	udelay(10);
 
-	write32(sdhci->addr + SD_GCTL, SDXC_HARDWARE_RESET);
-	write32(sdhci->addr + SD_RISR, 0xffffffff);
+	sdhci->reg->gctrl = SDXC_HARDWARE_RESET;
+	sdhci->reg->rint  = 0xffffffff;
 
 	udelay(100);
 

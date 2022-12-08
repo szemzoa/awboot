@@ -6,8 +6,8 @@
 #include "sunxi_usart.h"
 #include "sunxi_sdhci.h"
 
-#define CONFIG_BOOT_SPINAND
-#define CONFIG_BOOT_SDCARD
+// #define CONFIG_BOOT_SPINAND
+// #define CONFIG_BOOT_SDCARD
 #define CONFIG_BOOT_MMC
 
 #define CONFIG_CPU_FREQ 1200000000

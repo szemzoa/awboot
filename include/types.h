@@ -40,7 +40,7 @@ typedef unsigned int u32;
 typedef signed long long   s64;
 typedef unsigned long long u64;
 
-typedef float f32;
+typedef float  f32;
 typedef double f64;
 
 #ifdef CONFIG_ARM64
