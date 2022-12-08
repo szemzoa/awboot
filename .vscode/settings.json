@@ -6,10 +6,10 @@
     "cmake.configureOnOpen": true,
     "files.exclude": {
         "**/*.o": true,
-        "**/*.elf": true,
-        "**/*.bin": true,
-        "**/*.map": true
     },
     "cortex-debug.variableUseNaturalFormat": true,
+    "files.associations": {
+        "sunxi_clk.h": "c"
+    },
 
 }

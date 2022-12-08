@@ -12,7 +12,7 @@
 
 #define CONFIG_CPU_FREQ 1200000000
 
-#define CONFIG_ENABLE_CPU_FREQ_DUMP
+// #define CONFIG_ENABLE_CPU_FREQ_DUMP
 
 #define CONFIG_KERNEL_FILENAME "zImage"
 #define CONFIG_DTB_FILENAME	   "sun8i-t113-mangopi-dual.dtb"

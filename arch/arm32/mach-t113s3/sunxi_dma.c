@@ -36,30 +36,6 @@ static int			dma_init_ok = -1;
 static dma_source_t dma_channel_source[SUNXI_DMA_MAX];
 static dma_desc_t	dma_channel_desc[SUNXI_DMA_MAX] __attribute__((aligned(64)));
 
-static void dma_reg_func(void)
-{
-	int		   i;
-	u32		   pending;
-	dma_reg_t *dma_reg = (dma_reg_t *)SUNXI_DMA_BASE;
-
-	for (i = 0; i < 8 && i < SUNXI_DMA_MAX; i++) {
-		pending = (DMA_PKG_END_INT << (i * 4));
-		if (dma_reg->irq_pending0 & pending) {
-			dma_reg->irq_pending0 = pending;
-			if (dma_channel_source[i].dma_func.m_func != NULL)
-				dma_channel_source[i].dma_func.m_func();
-		}
-	}
-	for (i = 8; i < SUNXI_DMA_MAX; i++) {
-		pending = (DMA_PKG_END_INT << ((i - 8) * 4));
-		if (dma_reg->irq_pending1 & pending) {
-			dma_reg->irq_pending1 = pending;
-			if (dma_channel_source[i].dma_func.m_func != NULL)
-				dma_channel_source[i].dma_func.m_func();
-		}
-	}
-}
-
 void dma_init(void)
 {
 	debug("DMA: init\r\n");
@@ -247,11 +223,10 @@ int dma_test()
 {
 	u32		*src_addr = (u32 *)CONFIG_DTB_LOAD_ADDR;
 	u32		*dst_addr = (u32 *)CONFIG_KERNEL_LOAD_ADDR;
-	u32		  len	   = 256 * 1024;
+	u32		  len	   = 512 * 1024;
 	dma_set_t dma_set;
 	u32		  hdma, st = 0;
 	u32		  timeout;
-	u32		  start, duration;
 	u32		  i, valid;
 
 	len = ALIGN(len, 4);
@@ -293,17 +268,19 @@ int dma_test()
 	/* timeout : 100 ms */
 	timeout = time_ms();
 
-	start = time_us();
 	dma_start(hdma, (u32)src_addr, (u32)dst_addr, len);
 	st = dma_querystatus(hdma);
 
 	while ((time_ms() - timeout < 100) && st) {
 		st = dma_querystatus(hdma);
 	}
-	duration = (time_us() - start) + 1;
 
 	if (st) {
 		error("DMA: test timeout!\r\n");
+		dma_stop(hdma);
+		dma_release(hdma);
+
+		return -2;
 	} else {
 		valid = 1;
 		// Check data is valid
@@ -314,7 +291,7 @@ int dma_test()
 			}
 		}
 		if (valid) {
-			debug("DMA: test OK at %uMB/S in %ums\r\n", (len / duration), time_ms() - timeout);
+			debug("DMA: test OK in %lums\r\n", (time_ms() - timeout));
 		} else
 			error("DMA: test check failed at %u bytes\r\n", i);
 	}

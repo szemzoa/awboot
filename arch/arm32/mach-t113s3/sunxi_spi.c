@@ -524,7 +524,7 @@ static void spi_set_io_mode(sunxi_spi_t *spi, spi_io_mode_t mode)
 
 static int spi_transfer(sunxi_spi_t *spi, spi_io_mode_t mode, void *txbuf, uint32_t txlen, void *rxbuf, uint32_t rxlen)
 {
-	uint32_t stxlen;
+	uint32_t stxlen, fcr;
 	trace("SPI: tsfr mode=%u tx=%u rx=%u\r\n", mode, txlen, rxlen);
 
 	spi_set_io_mode(spi, mode);
@@ -554,11 +554,15 @@ static int spi_transfer(sunxi_spi_t *spi, spi_io_mode_t mode, void *txbuf, uint3
 		spi_write_tx_fifo(spi, txbuf, txlen);
 	}
 
+	fcr = read32(spi->base + SPI_FCR);
+
+	// Disable DMA request by default
+	write32(spi->base + SPI_FCR, (fcr & ~SPI_FCR_RX_DRQEN_MSK));
+
 	// Setup DMA for RX
 	if (rxbuf && rxlen) {
 		if (rxlen > 64) {
-			write32(spi->base + SPI_FCR,
-					(read32(spi->base + SPI_FCR) | SPI_FCR_RX_DRQEN_MSK)); // Enable RX FIFO DMA request
+			write32(spi->base + SPI_FCR, (fcr | SPI_FCR_RX_DRQEN_MSK)); // Enable RX FIFO DMA request
 			if (dma_start(spi_rx_dma_hd, spi->base + SPI_RXD, (u32)rxbuf, rxlen) != 0) {
 				error("SPI: DMA transfer failed\r\n");
 				return -1;
@@ -798,6 +802,8 @@ uint32_t spi_nand_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t r
 		if (spi->info.id.mfr == SPI_NAND_MFR_WINBOND) {
 			txlen++;
 		}
+
+		ca = address & (spi->info.page_size - 1);
 
 		tx[0] = read_opcode;
 		tx[1] = (uint8_t)(ca >> 8);

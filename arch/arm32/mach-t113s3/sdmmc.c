@@ -174,7 +174,7 @@ static bool_t mmc_send_op_cond(sdhci_t *hci, sdmmc_t *card)
 		}
 		udelay(5000);
 	} while (!(cmd.response[0] & OCR_BUSY) && retries--);
-	debug("SHMC: op_cond 0x%x\r\n", cmd.response[0]);
+	trace("SHMC: op_cond 0x%x\r\n", cmd.response[0]);
 
 	if (retries <= 0)
 		return FALSE;

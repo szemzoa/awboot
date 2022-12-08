@@ -181,10 +181,6 @@ int main(void)
 #endif
 
 	init_DRAM(0, &ddr_param);
-	dma_init();
-	dma_test();
-
-	// error("divide by zero: %u", 5 / 0);
 
 	memset(&image, 0, sizeof(image_info_t));
 
@@ -227,6 +223,8 @@ int main(void)
 
 #ifdef CONFIG_BOOT_SPINAND
 _spi:
+	dma_init();
+	dma_test();
 	debug("SPI: init\r\n");
 	if (sunxi_spi_init(&sunxi_spi0) != 0) {
 		fatal("SPI: init failed\r\n");

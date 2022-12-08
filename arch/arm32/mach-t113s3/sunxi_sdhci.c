@@ -184,8 +184,6 @@ enum {
 #define SDXC_SEND_AUTO_STOPCCSD	  (1 << 9)
 #define SDXC_CEATA_DEV_IRQ_ENABLE (1 << 10)
 
-extern uint32_t get_sys_ticks();
-
 static bool_t t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 {
 	uint32_t cmdval = SDXC_START;
@@ -234,7 +232,7 @@ static bool_t t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_
 	timeout = time_ms();
 	do {
 		status = read32(pdat->addr + SD_RISR);
-		if ((time_ms() - timeout > 10) || (status & SDXC_INTERRUPT_ERROR_BIT)) {
+		if ((time_ms() - timeout > 100) || (status & SDXC_INTERRUPT_ERROR_BIT)) {
 			write32(pdat->addr + SD_GCTL, SDXC_HARDWARE_RESET);
 			write32(pdat->addr + SD_RISR, 0xffffffff);
 			warning("SMHC: transfer timeout\r\n");
@@ -417,18 +415,18 @@ static bool_t sdhci_t113_update_clk(sdhci_t *pdat)
 
 bool_t sdhci_set_clock(sdhci_t *sdhci, uint32_t clock)
 {
-	uint32_t ratio = (sdhci->pclk + 2 * clock - 1 / (2 * clock));
+	uint32_t ratio = (sdhci->pclk / (clock));
 
 	if (clock <= 1000000) {
-		debug("SMHC: set clock at %uKHz\r\n", clock / 1000);
+		trace("SMHC: set clock at %uKHz (%u/%u)\r\n", clock / 1000, sdhci->pclk, ratio);
 	} else {
-		debug("SMHC: set clock at %uMHz\r\n", clock / 1000000);
+		trace("SMHC: set clock at %uMHz (%u/%u)\r\n", clock / 1000000, sdhci->pclk, ratio);
 	}
 
 	if ((ratio & 0xff) != ratio)
 		return FALSE;
 	write32(sdhci->addr + SD_CKCR, read32(sdhci->addr + SD_CKCR) & ~(1 << 16));
-	write32(sdhci->addr + SD_CKCR, ratio);
+	write32(sdhci->addr + SD_CKCR, ratio & 0xff);
 	if (!sdhci_t113_update_clk(sdhci))
 		return FALSE;
 	write32(sdhci->addr + SD_CKCR, read32(sdhci->addr + SD_CKCR) | (3 << 16));
@@ -467,21 +465,22 @@ int sunxi_sdhci_init(sdhci_t *sdhci)
 	sunxi_gpio_init(sdhci->gpio_d3.pin, sdhci->gpio_d3.mux);
 	sunxi_gpio_set_pull(sdhci->gpio_d3.pin, GPIO_PULL_UP);
 
-	addr = 0x0200184c;
+	/* De-assert reset */
+	addr = T113_CCU_BASE + CCU_SMHC_BGR_REG;
 	val	 = read32(addr);
 	val |= (1 << 16);
 	write32(addr, val);
 
 	/* Open the clock gate for sdhci0 */
-	addr = 0x02001830;
+	addr = T113_CCU_BASE + CCU_SMHC0_CLK_REG;
 	val	 = read32(addr);
-	val |= (1 << 31) | (1 << 24) | 11; /* 50MHz */
+	val |= (1 << 31) | (1 << 24) | 0 << 8 | 5; /* 600/6=100MHz */
 	write32(addr, val);
 
-	sdhci->pclk = sunxi_clk_get_peri1x_rate() / 12;
+	sdhci->pclk = sunxi_clk_get_peri1x_rate() / 6;
 
 	/* sdhc0 clock gate pass */
-	addr = 0x0200184c;
+	addr = T113_CCU_BASE + CCU_SMHC_BGR_REG;
 	val	 = read32(addr);
 	val |= (1 << 0);
 	write32(addr, val);

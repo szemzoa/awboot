@@ -42,8 +42,8 @@
 #define fatal(fmt, ...)                     \
 	{                                       \
 		message("[F] " fmt, ##__VA_ARGS__); \
-		while (1)                           \
-			;                               \
+		mdelay(100);                        \
+		reset();                            \
 	}
 
 void message(const char *fmt, ...);
