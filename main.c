@@ -67,7 +67,7 @@ static int fatfs_loadimage(char *filename, BYTE *dest)
 	} while (byte_read >= byte_to_read);
 
 	time = time_ms() - start;
-	debug("FATFS: read in %ums at %uKB/S\r\n", time, (total_read / time));
+	debug("FATFS: read in %ums at %.2fMB/S\r\n", time, (float)(total_read / time) / 1024.0);
 
 	if (fret != FR_OK) {
 		error("FATFS: f_read: error %d\r\n", fret);
@@ -144,7 +144,7 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 	start = time_us();
 	spi_nand_read(spi, image->of_dest, CONFIG_SPINAND_DTB_ADDR, (uint32_t)size);
 	time = time_us() - start;
-	info("SPI-NAND: read dt blob of size %u at %uMB/S\r\n", size, (size / time));
+	info("SPI-NAND: read dt blob of size %u at %.2fMB/S\r\n", size, (f32)(size / time));
 
 	/* get kernel size and read */
 	spi_nand_read(spi, image->dest, CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)sizeof(linux_zimage_header_t));
@@ -159,7 +159,7 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 	start = time_us();
 	spi_nand_read(spi, image->dest, CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)size);
 	time = time_us() - start;
-	info("SPI-NAND: read Image of size %u at %uMB/S\r\n", size, (size / time));
+	info("SPI-NAND: read Image of size %u at %.2fMB/S\r\n", size, (f32)(size / time));
 
 	return 0;
 }

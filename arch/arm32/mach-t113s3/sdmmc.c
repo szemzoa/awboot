@@ -62,7 +62,7 @@ static const unsigned char tran_speed_time[] = {
 	0, 10, 12, 13, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80,
 };
 
-static bool_t go_idle_state(sdhci_t *hci)
+static bool go_idle_state(sdhci_t *hci)
 {
 	sdhci_cmd_t cmd = {0};
 
@@ -74,7 +74,7 @@ static bool_t go_idle_state(sdhci_t *hci)
 	return sdhci_transfer(hci, &cmd, NULL);
 }
 
-static bool_t sd_send_if_cond(sdhci_t *hci, sdmmc_t *card)
+static bool sd_send_if_cond(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd = {0};
 
@@ -96,7 +96,7 @@ static bool_t sd_send_if_cond(sdhci_t *hci, sdmmc_t *card)
 	return TRUE;
 }
 
-static bool_t sd_send_op_cond(sdhci_t *hci, sdmmc_t *card)
+static bool sd_send_op_cond(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd		= {0};
 	int			retries = 50;
@@ -154,7 +154,7 @@ static bool_t sd_send_op_cond(sdhci_t *hci, sdmmc_t *card)
 	return TRUE;
 }
 
-static bool_t mmc_send_op_cond(sdhci_t *hci, sdmmc_t *card)
+static bool mmc_send_op_cond(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd		= {0};
 	int			retries = 50;
@@ -260,7 +260,7 @@ uint64_t mmc_read_blocks(sdhci_t *hci, sdmmc_t *card, uint8_t *buf, uint64_t sta
 	return blkcnt;
 }
 
-static bool_t sdmmc_detect(sdhci_t *hci, sdmmc_t *card)
+static bool sdmmc_detect(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t	 cmd = {0};
 	sdhci_data_t dat = {0};

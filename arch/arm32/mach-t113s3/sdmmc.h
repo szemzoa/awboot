@@ -169,7 +169,7 @@ typedef struct {
 	sdmmc_t	 card;
 	sdhci_t *hci;
 	uint8_t	 buf[512];
-	bool_t	 online;
+	bool	 online;
 } sdmmc_pdata_t;
 
 extern sdmmc_pdata_t card0;

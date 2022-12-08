@@ -184,7 +184,7 @@ enum {
 #define SDXC_SEND_AUTO_STOPCCSD	  (1 << 9)
 #define SDXC_CEATA_DEV_IRQ_ENABLE (1 << 10)
 
-static bool_t t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t *dat)
+static bool t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 {
 	uint32_t cmdval = SDXC_START;
 	uint32_t status = 0;
@@ -267,7 +267,7 @@ static bool_t t113_transfer_command(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_
 	return TRUE;
 }
 
-static bool_t read_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_t blksize)
+static bool read_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_t blksize)
 {
 	uint64_t  count = blkcount * blksize;
 	uint32_t *tmp	= buf;
@@ -314,7 +314,7 @@ static bool_t read_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32
 	return TRUE;
 }
 
-static bool_t write_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_t blksize)
+static bool write_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint32_t blksize)
 {
 	uint64_t  count = blkcount * blksize;
 	uint32_t *tmp	= buf;
@@ -353,10 +353,10 @@ static bool_t write_bytes(sdhci_t *pdat, uint32_t *buf, uint32_t blkcount, uint3
 	return TRUE;
 }
 
-static bool_t t113_transfer_data(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t *dat)
+static bool t113_transfer_data(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 {
 	uint32_t dlen = (uint32_t)(dat->blkcnt * dat->blksz);
-	bool_t	 ret  = FALSE;
+	bool	 ret  = FALSE;
 
 	write32(pdat->addr + SD_BKSR, dat->blksz);
 	write32(pdat->addr + SD_BYCR, dlen);
@@ -373,13 +373,13 @@ static bool_t t113_transfer_data(sdhci_t *pdat, sdhci_cmd_t *cmd, sdhci_data_t *
 	return ret;
 }
 
-bool_t sdhci_reset(sdhci_t *sdhci)
+bool sdhci_reset(sdhci_t *sdhci)
 {
 	write32(sdhci->addr + SD_GCTL, SDXC_HARDWARE_RESET);
 	return TRUE;
 }
 
-bool_t sdhci_set_width(sdhci_t *sdhci, uint32_t width)
+bool sdhci_set_width(sdhci_t *sdhci, uint32_t width)
 {
 	switch (width) {
 		case MMC_BUS_WIDTH_1:
@@ -399,7 +399,7 @@ bool_t sdhci_set_width(sdhci_t *sdhci, uint32_t width)
 	return TRUE;
 }
 
-static bool_t sdhci_t113_update_clk(sdhci_t *pdat)
+static bool sdhci_t113_update_clk(sdhci_t *pdat)
 {
 	uint32_t cmd = (1U << 31) | (1 << 21) | (1 << 13);
 
@@ -413,7 +413,7 @@ static bool_t sdhci_t113_update_clk(sdhci_t *pdat)
 	return TRUE;
 }
 
-bool_t sdhci_set_clock(sdhci_t *sdhci, uint32_t clock)
+bool sdhci_set_clock(sdhci_t *sdhci, uint32_t clock)
 {
 	uint32_t ratio = (sdhci->pclk / (clock));
 
@@ -435,7 +435,7 @@ bool_t sdhci_set_clock(sdhci_t *sdhci, uint32_t clock)
 	return TRUE;
 }
 
-bool_t sdhci_transfer(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat)
+bool sdhci_transfer(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 {
 	if (!dat)
 		return t113_transfer_command(sdhci, cmd, dat);
