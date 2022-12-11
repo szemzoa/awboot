@@ -118,27 +118,26 @@
 #define EXT_CSD_DDR_BUS_WIDTH_4 5 /* Card is in 4 bit DDR mode */
 #define EXT_CSD_DDR_BUS_WIDTH_8 6 /* Card is in 8 bit DDR mode */
 
-#define EXT_CSD_CARD_TYPE_26	(1<<0)	/* Card can run at 26MHz */
-#define EXT_CSD_CARD_TYPE_52	(1<<1)	/* Card can run at 52MHz */
-#define EXT_CSD_CARD_TYPE_MASK	0x3F	/* Mask out reserved bits */
-#define EXT_CSD_CARD_TYPE_DDR_1_8V  (1<<2)   /* Card can run at 52MHz */
-					     /* DDR mode @1.8V or 3V I/O */
-#define EXT_CSD_CARD_TYPE_DDR_1_2V  (1<<3)   /* Card can run at 52MHz */
-					     /* DDR mode @1.2V I/O */
-#define EXT_CSD_CARD_TYPE_DDR_52       (EXT_CSD_CARD_TYPE_DDR_1_8V  \
-					| EXT_CSD_CARD_TYPE_DDR_1_2V)
-#define EXT_CSD_CARD_TYPE_SDR_1_8V	(1<<4)	/* Card can run at 200MHz */
-#define EXT_CSD_CARD_TYPE_SDR_1_2V	(1<<5)	/* Card can run at 200MHz */
-						/* SDR mode @1.2V I/O */
+#define EXT_CSD_CARD_TYPE_26	   (1 << 0) /* Card can run at 26MHz */
+#define EXT_CSD_CARD_TYPE_52	   (1 << 1) /* Card can run at 52MHz */
+#define EXT_CSD_CARD_TYPE_MASK	   0x3F /* Mask out reserved bits */
+#define EXT_CSD_CARD_TYPE_DDR_1_8V (1 << 2) /* Card can run at 52MHz */
+/* DDR mode @1.8V or 3V I/O */
+#define EXT_CSD_CARD_TYPE_DDR_1_2V (1 << 3) /* Card can run at 52MHz */
+/* DDR mode @1.2V I/O */
+#define EXT_CSD_CARD_TYPE_DDR_52   (EXT_CSD_CARD_TYPE_DDR_1_8V | EXT_CSD_CARD_TYPE_DDR_1_2V)
+#define EXT_CSD_CARD_TYPE_SDR_1_8V (1 << 4) /* Card can run at 200MHz */
+#define EXT_CSD_CARD_TYPE_SDR_1_2V (1 << 5) /* Card can run at 200MHz */
+/* SDR mode @1.2V I/O */
 
-#define EXT_CSD_CMD_SET_NORMAL		(1<<0)
-#define EXT_CSD_CMD_SET_SECURE		(1<<1)
-#define EXT_CSD_CMD_SET_CPSECURE	(1<<2)
+#define EXT_CSD_CMD_SET_NORMAL	 (1 << 0)
+#define EXT_CSD_CMD_SET_SECURE	 (1 << 1)
+#define EXT_CSD_CMD_SET_CPSECURE (1 << 2)
 
-#define EXT_CSD_PWR_CL_8BIT_MASK	0xF0	/* 8 bit PWR CLS */
-#define EXT_CSD_PWR_CL_4BIT_MASK	0x0F	/* 8 bit PWR CLS */
-#define EXT_CSD_PWR_CL_8BIT_SHIFT	4
-#define EXT_CSD_PWR_CL_4BIT_SHIFT	0
+#define EXT_CSD_PWR_CL_8BIT_MASK  0xF0 /* 8 bit PWR CLS */
+#define EXT_CSD_PWR_CL_4BIT_MASK  0x0F /* 8 bit PWR CLS */
+#define EXT_CSD_PWR_CL_8BIT_SHIFT 4
+#define EXT_CSD_PWR_CL_4BIT_SHIFT 0
 
 sdmmc_pdata_t card0;
 
@@ -633,20 +632,23 @@ static bool sdmmc_detect(sdhci_t *hci, sdmmc_t *card)
 			if (hci->width >= MMC_BUS_WIDTH_4) {
 				cmd.idx		 = SD_CMD_SWITCH_FUNC;
 				cmd.resptype = MMC_RSP_R1;
-				cmd.arg	= (3 << 24) | (EXT_CSD_POWER_CLASS << 16) | EXT_CSD_CMD_SET_NORMAL;
-				if (width == EXT_CSD_DDR_BUS_WIDTH_4)	{
-					cmd.arg |= ((card->extcsd[EXT_CSD_PWR_CL_DDR_52_360] & EXT_CSD_PWR_CL_4BIT_MASK >> EXT_CSD_PWR_CL_4BIT_SHIFT) << 8);
-				} else
-				{
-					cmd.arg	|= ((card->extcsd[EXT_CSD_PWR_CL_52_360] & EXT_CSD_PWR_CL_4BIT_MASK >> EXT_CSD_PWR_CL_4BIT_SHIFT) << 8);
+				cmd.arg		 = (3 << 24) | (EXT_CSD_POWER_CLASS << 16) | EXT_CSD_CMD_SET_NORMAL;
+				if (width == EXT_CSD_DDR_BUS_WIDTH_4) {
+					cmd.arg |= ((card->extcsd[EXT_CSD_PWR_CL_DDR_52_360] &
+								 EXT_CSD_PWR_CL_4BIT_MASK >> EXT_CSD_PWR_CL_4BIT_SHIFT)
+								<< 8);
+				} else {
+					cmd.arg |=
+						((card->extcsd[EXT_CSD_PWR_CL_52_360] & EXT_CSD_PWR_CL_4BIT_MASK >> EXT_CSD_PWR_CL_4BIT_SHIFT)
+						 << 8);
 				}
-				
+
 				if (!sdhci_transfer(hci, &cmd, NULL))
 					return FALSE;
 			}
 
 			// Write EXT_CSD register 183 (width) with our value
-			cmd.arg		 = (3 << 24) | (EXT_CSD_BUS_WIDTH << 16) | (width << 8) | 1;
+			cmd.arg = (3 << 24) | (EXT_CSD_BUS_WIDTH << 16) | (width << 8) | 1;
 			if (!sdhci_transfer(hci, &cmd, NULL))
 				return FALSE;
 

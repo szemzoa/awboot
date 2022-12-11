@@ -3,6 +3,8 @@
 
 #include <inttypes.h>
 
+#define BIT(x) (1 << x)
+
 typedef unsigned int virtual_addr_t;
 
 static inline __attribute__((__always_inline__)) uint8_t read8(virtual_addr_t addr)

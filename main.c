@@ -194,7 +194,7 @@ int main(void)
 	if (sunxi_sdhci_init(&sdhci0) != 0) {
 		fatal("SMHC: %s controller init failed\r\n", sdhci0.name);
 	} else {
-		info("SMHC: %s controller initialized\r\n", sdhci0.name);
+		info("SMHC: %s controller v%x initialized\r\n", sdhci0.name, sdhci0.reg->vers);
 	}
 	if (sdmmc_init(&card0, &sdhci0) != 0) {
 #ifdef CONFIG_BOOT_SPINAND

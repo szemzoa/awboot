@@ -53,13 +53,12 @@ sunxi_spi_t sunxi_spi0 = {
 };
 
 sdhci_t sdhci0 = {
-	.name	   = "sdhci0",
-	.addr	   = 0x04020000,
-	.reg	   = (sdhci_reg_t *)0x04020000,
-	.reset	   = 400,
-	.voltage   = MMC_VDD_27_36,
-	.width	   = MMC_BUS_WIDTH_4,
-	.clock	   = 50 * 1000 * 1000,
+	.name	 = "sdhci0",
+	.addr	 = 0x04020000,
+	.reg	 = (sdhci_reg_t *)0x04020000,
+	.voltage = MMC_VDD_27_36,
+	.width	 = MMC_BUS_WIDTH_4,
+	.clock	 = 50 * 1000 * 1000,
 	.removable = 0,
 	.isspi	   = FALSE,
 	.gpio_clk  = {GPIO_PIN(PORTF, 2), GPIO_PERIPH_MUX2},

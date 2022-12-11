@@ -65,30 +65,53 @@ typedef struct {
 } sdhci_reg_t;
 
 typedef struct {
-	uint32_t idx;
-	uint32_t arg;
-	uint32_t resptype;
-	uint32_t response[4];
+	u32 idx;
+	u32 arg;
+	u32 resptype;
+	u32 response[4];
 } sdhci_cmd_t;
 
 typedef struct {
-	uint8_t *buf;
-	uint32_t flag;
-	uint32_t blksz;
-	uint32_t blkcnt;
+	u8 *buf;
+	u32 flag;
+	u32 blksz;
+	u32 blkcnt;
 } sdhci_data_t;
+
+#define SDXC_DES_NUM_SHIFT		12 /* smhc2!! */
+#define SDXC_DES_BUFFER_MAX_LEN (1 << SDXC_DES_NUM_SHIFT)
+typedef struct {
+	u32 : 1, dic : 1, /* disable interrupt on completion */
+		last_desc : 1, /* 1-this data buffer is the last buffer */
+		first_desc : 1, /* 1-data buffer is the first buffer, 0-data buffer contained in the next descriptor is 1st
+						  buffer */
+		des_chain : 1, /* 1-the 2nd address in the descriptor is the next descriptor address */
+		// end_of_ring : 1, /* 1-last descriptor flag when using dual data buffer in descriptor */
+		: 25, err_flag : 1, /* transfer error flag */
+		own : 1; /* des owner:1-idma owns it, 0-host owns it */
+
+	u32 data_buf_sz : SDXC_DES_NUM_SHIFT, data_buf_dummy : (32 - SDXC_DES_NUM_SHIFT);
+
+	u32 buf_addr;
+	u32 next_desc_addr;
+
+} sdhci_idma_desc_t __attribute__((aligned(8)));
 
 typedef struct {
 	char		 *name;
-	uint32_t	 addr;
 	sdhci_reg_t *reg;
-	uint32_t	 pclk;
-	uint32_t	 reset;
-	uint32_t	 voltage;
-	uint32_t	 width;
-	uint32_t	 clock;
-	bool		 removable;
-	bool		 isspi;
+	u32			 addr;
+	u32			 pclk;
+	u32			 reset;
+	u32			 voltage;
+	u32			 width;
+	u32			 clock;
+
+	sdhci_idma_desc_t dma_desc[64];
+	u32				  dma_trglvl;
+
+	bool removable;
+	bool isspi;
 
 	gpio_mux_t gpio_d0;
 	gpio_mux_t gpio_d1;
@@ -102,9 +125,9 @@ typedef struct {
 extern sdhci_t sdhci0;
 
 bool sdhci_reset(sdhci_t *hci);
-bool sdhci_set_voltage(sdhci_t *hci, uint32_t voltage);
-bool sdhci_set_width(sdhci_t *hci, uint32_t width);
-bool sdhci_set_clock(sdhci_t *hci, uint32_t clock);
+bool sdhci_set_voltage(sdhci_t *hci, u32 voltage);
+bool sdhci_set_width(sdhci_t *hci, u32 width);
+bool sdhci_set_clock(sdhci_t *hci, u32 clock);
 bool sdhci_transfer(sdhci_t *hci, sdhci_cmd_t *cmd, sdhci_data_t *dat);
 int	 sunxi_sdhci_init(sdhci_t *sdhci);
 
