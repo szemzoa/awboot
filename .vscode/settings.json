@@ -8,9 +8,4 @@
         "**/*.o": true,
     },
     "cortex-debug.variableUseNaturalFormat": true,
-    "files.associations": {
-        "sunxi_clk.h": "c",
-        "reg-ccu.h": "c"
-    },
-
 }
