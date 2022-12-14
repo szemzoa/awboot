@@ -4,6 +4,8 @@
 #include "reg-ccu.h"
 #include "debug.h"
 
+volatile ccu_reg_t *const ccu = (ccu_reg_t *)T113_CCU_BASE;
+
 void set_pll_cpux_axi(void)
 {
 	uint32_t val;

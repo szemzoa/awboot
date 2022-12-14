@@ -6,9 +6,11 @@
 #include "sunxi_usart.h"
 #include "sunxi_sdhci.h"
 
-// #define CONFIG_BOOT_SPINAND
-// #define CONFIG_BOOT_SDCARD
+#define CONFIG_BOOT_SPINAND
+#define CONFIG_BOOT_SDCARD
 #define CONFIG_BOOT_MMC
+
+#define CONFIG_FATFS_CACHE_SIZE 16 * 1024 // (512B sectors) needs to be bigger than both DTB + kernel
 
 #define CONFIG_CPU_FREQ 1200000000
 

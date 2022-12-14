@@ -11,8 +11,17 @@
 #include "reg-ccu.h"
 #include "debug.h"
 #include "board.h"
+#include "barrier.h"
 
 image_info_t image;
+extern u32	 _start;
+extern u32	 __spl_start;
+extern u32	 __spl_end;
+extern u32	 __spl_size;
+extern u32	 __stack_srv_start;
+extern u32	 __stack_srv_end;
+extern u32	 __stack_ddr_srv_start;
+extern u32	 __stack_ddr_srv_end;
 
 /* Linux zImage Header */
 #define LINUX_ZIMAGE_MAGIC 0x016f2818
@@ -64,10 +73,9 @@ static int fatfs_loadimage(char *filename, BYTE *dest)
 		fret	  = f_read(&file, (void *)(dest), byte_to_read, &byte_read);
 		dest += byte_to_read;
 		total_read += byte_read;
-	} while (byte_read >= byte_to_read);
+	} while (byte_read >= byte_to_read && fret == FR_OK);
 
-	time = time_ms() - start;
-	debug("FATFS: read in %ums at %.2fMB/S\r\n", time, (float)(total_read / time) / 1024.0);
+	time = time_ms() - start + 1;
 
 	if (fret != FR_OK) {
 		error("FATFS: f_read: error %d\r\n", fret);
@@ -79,6 +87,8 @@ static int fatfs_loadimage(char *filename, BYTE *dest)
 read_fail:
 	fret = f_close(&file);
 
+	debug("FATFS: read in %ums at %.2fMB/S\r\n", time, (float)(total_read / time) / 1024.0);
+
 open_fail:
 	return ret;
 }
@@ -88,7 +98,16 @@ static int load_sdcard(image_info_t *image)
 	FATFS	fs;
 	FRESULT fret;
 	int		ret;
+	u32		start;
+	u32		ts;
+	u32		time;
 
+	// ts = time_ms();
+	// sdmmc_blk_read(&card0, (u8 *)(SDRAM_BASE + 64 * 1024 * 1024), 0, 8 * 1024);
+	// time = time_ms() - ts;
+	// debug("SDMMC: bench %ums %uKB/S\r\n", time, (8 * 1024 * 512) / time);
+
+	start = time_ms();
 	/* mount fs */
 	fret = f_mount(&fs, "", 1);
 	if (fret != FR_OK) {
@@ -116,6 +135,7 @@ static int load_sdcard(image_info_t *image)
 	} else {
 		debug("FATFS: f_mount unmount OK\r\n");
 	}
+	debug("FATFS: done in %ums\r\n", time_ms() - start);
 
 	return 0;
 }
@@ -166,25 +186,31 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 
 int main(void)
 {
-	unsigned int entry_point = 0;
-	void (*kernel_entry)(int zero, int arch, unsigned int params);
+	u32 *pc, *sp_old, *sp_new;
+	int (*jump)(void);
+	const u32 *ddr	= (u32 *)SDRAM_BASE;
+	const u32 *base = (u32 *)&__spl_start; // SRAM start
+	u64		   time;
 
 	board_init();
+	sunxi_clk_init();
 
 	message("\r\n");
 	info("AWBoot r%u starting...\r\n", (u32)BUILD_REVISION);
 
-	sunxi_clk_init();
+	init_DRAM(0, &ddr_param);
+
+	unsigned int entry_point = 0;
+	void (*kernel_entry)(int zero, int arch, unsigned int params);
+
 #ifdef CONFIG_ENABLE_CPU_FREQ_DUMP
 	sunxi_clk_dump();
 #endif
 
-	init_DRAM(0, &ddr_param);
-
 	memset(&image, 0, sizeof(image_info_t));
 
-	image.of_dest = (unsigned char *)CONFIG_DTB_LOAD_ADDR;
-	image.dest	  = (unsigned char *)CONFIG_KERNEL_LOAD_ADDR;
+	image.of_dest = (u8 *)CONFIG_DTB_LOAD_ADDR;
+	image.dest	  = (u8 *)CONFIG_KERNEL_LOAD_ADDR;
 
 #if defined(CONFIG_BOOT_SDCARD) || defined(CONFIG_BOOT_MMC)
 
@@ -251,4 +277,6 @@ _boot:
 
 	kernel_entry = (void (*)(int, int, unsigned int))entry_point;
 	kernel_entry(0, ~0, (unsigned int)image.of_dest);
+
+	return 0;
 }

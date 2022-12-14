@@ -617,7 +617,7 @@ void auto_set_timing_para(dram_para_t *para) // s5
 // Purpose of this routine seems to be to initialize the PLL driving
 // the MBUS and sdram.
 //
-int ccm_set_pll_ddr_clk(int index, dram_para_t *para)
+int ccu_set_pll_ddr_clk(int index, dram_para_t *para)
 {
 	unsigned int val, clk, n;
 
@@ -672,7 +672,7 @@ void mctl_sys_init(dram_para_t *para)
 	sdelay(10);
 
 	// set ddr pll clock
-	val			   = ccm_set_pll_ddr_clk(0, para);
+	val			   = ccu_set_pll_ddr_clk(0, para);
 	para->dram_clk = val >> 1;
 	sdelay(100);
 	dram_disable_all_master();
@@ -1624,3 +1624,5 @@ int init_DRAM(int type, dram_para_t *para) // s0
 
 	return mem_size;
 }
+
+void abort(void) {}

@@ -39,21 +39,20 @@ static dma_desc_t	dma_channel_desc[SUNXI_DMA_MAX] __attribute__((aligned(64)));
 void dma_init(void)
 {
 	debug("DMA: init\r\n");
-	int							i;
-	dma_reg_t *const			dma_reg = (dma_reg_t *)SUNXI_DMA_BASE;
-	struct sunxi_ccm_reg *const ccm		= (struct sunxi_ccm_reg *)T113_CCU_BASE;
+	int				 i;
+	dma_reg_t *const dma_reg = (dma_reg_t *)SUNXI_DMA_BASE;
 
 	if (dma_init_ok > 0)
 		return;
 
 	/* dma : mbus clock gating */
-	ccm->mbus_gate |= 1 << 0;
+	ccu->mbus_gate |= 1 << 0;
 
 	/* dma reset */
-	ccm->dma_gate_reset |= 1 << DMA_RST_OFS;
+	ccu->dma_gate_reset |= 1 << DMA_RST_OFS;
 
 	/* dma gating */
-	ccm->dma_gate_reset |= 1 << DMA_GATING_OFS;
+	ccu->dma_gate_reset |= 1 << DMA_GATING_OFS;
 
 	dma_reg->irq_en0 = 0;
 	dma_reg->irq_en1 = 0;
@@ -84,7 +83,7 @@ void dma_exit(void)
 	int		   i;
 	dma_reg_t *dma_reg = (dma_reg_t *)SUNXI_DMA_BASE;
 #if defined(CONFIG_SUNXI_VERSION1)
-	struct sunxi_ccm_reg *const ccm = (struct sunxi_ccm_reg *)T113_CCU_BASE;
+	struct sunxi_ccu_reg *const ccu = (struct sunxi_ccu_reg *)T113_CCU_BASE;
 #endif
 	/* free dma channel if other module not free it */
 	for (i = 0; i < SUNXI_DMA_MAX; i++) {
@@ -95,7 +94,7 @@ void dma_exit(void)
 	}
 
 #if defined(CONFIG_SUNXI_VERSION1)
-	ccm->ahb_gate0 &= ~(1 << AHB_GATE_OFFSET_DMA);
+	ccu->ahb_gate0 &= ~(1 << AHB_GATE_OFFSET_DMA);
 #else
 	/* close dma clock when dma exit */
 	dma_reg->auto_gate &= ~(1 << DMA_GATING_OFS | 1 << DMA_RST_OFS);

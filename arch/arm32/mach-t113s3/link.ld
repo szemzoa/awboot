@@ -57,6 +57,12 @@ SECTIONS
 
     . = ALIGN(4);
 
+    .ARM.exidx : {
+        __exidx_start = .;
+        *(.ARM.exidx* .gnu.linkonce.armexidx.*)
+        __exidx_end = .;
+    } > ram
+
     PROVIDE(__spl_end = .);
     PROVIDE(__spl_size = __spl_end - __spl_start);
 

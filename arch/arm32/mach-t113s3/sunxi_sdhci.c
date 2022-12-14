@@ -40,164 +40,124 @@
 /*
  * Global control register bits
  */
-#define SDXC_SOFT_RESET			  (1 << 0)
-#define SDXC_FIFO_RESET			  (1 << 1)
-#define SDXC_DMA_RESET			  (1 << 2)
-#define SDXC_INTERRUPT_ENABLE_BIT (1 << 4)
-#define SDXC_DMA_ENABLE_BIT		  (1 << 5)
-#define SDXC_DEBOUNCE_ENABLE_BIT  (1 << 8)
-#define SDXC_POSEDGE_LATCH_DATA	  (1 << 9)
-#define SDXC_DDR_MODE			  (1 << 10)
-#define SDXC_MEMORY_ACCESS_DONE	  (1 << 29)
-#define SDXC_ACCESS_DONE_DIRECT	  (1 << 30)
-#define SDXC_ACCESS_BY_AHB		  (1 << 31)
-#define SDXC_ACCESS_BY_DMA		  (0 << 31)
-#define SDXC_HARDWARE_RESET		  (SDXC_SOFT_RESET | SDXC_FIFO_RESET | SDXC_DMA_RESET)
+#define SMHC_GCTRL_SOFT_RESET		  (1 << 0)
+#define SMHC_GCTRL_FIFO_RESET		  (1 << 1)
+#define SMHC_GCTRL_DMA_RESET		  (1 << 2)
+#define SMHC_GCTRL_INTERRUPT_ENABLE	  (1 << 4)
+#define SMHC_GCTRL_DMA_ENABLE		  (1 << 5)
+#define SMHC_GCTRL_DEBOUNCE_ENABLE	  (1 << 8)
+#define SMHC_GCTRL_POSEDGE_LATCH_DATA (1 << 9)
+#define SMHC_GCTRL_DDR_MODE			  (1 << 10)
+#define SMHC_GCTRL_MEMORY_ACCESS_DONE (1 << 29)
+#define SMHC_GCTRL_ACCESS_DONE_DIRECT (1 << 30)
+#define SMHC_GCTRL_ACCESS_BY_AHB	  (1 << 31)
+#define SMHC_GCTRL_ACCESS_BY_DMA	  (0 << 31)
+#define SMHC_GCTRL_HARDWARE_RESET	  (SMHC_GCTRL_SOFT_RESET | SMHC_GCTRL_FIFO_RESET | SMHC_GCTRL_DMA_RESET)
 
 /*
  * Clock control bits
  */
-#define SDXC_CARD_CLOCK_ON (1 << 16)
-#define SDXC_LOW_POWER_ON  (1 << 17)
+#define SMHC_CLKCR_MASK_D0		 (1 << 31)
+#define SMHC_CLKCR_CARD_CLOCK_ON (1 << 16)
+#define SMHC_CLKCR_LOW_POWER_ON	 (1 << 17)
+#define SMHC_CLKCR_CLOCK_DIV(n)	 ((n - 1) & 0xff)
 
 /*
  * Bus width
  */
-#define SDXC_WIDTH1 (0)
-#define SDXC_WIDTH4 (1)
+#define SMHC_WIDTH_1BIT (0)
+#define SMHC_WIDTH_4BIT (1)
 
 /*
  * Smc command bits
  */
-#define SDXC_RESP_EXPIRE		(1 << 6)
-#define SDXC_LONG_RESPONSE		(1 << 7)
-#define SDXC_CHECK_RESPONSE_CRC (1 << 8)
-#define SDXC_DATA_EXPIRE		(1 << 9)
-#define SDXC_WRITE				(1 << 10)
-#define SDXC_SEQUENCE_MODE		(1 << 11)
-#define SDXC_SEND_AUTO_STOP		(1 << 12)
-#define SDXC_WAIT_PRE_OVER		(1 << 13)
-#define SDXC_STOP_ABORT_CMD		(1 << 14)
-#define SDXC_SEND_INIT_SEQUENCE (1 << 15)
-#define SDXC_UPCLK_ONLY			(1 << 21)
-#define SDXC_READ_CEATA_DEV		(1 << 22)
-#define SDXC_CCS_EXPIRE			(1 << 23)
-#define SDXC_ENABLE_BIT_BOOT	(1 << 24)
-#define SDXC_ALT_BOOT_OPTIONS	(1 << 25)
-#define SDXC_BOOT_ACK_EXPIRE	(1 << 26)
-#define SDXC_BOOT_ABORT			(1 << 27)
-#define SDXC_VOLTAGE_SWITCH		(1 << 28)
-#define SDXC_USE_HOLD_REGISTER	(1 << 29)
-#define SDXC_START				(1 << 31)
+#define SMHC_CMD_RESP_EXPIRE		(1 << 6)
+#define SMHC_CMD_LONG_RESPONSE		(1 << 7)
+#define SMHC_CMD_CHECK_RESPONSE_CRC (1 << 8)
+#define SMHC_CMD_DATA_EXPIRE		(1 << 9)
+#define SMHC_CMD_WRITE				(1 << 10)
+#define SMHC_CMD_SEQUENCE_MODE		(1 << 11)
+#define SMHC_CMD_SEND_AUTO_STOP		(1 << 12)
+#define SMHC_CMD_WAIT_PRE_OVER		(1 << 13)
+#define SMHC_CMD_STOP_ABORT_CMD		(1 << 14)
+#define SMHC_CMD_SEND_INIT_SEQUENCE (1 << 15)
+#define SMHC_CMD_UPCLK_ONLY			(1 << 21)
+#define SMHC_CMD_READ_CEATA_DEV		(1 << 22)
+#define SMHC_CMD_CCS_EXPIRE			(1 << 23)
+#define SMHC_CMD_ENABLE_BIT_BOOT	(1 << 24)
+#define SMHC_CMD_ALT_BOOT_OPTIONS	(1 << 25)
+#define SMHC_CMD_BOOT_ACK_EXPIRE	(1 << 26)
+#define SMHC_CMD_BOOT_ABORT			(1 << 27)
+#define SMHC_CMD_VOLTAGE_SWITCH		(1 << 28)
+#define SMHC_CMD_USE_HOLD_REGISTER	(1 << 29)
+#define SMHC_CMD_START				(1 << 31)
 
 /*
  * Interrupt bits
  */
-#define SDXC_RESP_ERROR			 (1 << 1)
-#define SDXC_COMMAND_DONE		 (1 << 2)
-#define SDXC_DATA_OVER			 (1 << 3)
-#define SDXC_TX_DATA_REQUEST	 (1 << 4)
-#define SDXC_RX_DATA_REQUEST	 (1 << 5)
-#define SDXC_RESP_CRC_ERROR		 (1 << 6)
-#define SDXC_DATA_CRC_ERROR		 (1 << 7)
-#define SDXC_RESP_TIMEOUT		 (1 << 8)
-#define SDXC_DATA_TIMEOUT		 (1 << 9)
-#define SDXC_VOLTAGE_CHANGE_DONE (1 << 10)
-#define SDXC_FIFO_RUN_ERROR		 (1 << 11)
-#define SDXC_HARD_WARE_LOCKED	 (1 << 12)
-#define SDXC_START_BIT_ERROR	 (1 << 13)
-#define SDXC_AUTO_COMMAND_DONE	 (1 << 14)
-#define SDXC_END_BIT_ERROR		 (1 << 15)
-#define SDXC_SDIO_INTERRUPT		 (1 << 16)
-#define SDXC_CARD_INSERT		 (1 << 30)
-#define SDXC_CARD_REMOVE		 (1 << 31)
-#define SDXC_INTERRUPT_ERROR_BIT                                                                           \
-	(SDXC_RESP_ERROR | SDXC_RESP_CRC_ERROR | SDXC_DATA_CRC_ERROR | SDXC_RESP_TIMEOUT | SDXC_DATA_TIMEOUT | \
-	 SDXC_FIFO_RUN_ERROR | SDXC_HARD_WARE_LOCKED | SDXC_START_BIT_ERROR | SDXC_END_BIT_ERROR)
-#define SDXC_INTERRUPT_DONE_BIT (SDXC_AUTO_COMMAND_DONE | SDXC_DATA_OVER | SDXC_COMMAND_DONE | SDXC_VOLTAGE_CHANGE_DONE)
-
-#define SUNXI_MMC_GCTRL_SOFT_RESET	  (0x1 << 0)
-#define SUNXI_MMC_GCTRL_FIFO_RESET	  (0x1 << 1)
-#define SUNXI_MMC_GCTRL_DMA_RESET	  (0x1 << 2)
-#define SUNXI_MMC_GCTRL_RESET		  (SUNXI_MMC_GCTRL_SOFT_RESET | SUNXI_MMC_GCTRL_FIFO_RESET | SUNXI_MMC_GCTRL_DMA_RESET)
-#define SUNXI_MMC_GCTRL_DMA_ENABLE	  (0x1 << 5)
-#define SUNXI_MMC_GCTRL_ACCESS_BY_AHB (0x1 << 31)
-
-#define SUNXI_MMC_RINT_RESP_ERROR		   (0x1 << 1)
-#define SUNXI_MMC_RINT_COMMAND_DONE		   (0x1 << 2)
-#define SUNXI_MMC_RINT_DATA_OVER		   (0x1 << 3)
-#define SUNXI_MMC_RINT_TX_DATA_REQUEST	   (0x1 << 4)
-#define SUNXI_MMC_RINT_RX_DATA_REQUEST	   (0x1 << 5)
-#define SUNXI_MMC_RINT_RESP_CRC_ERROR	   (0x1 << 6)
-#define SUNXI_MMC_RINT_DATA_CRC_ERROR	   (0x1 << 7)
-#define SUNXI_MMC_RINT_RESP_TIMEOUT		   (0x1 << 8)
-#define SUNXI_MMC_RINT_DATA_TIMEOUT		   (0x1 << 9)
-#define SUNXI_MMC_RINT_VOLTAGE_CHANGE_DONE (0x1 << 10)
-#define SUNXI_MMC_RINT_FIFO_RUN_ERROR	   (0x1 << 11)
-#define SUNXI_MMC_RINT_HARD_WARE_LOCKED	   (0x1 << 12)
-#define SUNXI_MMC_RINT_START_BIT_ERROR	   (0x1 << 13)
-#define SUNXI_MMC_RINT_AUTO_COMMAND_DONE   (0x1 << 14)
-#define SUNXI_MMC_RINT_END_BIT_ERROR	   (0x1 << 15)
-#define SUNXI_MMC_RINT_SDIO_INTERRUPT	   (0x1 << 16)
-#define SUNXI_MMC_RINT_CARD_INSERT		   (0x1 << 30)
-#define SUNXI_MMC_RINT_CARD_REMOVE		   (0x1 << 31)
-#define SUNXI_MMC_RINT_INTERRUPT_ERROR_BIT                                                              \
-	(SUNXI_MMC_RINT_RESP_ERROR | SUNXI_MMC_RINT_RESP_CRC_ERROR | SUNXI_MMC_RINT_DATA_CRC_ERROR |        \
-	 SUNXI_MMC_RINT_RESP_TIMEOUT | SUNXI_MMC_RINT_DATA_TIMEOUT | SUNXI_MMC_RINT_VOLTAGE_CHANGE_DONE |   \
-	 SUNXI_MMC_RINT_FIFO_RUN_ERROR | SUNXI_MMC_RINT_HARD_WARE_LOCKED | SUNXI_MMC_RINT_START_BIT_ERROR | \
-	 SUNXI_MMC_RINT_END_BIT_ERROR) /* 0xbfc2 */
-#define SUNXI_MMC_RINT_INTERRUPT_DONE_BIT                                                        \
-	(SUNXI_MMC_RINT_AUTO_COMMAND_DONE | SUNXI_MMC_RINT_DATA_OVER | SUNXI_MMC_RINT_COMMAND_DONE | \
-	 SUNXI_MMC_RINT_VOLTAGE_CHANGE_DONE)
+#define SMHC_RINT_RESP_ERROR		  (0x1 << 1)
+#define SMHC_RINT_COMMAND_DONE		  (0x1 << 2)
+#define SMHC_RINT_DATA_OVER			  (0x1 << 3)
+#define SMHC_RINT_TX_DATA_REQUEST	  (0x1 << 4)
+#define SMHC_RINT_RX_DATA_REQUEST	  (0x1 << 5)
+#define SMHC_RINT_RESP_CRC_ERROR	  (0x1 << 6)
+#define SMHC_RINT_DATA_CRC_ERROR	  (0x1 << 7)
+#define SMHC_RINT_RESP_TIMEOUT		  (0x1 << 8)
+#define SMHC_RINT_DATA_TIMEOUT		  (0x1 << 9)
+#define SMHC_RINT_VOLTAGE_CHANGE_DONE (0x1 << 10)
+#define SMHC_RINT_FIFO_RUN_ERROR	  (0x1 << 11)
+#define SMHC_RINT_HARD_WARE_LOCKED	  (0x1 << 12)
+#define SMHC_RINT_START_BIT_ERROR	  (0x1 << 13)
+#define SMHC_RINT_AUTO_COMMAND_DONE	  (0x1 << 14)
+#define SMHC_RINT_END_BIT_ERROR		  (0x1 << 15)
+#define SMHC_RINT_SDIO_INTERRUPT	  (0x1 << 16)
+#define SMHC_RINT_CARD_INSERT		  (0x1 << 30)
+#define SMHC_RINT_CARD_REMOVE		  (0x1 << 31)
+#define SMHC_RINT_INTERRUPT_ERROR_BIT                                                                                 \
+	(SMHC_RINT_RESP_ERROR | SMHC_RINT_RESP_CRC_ERROR | SMHC_RINT_DATA_CRC_ERROR | SMHC_RINT_RESP_TIMEOUT |            \
+	 SMHC_RINT_DATA_TIMEOUT | SMHC_RINT_VOLTAGE_CHANGE_DONE | SMHC_RINT_FIFO_RUN_ERROR | SMHC_RINT_HARD_WARE_LOCKED | \
+	 SMHC_RINT_START_BIT_ERROR | SMHC_RINT_END_BIT_ERROR) /* 0xbfc2 */
+#define SMHC_RINT_INTERRUPT_DONE_BIT \
+	(SMHC_RINT_AUTO_COMMAND_DONE | SMHC_RINT_DATA_OVER | SMHC_RINT_COMMAND_DONE | SMHC_RINT_VOLTAGE_CHANGE_DONE)
 
 /*
  * Status
  */
-#define SDXC_RXWL_FLAG		(1 << 0)
-#define SDXC_TXWL_FLAG		(1 << 1)
-#define SDXC_FIFO_EMPTY		(1 << 2)
-#define SDXC_FIFO_FULL		(1 << 3)
-#define SDXC_CARD_PRESENT	(1 << 8)
-#define SDXC_CARD_DATA_BUSY (1 << 9)
-#define SDXC_DATA_FSM_BUSY	(1 << 10)
-#define SDXC_DMA_REQUEST	(1 << 31)
-#define SDXC_FIFO_SIZE		(16)
-
-/*
- * Function select
- */
-#define SDXC_CEATA_ON			  (0xceaa << 16)
-#define SDXC_SEND_IRQ_RESPONSE	  (1 << 0)
-#define SDXC_SDIO_READ_WAIT		  (1 << 1)
-#define SDXC_ABORT_READ_DATA	  (1 << 2)
-#define SDXC_SEND_CCSD			  (1 << 8)
-#define SDXC_SEND_AUTO_STOPCCSD	  (1 << 9)
-#define SDXC_CEATA_DEV_IRQ_ENABLE (1 << 10)
+#define SMHC_STATUS_RXWL_FLAG	   (1 << 0)
+#define SMHC_STATUS_TXWL_FLAG	   (1 << 1)
+#define SMHC_STATUS_FIFO_EMPTY	   (1 << 2)
+#define SMHC_STATUS_FIFO_FULL	   (1 << 3)
+#define SMHC_STATUS_CARD_PRESENT   (1 << 8)
+#define SMHC_STATUS_CARD_DATA_BUSY (1 << 9)
+#define SMHC_STATUS_DATA_FSM_BUSY  (1 << 10)
+#define SMHC_STATUS_DMA_REQUEST	   (1 << 31)
+#define SMHC_STATUS_FIFO_SIZE	   (16)
+#define SMHC_STATUS_FIFO_LEVEL(x)  (((x) >> 17) & 0x3fff)
 
 /* IDMA controller bus mod bit field */
-#define SDXC_IDMAC_SOFT_RESET  BIT(0)
-#define SDXC_IDMAC_FIX_BURST   BIT(1)
-#define SDXC_IDMAC_IDMA_ON	   BIT(7)
-#define SDXC_IDMAC_REFETCH_DES BIT(31)
+#define SMHC_IDMAC_SOFT_RESET  BIT(0)
+#define SMHC_IDMAC_FIX_BURST   BIT(1)
+#define SMHC_IDMAC_IDMA_ON	   BIT(7)
+#define SMHC_IDMAC_REFETCH_DES BIT(31)
 
 /* IDMA status bit field */
-#define SDXC_IDMAC_TRANSMIT_INTERRUPT	  BIT(0)
-#define SDXC_IDMAC_RECEIVE_INTERRUPT	  BIT(1)
-#define SDXC_IDMAC_FATAL_BUS_ERROR		  BIT(2)
-#define SDXC_IDMAC_DESTINATION_INVALID	  BIT(4)
-#define SDXC_IDMAC_CARD_ERROR_SUM		  BIT(5)
-#define SDXC_IDMAC_NORMAL_INTERRUPT_SUM	  BIT(8)
-#define SDXC_IDMAC_ABNORMAL_INTERRUPT_SUM BIT(9)
-#define SDXC_IDMAC_HOST_ABORT_INTERRUPT	  BIT(10)
-#define SDXC_IDMAC_IDLE					  (0 << 13)
-#define SDXC_IDMAC_SUSPEND				  (1 << 13)
-#define SDXC_IDMAC_DESC_READ			  (2 << 13)
-#define SDXC_IDMAC_DESC_CHECK			  (3 << 13)
-#define SDXC_IDMAC_READ_REQUEST_WAIT	  (4 << 13)
-#define SDXC_IDMAC_WRITE_REQUEST_WAIT	  (5 << 13)
-#define SDXC_IDMAC_READ					  (6 << 13)
-#define SDXC_IDMAC_WRITE				  (7 << 13)
-#define SDXC_IDMAC_DESC_CLOSE			  (8 << 13)
+#define SMHC_IDMAC_TRANSMIT_INTERRUPT	  BIT(0)
+#define SMHC_IDMAC_RECEIVE_INTERRUPT	  BIT(1)
+#define SMHC_IDMAC_FATAL_BUS_ERROR		  BIT(2)
+#define SMHC_IDMAC_DESTINATION_INVALID	  BIT(4)
+#define SMHC_IDMAC_CARD_ERROR_SUM		  BIT(5)
+#define SMHC_IDMAC_NORMAL_INTERRUPT_SUM	  BIT(8)
+#define SMHC_IDMAC_ABNORMAL_INTERRUPT_SUM BIT(9)
+#define SMHC_IDMAC_HOST_ABORT_INTERRUPT	  BIT(10)
+#define SMHC_IDMAC_IDLE					  (0 << 13)
+#define SMHC_IDMAC_SUSPEND				  (1 << 13)
+#define SMHC_IDMAC_DESC_READ			  (2 << 13)
+#define SMHC_IDMAC_DESC_CHECK			  (3 << 13)
+#define SMHC_IDMAC_READ_REQUEST_WAIT	  (4 << 13)
+#define SMHC_IDMAC_WRITE_REQUEST_WAIT	  (5 << 13)
+#define SMHC_IDMAC_READ					  (6 << 13)
+#define SMHC_IDMAC_WRITE				  (7 << 13)
+#define SMHC_IDMAC_DESC_CLOSE			  (8 << 13)
 
 /*
  * If the idma-des-size-bits of property is ie 13, bufsize bits are:
@@ -206,18 +166,56 @@
  *  Bits 26-31: not used
  * Since we only ever set buf1 size, we can simply store it directly.
  */
-#define SDXC_IDMAC_DES0_DIC BIT(1) /* disable interrupt on completion */
-#define SDXC_IDMAC_DES0_LD	BIT(2) /* last descriptor */
-#define SDXC_IDMAC_DES0_FD	BIT(3) /* first descriptor */
-#define SDXC_IDMAC_DES0_CH	BIT(4) /* chain mode */
-#define SDXC_IDMAC_DES0_ER	BIT(5) /* end of ring */
-#define SDXC_IDMAC_DES0_CES BIT(30) /* card error summary */
-#define SDXC_IDMAC_DES0_OWN BIT(31) /* 1-idma owns it, 0-host owns it */
+#define SMHC_IDMAC_DES0_DIC BIT(1) /* disable interrupt on completion */
+#define SMHC_IDMAC_DES0_LD	BIT(2) /* last descriptor */
+#define SMHC_IDMAC_DES0_FD	BIT(3) /* first descriptor */
+#define SMHC_IDMAC_DES0_CH	BIT(4) /* chain mode */
+#define SMHC_IDMAC_DES0_ER	BIT(5) /* end of ring */
+#define SMHC_IDMAC_DES0_CES BIT(30) /* card error summary */
+#define SMHC_IDMAC_DES0_OWN BIT(31) /* 1-idma owns it, 0-host owns it */
 
-#define CONFIG_SYS_CACHELINE_SIZE 16
-#define DTO_MAX					  200
-#define SUNXI_DMA_TL_TM5_V5P3X    ((0x3<<28)|(15<<16)|240)
-#define SUNXI_MMC_STATUS_FIFO_LEVEL(x)	(((x) >> 17) & 0x3fff)
+/*
+timing mode
+0: output and input are both based on [0,1,...,7] pll delay.
+1: output and input are both based on phase.
+2: output is based on phase, input is based on delay chain except hs400.
+	input of hs400 is based on delay chain.
+3: output is based on phase, input is based on delay chain.
+4: output is based on phase, input is based on delay chain.
+	it also support to use delay chain on data strobe signal.
+*/
+#define SUNXI_MMC_TIMING_MODE_0 0U
+#define SUNXI_MMC_TIMING_MODE_1 1U
+#define SUNXI_MMC_TIMING_MODE_2 2U
+#define SUNXI_MMC_TIMING_MODE_3 3U
+#define SUNXI_MMC_TIMING_MODE_4 4U
+#define SUNXI_MMC_TIMING_MODE_5 5U
+
+#define MMC_CLK_SAMPLE_POINIT_MODE_0	   8U
+#define MMC_CLK_SAMPLE_POINIT_MODE_1	   3U
+#define MMC_CLK_SAMPLE_POINIT_MODE_2	   2U
+#define MMC_CLK_SAMPLE_POINIT_MODE_2_HS400 64U
+#define MMC_CLK_SAMPLE_POINIT_MODE_3	   64U
+#define MMC_CLK_SAMPLE_POINIT_MODE_4	   64U
+#define MMC_CLK_SAMPLE_POINIT_MODE_5	   64U
+
+#define TM5_OUT_PH90  (0)
+#define TM5_OUT_PH180 (1)
+#define TM5_IN_PH90	  (0)
+#define TM5_IN_PH180  (1)
+#define TM5_IN_PH270  (2)
+#define TM5_IN_PH0	  (3)
+
+/* delay control */
+#define SDXC_NTDC_START_CAL	  (1 << 15)
+#define SDXC_NTDC_CAL_DONE	  (1 << 14)
+#define SDXC_NTDC_CAL_DLY	  (0x3F << 8)
+#define SDXC_NTDC_ENABLE_DLY  (1 << 7)
+#define SDXC_NTDC_CFG_DLY	  (0x3F << 0)
+#define SDXC_NTDC_CFG_NEW_DLY (0xF << 0)
+
+#define DTO_MAX						200
+#define SUNXI_MMC_NTSR_MODE_SEL_NEW (0x1 << 31)
 
 static void set_read_timeout(sdhci_t *sdhci, u32 timeout)
 {
@@ -229,13 +227,13 @@ static void set_read_timeout(sdhci_t *sdhci, u32 timeout)
 	rval	 = sdhci->reg->ntsr;
 	mode_2x	 = rval & (0x1 << 31);
 
-	if ((sdhci->width == MMC_BUS_WIDTH_4_DDR && mode_2x)) {
+	if ((sdhci->clock == MMC_CLK_50M_DDR && mode_2x)) {
 		rdto_clk = rdto_clk << 1;
 	}
 
 	rval = sdhci->reg->gctrl;
 	/*ddr50 mode don't use 256x timeout unit*/
-	if (rdto_clk > 0xffffff && sdhci->width == MMC_BUS_WIDTH_4_DDR) {
+	if (rdto_clk > 0xffffff && sdhci->clock == MMC_CLK_50M_DDR) {
 		rdto_clk = (rdto_clk + 255) / 256;
 		rval |= (0x1 << 11);
 	} else {
@@ -264,12 +262,12 @@ static int prepare_dma(sdhci_t *sdhci, sdhci_data_t *data)
 	u32				   i;
 
 	buff		  = data->buf;
-	buff_frag_num = byte_cnt >> SDXC_DES_NUM_SHIFT;
-	remain		  = byte_cnt & (SDXC_DES_BUFFER_MAX_LEN - 1);
+	buff_frag_num = byte_cnt >> SMHC_DES_NUM_SHIFT;
+	remain		  = byte_cnt & (SMHC_DES_BUFFER_MAX_LEN - 1);
 	if (remain)
 		buff_frag_num++;
 	else
-		remain = SDXC_DES_BUFFER_MAX_LEN - 1;
+		remain = SMHC_DES_BUFFER_MAX_LEN - 1;
 
 	for (i = 0; i < buff_frag_num; i++, des_idx++) {
 		memset((void *)&pdes[des_idx], 0, sizeof(sdhci_idma_desc_t));
@@ -277,16 +275,16 @@ static int prepare_dma(sdhci_t *sdhci, sdhci_data_t *data)
 		pdes[des_idx].own		= 1;
 		pdes[des_idx].dic		= 1;
 		if (buff_frag_num > 1 && i != buff_frag_num - 1)
-			pdes[des_idx].data_buf_sz = SDXC_DES_BUFFER_MAX_LEN - 1;
+			pdes[des_idx].data_buf_sz = SMHC_DES_BUFFER_MAX_LEN - 1;
 		else
 			pdes[des_idx].data_buf_sz = remain;
-		pdes[des_idx].buf_addr = ((u32)buff + i * SDXC_DES_BUFFER_MAX_LEN) >> 2;
+		pdes[des_idx].buf_addr = ((u32)buff + i * SMHC_DES_BUFFER_MAX_LEN) >> 2;
 		if (i == 0)
 			pdes[des_idx].first_desc = 1;
 
 		if (i == buff_frag_num - 1) {
-			pdes[des_idx].dic	   = 0;
-			pdes[des_idx].last_desc = 1;
+			pdes[des_idx].dic			 = 0;
+			pdes[des_idx].last_desc		 = 1;
 			pdes[des_idx].next_desc_addr = 0;
 		} else {
 			pdes[des_idx].next_desc_addr = ((u32)&pdes[des_idx + 1]) >> 2;
@@ -314,19 +312,19 @@ static int prepare_dma(sdhci_t *sdhci, sdhci_data_t *data)
 	 * IDIE[1]	: IDMA receive interrupt flag
 	 */
 	sdhci->reg->idst = 0x337; // clear interrupt status
-	sdhci->reg->gctrl |= SDXC_DMA_ENABLE_BIT | SDXC_DMA_RESET; /* dma enable */
-	sdhci->reg->dmac = SDXC_IDMAC_SOFT_RESET; /* idma reset */
-	while (sdhci->reg->dmac & SDXC_IDMAC_SOFT_RESET) {
+	sdhci->reg->gctrl |= SMHC_GCTRL_DMA_ENABLE | SMHC_GCTRL_DMA_RESET; /* dma enable */
+	sdhci->reg->dmac = SMHC_IDMAC_SOFT_RESET; /* idma reset */
+	while (sdhci->reg->dmac & SMHC_IDMAC_SOFT_RESET) {
 	} /* wait idma reset done */
 
-	sdhci->reg->dmac = SDXC_IDMAC_FIX_BURST | SDXC_IDMAC_IDMA_ON; /* idma on */
-	sdhci->reg->idie &= ~(SDXC_IDMAC_TRANSMIT_INTERRUPT | SDXC_IDMAC_RECEIVE_INTERRUPT);
+	sdhci->reg->dmac = SMHC_IDMAC_FIX_BURST | SMHC_IDMAC_IDMA_ON; /* idma on */
+	sdhci->reg->idie &= ~(SMHC_IDMAC_TRANSMIT_INTERRUPT | SMHC_IDMAC_RECEIVE_INTERRUPT);
 	if (data->flag & MMC_DATA_WRITE)
-		sdhci->reg->idie |= SDXC_IDMAC_TRANSMIT_INTERRUPT;
+		sdhci->reg->idie |= SMHC_IDMAC_TRANSMIT_INTERRUPT;
 	else
-		sdhci->reg->idie |= SDXC_IDMAC_RECEIVE_INTERRUPT;
+		sdhci->reg->idie |= SMHC_IDMAC_RECEIVE_INTERRUPT;
 
-	sdhci->reg->dlba	  = (u32)pdes  >> 2;
+	sdhci->reg->dlba	  = (u32)pdes >> 2;
 	sdhci->reg->ftrglevel = sdhci->dma_trglvl;
 
 	return 0;
@@ -341,15 +339,16 @@ static int wait_done(sdhci_t *sdhci, sdhci_data_t *dat, u32 timeout_msecs, u32 f
 	do {
 		status = sdhci->reg->rint;
 		if ((time_ms() > (start + timeout_msecs))) {
-			warning("SMHC: wait timeout %x status %x flag %x\r\n", status & SUNXI_MMC_RINT_INTERRUPT_ERROR_BIT, status,
+			warning("SMHC: wait timeout %x status %x flag %x\r\n", status & SMHC_RINT_INTERRUPT_ERROR_BIT, status,
 					flag);
 			return -1;
-		} else if ((status & SUNXI_MMC_RINT_INTERRUPT_ERROR_BIT)) {
-			warning("SMHC: error 0x%x status 0x%x\r\n", status & SUNXI_MMC_RINT_INTERRUPT_ERROR_BIT, status & ~SUNXI_MMC_RINT_INTERRUPT_ERROR_BIT);
+		} else if ((status & SMHC_RINT_INTERRUPT_ERROR_BIT)) {
+			warning("SMHC: error 0x%x status 0x%x\r\n", status & SMHC_RINT_INTERRUPT_ERROR_BIT,
+					status & ~SMHC_RINT_INTERRUPT_ERROR_BIT);
 			return -1;
 		}
 		if (dat && dma && (dat->blkcnt * dat->blksz) > 0)
-			done = ((status & flag) && (sdhci->reg->idst & SDXC_IDMAC_RECEIVE_INTERRUPT)) ? 1 : 0;
+			done = ((status & flag) && (sdhci->reg->idst & SMHC_IDMAC_RECEIVE_INTERRUPT)) ? 1 : 0;
 		else
 			done = (status & flag);
 	} while (!done);
@@ -363,7 +362,7 @@ static bool read_bytes(sdhci_t *sdhci, sdhci_data_t *dat)
 	u32 *tmp   = (u32 *)dat->buf;
 	u32	 status, err, done;
 	u32	 timeout = time_ms() + count;
-	u32  in_fifo;
+	u32	 in_fifo;
 
 	if (timeout < 250)
 		timeout = 250;
@@ -371,40 +370,40 @@ static bool read_bytes(sdhci_t *sdhci, sdhci_data_t *dat)
 	trace("SMHC: read %u\r\n", count);
 
 	status = sdhci->reg->status;
-	err	   = sdhci->reg->rint & SDXC_INTERRUPT_ERROR_BIT;
+	err	   = sdhci->reg->rint & SMHC_RINT_INTERRUPT_ERROR_BIT;
 	if (err)
-		warning("SMHC: interrupt error 0x%x status 0x%x\r\n", err & SDXC_INTERRUPT_ERROR_BIT, status);
+		warning("SMHC: interrupt error 0x%x status 0x%x\r\n", err & SMHC_RINT_INTERRUPT_ERROR_BIT, status);
 
 	while ((!err) && (count >= sizeof(sdhci->reg->fifo))) {
-		while (sdhci->reg->status & SDXC_FIFO_EMPTY) {
+		while (sdhci->reg->status & SMHC_STATUS_FIFO_EMPTY) {
 			if (time_ms() > timeout) {
 				warning("SMHC: read timeout\r\n");
 				return FALSE;
 			}
 		}
-		in_fifo = SUNXI_MMC_STATUS_FIFO_LEVEL(status);
+		in_fifo = SMHC_STATUS_FIFO_LEVEL(status);
 		count -= sizeof(sdhci->reg->fifo) * in_fifo;
 		while (in_fifo--) {
 			*(tmp++) = sdhci->reg->fifo;
 		}
 
 		status = sdhci->reg->status;
-		err	   = sdhci->reg->rint & SDXC_INTERRUPT_ERROR_BIT;
+		err	   = sdhci->reg->rint & SMHC_RINT_INTERRUPT_ERROR_BIT;
 	}
 
 	do {
 		status = sdhci->reg->rint;
 
-		err = status & SDXC_INTERRUPT_ERROR_BIT;
+		err = status & SMHC_RINT_INTERRUPT_ERROR_BIT;
 		if (dat->blkcnt > 1)
-			done = status & SDXC_AUTO_COMMAND_DONE;
+			done = status & SMHC_RINT_AUTO_COMMAND_DONE;
 		else
-			done = status & SDXC_DATA_OVER;
+			done = status & SMHC_RINT_DATA_OVER;
 
 	} while (!done && !err);
 
-	if (err & SDXC_INTERRUPT_ERROR_BIT) {
-		warning("SMHC: interrupt error 0x%x status 0x%x\r\n", err & SDXC_INTERRUPT_ERROR_BIT, status);
+	if (err & SMHC_RINT_INTERRUPT_ERROR_BIT) {
+		warning("SMHC: interrupt error 0x%x status 0x%x\r\n", err & SMHC_RINT_INTERRUPT_ERROR_BIT, status);
 		return FALSE;
 	}
 
@@ -428,9 +427,9 @@ static bool write_bytes(sdhci_t *sdhci, sdhci_data_t *dat)
 	trace("SMHC: write %u\r\n", count);
 
 	status = sdhci->reg->status;
-	err	   = sdhci->reg->rint & SDXC_INTERRUPT_ERROR_BIT;
+	err	   = sdhci->reg->rint & SMHC_RINT_INTERRUPT_ERROR_BIT;
 	while (!err && count) {
-		while (sdhci->reg->status & SDXC_FIFO_FULL) {
+		while (sdhci->reg->status & SMHC_STATUS_FIFO_FULL) {
 			if (time_ms() > timeout) {
 				warning("SMHC: write timeout\r\n");
 				return FALSE;
@@ -440,28 +439,27 @@ static bool write_bytes(sdhci_t *sdhci, sdhci_data_t *dat)
 		count -= sizeof(u32);
 
 		status = sdhci->reg->status;
-		err	   = sdhci->reg->rint & SDXC_INTERRUPT_ERROR_BIT;
+		err	   = sdhci->reg->rint & SMHC_RINT_INTERRUPT_ERROR_BIT;
 	}
 
 	do {
 		status = sdhci->reg->rint;
-		err	   = status & SDXC_INTERRUPT_ERROR_BIT;
+		err	   = status & SMHC_RINT_INTERRUPT_ERROR_BIT;
 		if (dat->blkcnt > 1)
-			done = status & SDXC_AUTO_COMMAND_DONE;
+			done = status & SMHC_RINT_AUTO_COMMAND_DONE;
 		else
-			done = status & SDXC_DATA_OVER;
+			done = status & SMHC_RINT_DATA_OVER;
 	} while (!done && !err);
 
-	if (err & SDXC_INTERRUPT_ERROR_BIT)
+	if (err & SMHC_RINT_INTERRUPT_ERROR_BIT)
 		return FALSE;
-	// sdhci->reg->gctrl |= SDXC_FIFO_RESET;
 
 	if (count)
 		return FALSE;
 	return TRUE;
 }
 
-static bool transfer_command(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat)
+bool sdhci_transfer(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 {
 	u32	 cmdval = 0;
 	u32	 status = 0;
@@ -475,65 +473,67 @@ static bool transfer_command(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat
 		do {
 			status = sdhci->reg->status;
 			if (time_ms() - timeout > 10) {
-				sdhci->reg->gctrl = SDXC_HARDWARE_RESET;
+				sdhci->reg->gctrl = SMHC_GCTRL_HARDWARE_RESET;
 				sdhci->reg->rint  = 0xffffffff;
 				warning("SMHC: stop timeout\r\n");
 				return FALSE;
 			}
-		} while (status & SDXC_CARD_DATA_BUSY);
+		} while (status & SMHC_STATUS_CARD_DATA_BUSY);
 		return TRUE;
 	}
 
 	if (cmd->resptype & MMC_RSP_PRESENT) {
-		cmdval |= SDXC_RESP_EXPIRE;
+		cmdval |= SMHC_CMD_RESP_EXPIRE;
 		if (cmd->resptype & MMC_RSP_136)
-			cmdval |= SDXC_LONG_RESPONSE;
+			cmdval |= SMHC_CMD_LONG_RESPONSE;
 		if (cmd->resptype & MMC_RSP_CRC)
-			cmdval |= SDXC_CHECK_RESPONSE_CRC;
+			cmdval |= SMHC_CMD_CHECK_RESPONSE_CRC;
 	}
 
 	if (dat) {
-		cmdval |= SDXC_DATA_EXPIRE | SDXC_WAIT_PRE_OVER;
+		sdhci->reg->blksz	= dat->blksz;
+		sdhci->reg->bytecnt = (u32)(dat->blkcnt * dat->blksz);
+
+		cmdval |= SMHC_CMD_DATA_EXPIRE | SMHC_CMD_WAIT_PRE_OVER;
 		set_read_timeout(sdhci, DTO_MAX);
 
 		if (dat->flag & MMC_DATA_WRITE) {
-			cmdval |= SDXC_WRITE;
-			sdhci->reg->idst |= SDXC_IDMAC_TRANSMIT_INTERRUPT; // clear TX status
+			cmdval |= SMHC_CMD_WRITE;
+			sdhci->reg->idst |= SMHC_IDMAC_TRANSMIT_INTERRUPT; // clear TX status
 		}
 		if (dat->flag & MMC_DATA_READ)
-			sdhci->reg->idst |= SDXC_IDMAC_RECEIVE_INTERRUPT; // clear RX status
+			sdhci->reg->idst |= SMHC_IDMAC_RECEIVE_INTERRUPT; // clear RX status
 	}
 
 	if (cmd->idx == MMC_WRITE_MULTIPLE_BLOCK || cmd->idx == MMC_READ_MULTIPLE_BLOCK)
-		cmdval |= SDXC_SEND_AUTO_STOP;
+		cmdval |= SMHC_CMD_SEND_AUTO_STOP;
 
 	sdhci->reg->rint = 0xffffffff; // Clear status
 	sdhci->reg->arg	 = cmd->arg;
 
 	if (dat && (dat->blkcnt * dat->blksz) > 64) {
 		dma = true;
-		sdhci->reg->gctrl &= ~SUNXI_MMC_GCTRL_ACCESS_BY_AHB;
+		sdhci->reg->gctrl &= ~SMHC_GCTRL_ACCESS_BY_AHB;
 		prepare_dma(sdhci, dat);
-		sdhci->reg->cmd = cmdval | cmd->idx | SDXC_START; // Start
+		sdhci->reg->cmd = cmdval | cmd->idx | SMHC_CMD_START; // Start
 	} else if (dat && (dat->blkcnt * dat->blksz) > 0) {
-		sdhci->reg->gctrl |= SUNXI_MMC_GCTRL_ACCESS_BY_AHB;
-		sdhci->reg->cmd = cmdval | cmd->idx | SDXC_START; // Start
+		sdhci->reg->gctrl |= SMHC_GCTRL_ACCESS_BY_AHB;
+		sdhci->reg->cmd = cmdval | cmd->idx | SMHC_CMD_START; // Start
 		if (dat->flag & MMC_DATA_READ && !read_bytes(sdhci, dat))
 			return FALSE;
 		else if (dat->flag & MMC_DATA_WRITE && !write_bytes(sdhci, dat))
 			return FALSE;
 	} else {
-		sdhci->reg->gctrl |= SUNXI_MMC_GCTRL_ACCESS_BY_AHB;
-		sdhci->reg->cmd = cmdval | cmd->idx | SDXC_START; // Start
+		sdhci->reg->gctrl |= SMHC_GCTRL_ACCESS_BY_AHB;
+		sdhci->reg->cmd = cmdval | cmd->idx | SMHC_CMD_START; // Start
 	}
 
-	if (wait_done(sdhci, 0, 100, SUNXI_MMC_RINT_COMMAND_DONE, false)) {
+	if (wait_done(sdhci, 0, 100, SMHC_RINT_COMMAND_DONE, false)) {
 		warning("SMHC: cmd timeout\r\n");
 		return FALSE;
 	}
 
-	if (dat && wait_done(sdhci, dat, 6000,
-						 dat->blkcnt > 1 ? SUNXI_MMC_RINT_AUTO_COMMAND_DONE : SUNXI_MMC_RINT_DATA_OVER, dma)) {
+	if (dat && wait_done(sdhci, dat, 6000, dat->blkcnt > 1 ? SMHC_RINT_AUTO_COMMAND_DONE : SMHC_RINT_DATA_OVER, dma)) {
 		warning("SMHC: data timeout\r\n");
 		return FALSE;
 	}
@@ -543,12 +543,12 @@ static bool transfer_command(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat
 		do {
 			status = sdhci->reg->status;
 			if (time_ms() - timeout > 10) {
-				sdhci->reg->gctrl = SDXC_HARDWARE_RESET;
+				sdhci->reg->gctrl = SMHC_GCTRL_HARDWARE_RESET;
 				sdhci->reg->rint  = 0xffffffff;
 				warning("SMHC: busy timeout\r\n");
 				return FALSE;
 			}
-		} while (status & SDXC_CARD_DATA_BUSY);
+		} while (status & SMHC_STATUS_CARD_DATA_BUSY);
 	}
 
 	if (cmd->resptype & MMC_RSP_136) {
@@ -566,103 +566,198 @@ static bool transfer_command(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat
 		sdhci->reg->idst = status;
 		sdhci->reg->idie = 0;
 		sdhci->reg->dmac = 0;
-		sdhci->reg->gctrl &= ~SUNXI_MMC_GCTRL_DMA_ENABLE;
+		sdhci->reg->gctrl &= ~SMHC_GCTRL_DMA_ENABLE;
 	}
 
 	return TRUE;
 }
 
-static bool transfer_data(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat)
-{
-	u32 dlen = (u32)(dat->blkcnt * dat->blksz);
-
-	sdhci->reg->blksz	= dat->blksz;
-	sdhci->reg->bytecnt = dlen;
-
-	return transfer_command(sdhci, cmd, dat);
-}
-
 bool sdhci_reset(sdhci_t *sdhci)
 {
-	sdhci->reg->gctrl = SDXC_HARDWARE_RESET;
+	sdhci->reg->gctrl = SMHC_GCTRL_HARDWARE_RESET;
 	return TRUE;
 }
 
 bool sdhci_set_width(sdhci_t *sdhci, u32 width)
 {
 	const char *mode = "1 bit";
+	sdhci->reg->gctrl &= ~SMHC_GCTRL_DDR_MODE;
 	switch (width) {
 		case MMC_BUS_WIDTH_1:
-			sdhci->reg->width = SDXC_WIDTH1;
-			sdhci->reg->gctrl &= ~SDXC_DDR_MODE;
+			sdhci->reg->width = SMHC_WIDTH_1BIT;
 			break;
 		case MMC_BUS_WIDTH_4:
-			sdhci->reg->width = SDXC_WIDTH4;
-			sdhci->reg->gctrl &= ~SDXC_DDR_MODE;
-			mode = "4 bit";
-			break;
-		case MMC_BUS_WIDTH_4_DDR:
-			sdhci->reg->width = SDXC_WIDTH4;
-			sdhci->reg->gctrl |= SDXC_DDR_MODE;
-			mode = "4 bit DDR";
+			sdhci->reg->width = SMHC_WIDTH_4BIT;
+			mode			  = "4 bit";
 			break;
 		default:
 			error("SMHC: %u width value invalid\r\n", width);
 			return FALSE;
 	}
+	if (sdhci->clock == MMC_CLK_50M_DDR) {
+		sdhci->reg->gctrl |= SMHC_GCTRL_DDR_MODE;
+		mode = "4 bit DDR";
+	}
+
 	trace("SMHC: set width to %s\r\n", mode);
 	return TRUE;
 }
 
-static bool update_clk(sdhci_t *sdhci)
+static int init_default_timing(sdhci_t *sdhci)
 {
-	u32 cmd = (1U << 31) | (1 << 21) | (1 << 13);
+	sdhci->odly[MMC_CLK_400K]	 = TM5_OUT_PH180;
+	sdhci->odly[MMC_CLK_25M]	 = TM5_OUT_PH180;
+	sdhci->odly[MMC_CLK_50M]	 = TM5_OUT_PH180;
+	sdhci->odly[MMC_CLK_50M_DDR] = TM5_OUT_PH90;
 
-	sdhci->reg->cmd = cmd;
+	sdhci->sdly[MMC_CLK_400K]	 = TM5_IN_PH180;
+	sdhci->sdly[MMC_CLK_25M]	 = TM5_IN_PH180;
+	sdhci->sdly[MMC_CLK_50M]	 = TM5_IN_PH90;
+	sdhci->sdly[MMC_CLK_50M_DDR] = TM5_IN_PH180;
+
+	return 0;
+}
+
+static int config_delay(sdhci_t *sdhci)
+{
+	u32 rval, freq;
+	u8	odly, sdly;
+
+	freq = sdhci->clock;
+
+	odly = sdhci->odly[freq];
+	sdly = sdhci->sdly[freq];
+
+	trace("SMHC: odly: %d   sldy: %d\r\n", odly, sdly);
+
+	ccu->smhc0_clk_cfg &= (~CCU_MMC_CTRL_ENABLE);
+	sdhci->reg->drv_dl &= (~(0x3 << 16));
+	sdhci->reg->drv_dl |= (((odly & 0x1) << 16) | ((odly & 0x1) << 17));
+	ccu->smhc0_clk_cfg |= CCU_MMC_CTRL_ENABLE;
+
+	rval = sdhci->reg->ntsr;
+	rval &= (~(0x3 << 8));
+	rval |= ((sdly & 0x3) << 8);
+	sdhci->reg->ntsr = rval;
+
+	/*enable hw skew auto mode*/
+	rval = sdhci->reg->skew_ctrl;
+	rval |= (0x1 << 4);
+	sdhci->reg->skew_ctrl = rval;
+
+	return 0;
+}
+
+static bool update_card_clock(sdhci_t *sdhci)
+{
+	sdhci->reg->cmd = SMHC_CMD_START | SMHC_CMD_UPCLK_ONLY | SMHC_CMD_WAIT_PRE_OVER;
 	u32 timeout		= time_ms();
+
 	do {
 		if (time_ms() - timeout > 10)
 			return FALSE;
-	} while (sdhci->reg->cmd & 0x80000000);
-	sdhci->reg->rint = sdhci->reg->rint;
+	} while (sdhci->reg->cmd & SMHC_CMD_START);
+
+	sdhci->reg->rint = 0xffffffff;
 	return TRUE;
 }
 
-bool sdhci_set_clock(sdhci_t *sdhci, u32 clock)
+bool sdhci_set_clock(sdhci_t *sdhci, smhc_clk_t clock)
 {
-	u32 ratio = (sdhci->pclk / clock);
+	u32 div, n, mod_hz, pll, pll_hz, hz;
 
-	if (clock <= 1000000) {
-		trace("SMHC: set clock to %.2fKHz\r\n", (f32)((f32)clock / 1000.0));
-	} else {
-		trace("SMHC: set clock to %.2fMHz\r\n", (f32)((f32)clock / 1000000.0));
+	switch (clock) {
+		case MMC_CLK_400K:
+			hz = 400000;
+			break;
+		case MMC_CLK_25M:
+			hz = 25000000;
+			break;
+		case MMC_CLK_50M:
+		case MMC_CLK_50M_DDR:
+			hz = 50000000;
+			break;
+		case MMC_CLK_100M:
+			hz = 100000000;
+			break;
+		case MMC_CLK_150M:
+			hz = 150000000;
+			break;
+		case MMC_CLK_200M:
+			hz = 200000000;
+			break;
+		default:
+			error("SHMC: invalid clock: %u\r\n", clock);
+			return false;
 	}
-	trace("SMHC: clock ratio %u\r\n", ratio);
 
-	if ((ratio & 0xff) != ratio)
-		return FALSE;
-	sdhci->reg->clkcr &= ~(1 << 16);
-	sdhci->reg->clkcr = ratio & 0xff;
-	if (!update_clk(sdhci))
-		return FALSE;
-	sdhci->reg->clkcr |= (3 << 16);
-	if (!update_clk(sdhci))
-		return FALSE;
-	return TRUE;
-}
+	if (hz < 1000000) {
+		trace("SMHC: set clock to %.2fKHz\r\n", (f32)((f32)hz / 1000.0));
+	} else {
+		trace("SMHC: set clock to %.2fMHz\r\n", (f32)((f32)hz / 1000000.0));
+	}
 
-bool sdhci_transfer(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat)
-{
-	if (!dat)
-		return transfer_command(sdhci, cmd, dat);
+	if (sdhci->clock == MMC_CLK_50M_DDR)
+		mod_hz = hz * 4; /* 4xclk: DDR 4(HS); */
+	else
+		mod_hz = hz * 2; /* 2xclk: SDR 1/4; */
 
-	return transfer_data(sdhci, cmd, dat);
+	if (mod_hz <= 24000000) {
+		pll	   = CCU_MMC_CTRL_OSCM24;
+		pll_hz = 24000000;
+	} else {
+		pll	   = CCU_MMC_CTRL_PLL_PERIPH1X;
+		pll_hz = sunxi_clk_get_peri1x_rate(); // 600Mhz
+	}
+
+	div = pll_hz / mod_hz;
+	if (pll_hz % mod_hz)
+		div++;
+
+	n = 0;
+	while (div > 16) {
+		n++;
+		div = (div + 1) / 2;
+	}
+
+	if (n > 3) {
+		error("mmc %u error cannot set clock to %uHz\n", sdhci->name, hz);
+		return false;
+	}
+
+	trace("SMHC: clock ratio %u\r\n", div);
+
+	sdhci->reg->clkcr &= ~SMHC_CLKCR_CARD_CLOCK_ON; // Disable clock
+	if (!update_card_clock(sdhci))
+		return false;
+
+	sdhci->reg->ntsr |= SUNXI_MMC_NTSR_MODE_SEL_NEW;
+
+	ccu->smhc_gate_reset |= CCU_MMC_BGR_SMHC0_RST;
+	ccu->smhc0_clk_cfg &= (~CCU_MMC_CTRL_ENABLE);
+	ccu->smhc0_clk_cfg = pll | CCU_MMC_CTRL_N(n) | CCU_MMC_CTRL_M(div);
+	ccu->smhc0_clk_cfg |= CCU_MMC_CTRL_ENABLE;
+	ccu->smhc_gate_reset |= CCU_MMC_BGR_SMHC0_GATE;
+
+	sdhci->pclk = mod_hz;
+
+	sdhci->reg->clkcr |= SMHC_CLKCR_MASK_D0; // Mask D0 when updating
+	sdhci->reg->clkcr &= ~(0xff); // Clear div (set to 1)
+	if (sdhci->clock == MMC_CLK_50M_DDR) {
+		sdhci->reg->clkcr |= SMHC_CLKCR_CLOCK_DIV(2);
+	}
+	sdhci->reg->clkcr |= SMHC_CLKCR_CARD_CLOCK_ON; // Enable clock
+
+	if (!update_card_clock(sdhci))
+		return false;
+
+	config_delay(sdhci);
+
+	return true;
 }
 
 int sunxi_sdhci_init(sdhci_t *sdhci)
 {
-	u32 addr, val;
-
 	sunxi_gpio_init(sdhci->gpio_clk.pin, sdhci->gpio_clk.mux);
 	sunxi_gpio_set_pull(sdhci->gpio_clk.pin, GPIO_PULL_UP);
 
@@ -681,32 +776,13 @@ int sunxi_sdhci_init(sdhci_t *sdhci)
 	sunxi_gpio_init(sdhci->gpio_d3.pin, sdhci->gpio_d3.mux);
 	sunxi_gpio_set_pull(sdhci->gpio_d3.pin, GPIO_PULL_UP);
 
-	/* De-assert reset */
-	addr = T113_CCU_BASE + CCU_SMHC_BGR_REG;
-	val	 = read32(addr);
-	val |= (1 << 16);
-	write32(addr, val);
+	init_default_timing(sdhci);
+	sdhci_set_clock(sdhci, MMC_CLK_400K);
 
-	/* Open the clock gate for sdhci0 */
-	addr = T113_CCU_BASE + CCU_SMHC0_CLK_REG;
-	val	 = read32(addr);
-	val |= (1 << 31) | (1 << 24) | 0 << 8 | 5; /* 600/6=100MHz */
-	write32(addr, val);
-
-	sdhci->pclk = sunxi_clk_get_peri1x_rate() / 6;
-
-	/* sdhc0 clock gate pass */
-	addr = T113_CCU_BASE + CCU_SMHC_BGR_REG;
-	val	 = read32(addr);
-	val |= (1 << 0);
-	write32(addr, val);
-
-	udelay(10);
-
-	sdhci->reg->gctrl = SDXC_HARDWARE_RESET;
+	sdhci->reg->gctrl = SMHC_GCTRL_HARDWARE_RESET;
 	sdhci->reg->rint  = 0xffffffff;
 
-	sdhci->dma_trglvl = SUNXI_DMA_TL_TM5_V5P3X;
+	sdhci->dma_trglvl = ((0x3 << 28) | (15 << 16) | 240);
 
 	udelay(100);
 

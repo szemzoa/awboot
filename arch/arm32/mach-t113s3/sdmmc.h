@@ -122,9 +122,8 @@ enum {
 };
 
 enum {
-	MMC_BUS_WIDTH_1		= 1,
-	MMC_BUS_WIDTH_4		= 2,
-	MMC_BUS_WIDTH_4_DDR = 3,
+	MMC_BUS_WIDTH_1 = 1,
+	MMC_BUS_WIDTH_4 = 2,
 };
 
 enum {

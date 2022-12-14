@@ -15,5 +15,6 @@ SRCS	+=  $(SOC)/sdmmc.c
 SRCS	+=  $(SOC)/sunxi_sdhci.c
 SRCS	+=  $(SOC)/sunxi_clk.c
 SRCS	+=  $(SOC)/exception.c
-ASRCS	+=  $(SOC)/start.S
 
+ASRCS	+=  $(SOC)/start.S
+ASRCS	+=  $(SOC)/memcpy.S

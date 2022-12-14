@@ -3,6 +3,16 @@
 
 #include "sunxi_gpio.h"
 
+typedef enum {
+	MMC_CLK_400K = 0,
+	MMC_CLK_25M,
+	MMC_CLK_50M,
+	MMC_CLK_50M_DDR,
+	MMC_CLK_100M,
+	MMC_CLK_150M,
+	MMC_CLK_200M
+} smhc_clk_t;
+
 typedef struct {
 	volatile u32 gctrl; /* (0x00) SMC Global Control Register */
 	volatile u32 clkcr; /* (0x04) SMC Clock Control Register */
@@ -78,8 +88,8 @@ typedef struct {
 	u32 blkcnt;
 } sdhci_data_t;
 
-#define SDXC_DES_NUM_SHIFT		12 /* smhc2!! */
-#define SDXC_DES_BUFFER_MAX_LEN (1 << SDXC_DES_NUM_SHIFT)
+#define SMHC_DES_NUM_SHIFT		12 /* smhc2!! */
+#define SMHC_DES_BUFFER_MAX_LEN (1 << SMHC_DES_NUM_SHIFT)
 typedef struct {
 	u32 : 1, dic : 1, /* disable interrupt on completion */
 		last_desc : 1, /* 1-this data buffer is the last buffer */
@@ -90,7 +100,7 @@ typedef struct {
 		: 25, err_flag : 1, /* transfer error flag */
 		own : 1; /* des owner:1-idma owns it, 0-host owns it */
 
-	u32 data_buf_sz : SDXC_DES_NUM_SHIFT, data_buf_dummy : (32 - SDXC_DES_NUM_SHIFT);
+	u32 data_buf_sz : SMHC_DES_NUM_SHIFT, data_buf_dummy : (32 - SMHC_DES_NUM_SHIFT);
 
 	u32 buf_addr;
 	u32 next_desc_addr;
@@ -100,14 +110,16 @@ typedef struct {
 typedef struct {
 	char		 *name;
 	sdhci_reg_t *reg;
-	u32			 addr;
-	u32			 pclk;
 	u32			 reset;
-	u32			 voltage;
-	u32			 width;
-	u32			 clock;
 
-	sdhci_idma_desc_t dma_desc[64];
+	u32		   voltage;
+	u32		   width;
+	smhc_clk_t clock;
+	u32		   pclk;
+	u8		   odly[6];
+	u8		   sdly[6];
+
+	sdhci_idma_desc_t dma_desc[32];
 	u32				  dma_trglvl;
 
 	bool removable;
@@ -127,7 +139,7 @@ extern sdhci_t sdhci0;
 bool sdhci_reset(sdhci_t *hci);
 bool sdhci_set_voltage(sdhci_t *hci, u32 voltage);
 bool sdhci_set_width(sdhci_t *hci, u32 width);
-bool sdhci_set_clock(sdhci_t *hci, u32 clock);
+bool sdhci_set_clock(sdhci_t *hci, smhc_clk_t hz);
 bool sdhci_transfer(sdhci_t *hci, sdhci_cmd_t *cmd, sdhci_data_t *dat);
 int	 sunxi_sdhci_init(sdhci_t *sdhci);
 

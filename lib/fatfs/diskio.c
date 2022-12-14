@@ -12,11 +12,19 @@
 #include "main.h"
 #include "sdmmc.h"
 #include "debug.h"
+#include "dram.h"
+#include "sunxi_dma.h"
+#include "board.h"
 
 //------------------------------------------------------------------------------
 //         Internal variables
 
 static volatile DSTATUS Stat = STA_NOINIT; /* Disk status */
+#ifdef CONFIG_FATFS_CACHE_SIZE
+static u8 *const cache		= (u8 *)SDRAM_BASE;
+static const u32 cache_size = (CONFIG_FATFS_CACHE_SIZE);
+static u32		 cache_first, cache_last;
+#endif
 
 //------------------------------------------------------------------------------
 /* Initialize a Drive                                                    */
@@ -29,6 +37,11 @@ DSTATUS disk_initialize(BYTE drv /* Physical drive number (0..) */
 		return STA_NOINIT;
 
 	Stat &= ~STA_NOINIT;
+
+#ifdef CONFIG_FATFS_CACHE_SIZE
+	cache_first = 0xFFFFFFFF - cache_size; // Set to a big sector for a proper init
+	cache_last	= 0xFFFFFFFF;
+#endif
 
 	return Stat;
 }
@@ -56,23 +69,56 @@ DRESULT disk_read(BYTE	drv, /* Physical drive nmuber to identify the drive */
 				  UINT	count /* Number of sectors to read */
 )
 {
-	unsigned int blk, blkcnt, blkread;
+	u32		  blkread, read_pos, first, last, chunk, bytes;
+	dma_set_t dma_set;
+	u32		  hdma, timeout, st = 0;
 
 	if (drv || !count)
 		return RES_PARERR;
 	if (Stat & STA_NOINIT)
 		return RES_NOTRDY;
 
-	blk	   = sector;
-	blkcnt = count;
+	first = sector;
+	last  = sector + count;
+	bytes = count * FF_MIN_SS;
 
-	blkread = sdmmc_blk_read(&card0, buff, blk, blkcnt);
+	trace("FATFS: read %u sectors at %u\r\n", count, first);
 
-	if (blkread == blkcnt)
-		return RES_OK;
+#ifdef CONFIG_FATFS_CACHE_SIZE
+	// Read starts in cache but overflows
+	if (first >= cache_first && first < cache_last && last > cache_last) {
+		chunk = (cache_last - first) * FF_MIN_SS;
+		memcpy(buff, cache + (first - cache_first) * FF_MIN_SS, chunk);
+		buff += chunk;
+		first += (cache_last - first);
+		trace("FATFS: chunk %u first %u\r\n", chunk, first);
+	}
 
-	warning("FATFS: MMC read %u/%u blocks\r\n", blkread, blkcnt);
-	return RES_ERROR;
+	// Read is NOT in the cache
+	if (last > cache_last || first < cache_first) {
+		trace("FATFS: if %u > %u || %u < %u\r\n", last, cache_last, first, cache_first);
+
+		read_pos	= (first / cache_size) * cache_size; // TODO: check with card max capacity
+		cache_first = read_pos;
+		cache_last	= read_pos + cache_size;
+		blkread		= sdmmc_blk_read(&card0, cache, read_pos, cache_size);
+
+		if (blkread != cache_size) {
+			warning("FATFS: MMC read %u/%u blocks\r\n", blkread, cache_size);
+			return RES_ERROR;
+		}
+		trace("FATFS: cached %u sectors (%uKB) at %u/[%u-%u]\r\n", blkread, (blkread * FF_MIN_SS) / 1024, first,
+			  read_pos, read_pos + cache_size);
+	}
+
+	// Copy from read cache to output buffer
+	trace("FATFS: copy %u from 0x%x to 0x%x\r\n", bytes, (cache + ((first - cache_first) * FF_MIN_SS)), buff);
+	memcpy(buff, (cache + ((first - cache_first) * FF_MIN_SS)), bytes);
+
+	return RES_OK;
+#else
+	return (sdmmc_blk_read(&card0, buff, sector, count) == count ? RES_OK : RES_ERROR);
+#endif
 }
 
 /*-----------------------------------------------------------------------*/
