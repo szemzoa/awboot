@@ -61,7 +61,7 @@ static int fatfs_loadimage(char *filename, BYTE *dest)
 
 	fret = f_open(&file, filename, FA_OPEN_EXISTING | FA_READ);
 	if (fret != FR_OK) {
-		error("FATFS: f_open, filename: [%s]: error %d\r\n", filename, fret);
+		error("FATFS: open, filename: [%s]: error %d\r\n", filename, fret);
 		ret = -1;
 		goto open_fail;
 	}
@@ -78,7 +78,7 @@ static int fatfs_loadimage(char *filename, BYTE *dest)
 	time = time_ms() - start + 1;
 
 	if (fret != FR_OK) {
-		error("FATFS: f_read: error %d\r\n", fret);
+		error("FATFS: read: error %d\r\n", fret);
 		ret = -1;
 		goto read_fail;
 	}
@@ -87,7 +87,7 @@ static int fatfs_loadimage(char *filename, BYTE *dest)
 read_fail:
 	fret = f_close(&file);
 
-	debug("FATFS: read in %ums at %.2fMB/S\r\n", time, (float)(total_read / time) / 1024.0);
+	debug("FATFS: read in %ums at %.2fMB/S\r\n", time, (f32)(total_read / time) / 1024.0f);
 
 open_fail:
 	return ret;
@@ -99,22 +99,24 @@ static int load_sdcard(image_info_t *image)
 	FRESULT fret;
 	int		ret;
 	u32		start;
-	u32		ts;
-	u32		time;
 
-	// ts = time_ms();
-	// sdmmc_blk_read(&card0, (u8 *)(SDRAM_BASE + 64 * 1024 * 1024), 0, 8 * 1024);
-	// time = time_ms() - ts;
-	// debug("SDMMC: bench %ums %uKB/S\r\n", time, (8 * 1024 * 512) / time);
+#if defined(CONFIG_SDMMC_SPEED_TEST_SIZE) && LOG_LEVEL >= LOG_DEBUG
+	u32 test_time;
+	start = time_ms();
+	sdmmc_blk_read(&card0, (u8 *)(SDRAM_BASE), 0, CONFIG_SDMMC_SPEED_TEST_SIZE);
+	test_time = time_ms() - start;
+	debug("SDMMC: speedtest %uKB in %ums at %uKB/S\r\n", (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / 1024, test_time,
+		  (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / test_time);
+#endif // SDMMC_SPEED_TEST
 
 	start = time_ms();
 	/* mount fs */
 	fret = f_mount(&fs, "", 1);
 	if (fret != FR_OK) {
-		error("FATFS: f_mount mount error %d\r\n", fret);
+		error("FATFS: mount error: %d\r\n", fret);
 		return -1;
 	} else {
-		debug("FATFS: f_mount OK\r\n");
+		debug("FATFS: mount OK\r\n");
 	}
 
 	info("FATFS: read %s addr=%x\r\n", image->of_filename, (unsigned int)image->of_dest);
@@ -130,10 +132,10 @@ static int load_sdcard(image_info_t *image)
 	/* umount fs */
 	fret = f_mount(0, "", 0);
 	if (fret != FR_OK) {
-		error("FATFS: f_mount unmount error %d\r\n", fret);
+		error("FATFS: unmount error %d\r\n", fret);
 		return -1;
 	} else {
-		debug("FATFS: f_mount unmount OK\r\n");
+		debug("FATFS: unmount OK\r\n");
 	}
 	debug("FATFS: done in %ums\r\n", time_ms() - start);
 
@@ -186,12 +188,6 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 
 int main(void)
 {
-	u32 *pc, *sp_old, *sp_new;
-	int (*jump)(void);
-	const u32 *ddr	= (u32 *)SDRAM_BASE;
-	const u32 *base = (u32 *)&__spl_start; // SRAM start
-	u64		   time;
-
 	board_init();
 	sunxi_clk_init();
 

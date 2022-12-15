@@ -69,9 +69,7 @@ DRESULT disk_read(BYTE	drv, /* Physical drive nmuber to identify the drive */
 				  UINT	count /* Number of sectors to read */
 )
 {
-	u32		  blkread, read_pos, first, last, chunk, bytes;
-	dma_set_t dma_set;
-	u32		  hdma, timeout, st = 0;
+	u32 blkread, read_pos, first, last, chunk, bytes;
 
 	if (drv || !count)
 		return RES_PARERR;

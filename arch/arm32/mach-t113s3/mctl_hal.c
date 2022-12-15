@@ -1625,4 +1625,8 @@ int init_DRAM(int type, dram_para_t *para) // s0
 	return mem_size;
 }
 
-void abort(void) {}
+void abort(void)
+{
+	while (1)
+		;
+}

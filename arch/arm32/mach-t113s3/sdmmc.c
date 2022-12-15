@@ -393,7 +393,6 @@ static bool sdmmc_detect(sdhci_t *hci, sdmmc_t *card)
 // Otherwise there's only one media type if enabled
 #ifdef CONFIG_BOOT_SDCARD
 	if (!sd_send_op_cond(hci, card)) {
-		debug("SMHC: SD detect failed\r\n");
 #ifdef CONFIG_BOOT_MMC
 		sdhci_reset(hci);
 		sdhci_set_clock(hci, MMC_CLK_400K);
@@ -406,10 +405,11 @@ static bool sdmmc_detect(sdhci_t *hci, sdmmc_t *card)
 		udelay(2000); // 1ms + 74 clocks @ 400KHz (185us)
 
 		if (!mmc_send_op_cond(hci, card)) {
-			debug("SMHC: MMC detect failed\r\n");
+			debug("SMHC: SD/MMC detect failed\r\n");
 			return FALSE;
 		}
 #else
+		debug("SMHC: SD detect failed\r\n");
 		return FALSE;
 #endif
 	}
@@ -601,7 +601,7 @@ static bool sdmmc_detect(sdhci_t *hci, sdmmc_t *card)
 		card->capacity = (csize + 1) << (cmult + 2);
 	}
 	card->capacity *= 1 << UNSTUFF_BITS(card->csd, 80, 4);
-	debug("SMHC: capacity %luGB\r\n", (uint32_t)(card->capacity / 1000000000llu) + 1);
+	debug("SMHC: capacity %.1fGB\r\n", (f32)((f64)card->capacity / (f64)1000000000.0));
 
 	if (hci->isspi) {
 		if (!sdhci_set_clock(hci, min(card->tran_speed, hci->clock)) || !sdhci_set_width(hci, MMC_BUS_WIDTH_1)) {
