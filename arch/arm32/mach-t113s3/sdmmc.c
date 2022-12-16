@@ -29,12 +29,117 @@
 #include "main.h"
 #include "debug.h"
 #include "sunxi_sdhci.h"
-#include "sdcard.h"
+#include "sdmmc.h"
+#include "board.h"
 
 #define FALSE 0
 #define TRUE  1
 
-sdcard_pdata_t sdcard0;
+/*
+ * EXT_CSD fields
+ */
+
+#define EXT_CSD_CMDQ_MODE_EN				15 /* R/W */
+#define EXT_CSD_FLUSH_CACHE					32 /* W */
+#define EXT_CSD_CACHE_CTRL					33 /* R/W */
+#define EXT_CSD_POWER_OFF_NOTIFICATION		34 /* R/W */
+#define EXT_CSD_PACKED_FAILURE_INDEX		35 /* RO */
+#define EXT_CSD_PACKED_CMD_STATUS			36 /* RO */
+#define EXT_CSD_EXP_EVENTS_STATUS			54 /* RO, 2 bytes */
+#define EXT_CSD_EXP_EVENTS_CTRL				56 /* R/W, 2 bytes */
+#define EXT_CSD_DATA_SECTOR_SIZE			61 /* R */
+#define EXT_CSD_GP_SIZE_MULT				143 /* R/W */
+#define EXT_CSD_PARTITION_SETTING_COMPLETED 155 /* R/W */
+#define EXT_CSD_PARTITION_ATTRIBUTE			156 /* R/W */
+#define EXT_CSD_PARTITION_SUPPORT			160 /* RO */
+#define EXT_CSD_HPI_MGMT					161 /* R/W */
+#define EXT_CSD_RST_N_FUNCTION				162 /* R/W */
+#define EXT_CSD_BKOPS_EN					163 /* R/W */
+#define EXT_CSD_BKOPS_START					164 /* W */
+#define EXT_CSD_SANITIZE_START				165 /* W */
+#define EXT_CSD_WR_REL_PARAM				166 /* RO */
+#define EXT_CSD_RPMB_MULT					168 /* RO */
+#define EXT_CSD_FW_CONFIG					169 /* R/W */
+#define EXT_CSD_BOOT_WP						173 /* R/W */
+#define EXT_CSD_ERASE_GROUP_DEF				175 /* R/W */
+#define EXT_CSD_PART_CONFIG					179 /* R/W */
+#define EXT_CSD_ERASED_MEM_CONT				181 /* RO */
+#define EXT_CSD_BUS_WIDTH					183 /* R/W */
+#define EXT_CSD_STROBE_SUPPORT				184 /* RO */
+#define EXT_CSD_HS_TIMING					185 /* R/W */
+#define EXT_CSD_POWER_CLASS					187 /* R/W */
+#define EXT_CSD_REV							192 /* RO */
+#define EXT_CSD_STRUCTURE					194 /* RO */
+#define EXT_CSD_CARD_TYPE					196 /* RO */
+#define EXT_CSD_DRIVER_STRENGTH				197 /* RO */
+#define EXT_CSD_OUT_OF_INTERRUPT_TIME		198 /* RO */
+#define EXT_CSD_PART_SWITCH_TIME			199 /* RO */
+#define EXT_CSD_PWR_CL_52_195				200 /* RO */
+#define EXT_CSD_PWR_CL_26_195				201 /* RO */
+#define EXT_CSD_PWR_CL_52_360				202 /* RO */
+#define EXT_CSD_PWR_CL_26_360				203 /* RO */
+#define EXT_CSD_SEC_CNT						212 /* RO, 4 bytes */
+#define EXT_CSD_S_A_TIMEOUT					217 /* RO */
+#define EXT_CSD_REL_WR_SEC_C				222 /* RO */
+#define EXT_CSD_HC_WP_GRP_SIZE				221 /* RO */
+#define EXT_CSD_ERASE_TIMEOUT_MULT			223 /* RO */
+#define EXT_CSD_HC_ERASE_GRP_SIZE			224 /* RO */
+#define EXT_CSD_BOOT_MULT					226 /* RO */
+#define EXT_CSD_SEC_TRIM_MULT				229 /* RO */
+#define EXT_CSD_SEC_ERASE_MULT				230 /* RO */
+#define EXT_CSD_SEC_FEATURE_SUPPORT			231 /* RO */
+#define EXT_CSD_TRIM_MULT					232 /* RO */
+#define EXT_CSD_PWR_CL_200_195				236 /* RO */
+#define EXT_CSD_PWR_CL_200_360				237 /* RO */
+#define EXT_CSD_PWR_CL_DDR_52_195			238 /* RO */
+#define EXT_CSD_PWR_CL_DDR_52_360			239 /* RO */
+#define EXT_CSD_BKOPS_STATUS				246 /* RO */
+#define EXT_CSD_POWER_OFF_LONG_TIME			247 /* RO */
+#define EXT_CSD_GENERIC_CMD6_TIME			248 /* RO */
+#define EXT_CSD_CACHE_SIZE					249 /* RO, 4 bytes */
+#define EXT_CSD_PWR_CL_DDR_200_360			253 /* RO */
+#define EXT_CSD_FIRMWARE_VERSION			254 /* RO, 8 bytes */
+#define EXT_CSD_PRE_EOL_INFO				267 /* RO */
+#define EXT_CSD_DEVICE_LIFE_TIME_EST_TYP_A	268 /* RO */
+#define EXT_CSD_DEVICE_LIFE_TIME_EST_TYP_B	269 /* RO */
+#define EXT_CSD_CMDQ_DEPTH					307 /* RO */
+#define EXT_CSD_CMDQ_SUPPORT				308 /* RO */
+#define EXT_CSD_SUPPORTED_MODE				493 /* RO */
+#define EXT_CSD_TAG_UNIT_SIZE				498 /* RO */
+#define EXT_CSD_DATA_TAG_SUPPORT			499 /* RO */
+#define EXT_CSD_MAX_PACKED_WRITES			500 /* RO */
+#define EXT_CSD_MAX_PACKED_READS			501 /* RO */
+#define EXT_CSD_BKOPS_SUPPORT				502 /* RO */
+#define EXT_CSD_HPI_FEATURES				503 /* RO */
+
+#define EXT_CSD_BUS_WIDTH_1		0 /* Card is in 1 bit mode */
+#define EXT_CSD_BUS_WIDTH_4		1 /* Card is in 4 bit mode */
+#define EXT_CSD_BUS_WIDTH_8		2 /* Card is in 8 bit mode */
+#define EXT_CSD_DDR_BUS_WIDTH_4 5 /* Card is in 4 bit DDR mode */
+#define EXT_CSD_DDR_BUS_WIDTH_8 6 /* Card is in 8 bit DDR mode */
+
+#define EXT_CSD_CARD_TYPE_26	   (1 << 0) /* Card can run at 26MHz */
+#define EXT_CSD_CARD_TYPE_52	   (1 << 1) /* Card can run at 52MHz */
+#define EXT_CSD_CARD_TYPE_MASK	   0x3F /* Mask out reserved bits */
+#define EXT_CSD_CARD_TYPE_DDR_1_8V (1 << 2) /* Card can run at 52MHz */
+/* DDR mode @1.8V or 3V I/O */
+#define EXT_CSD_CARD_TYPE_DDR_1_2V (1 << 3) /* Card can run at 52MHz */
+/* DDR mode @1.2V I/O */
+#define EXT_CSD_CARD_TYPE_DDR_52   (EXT_CSD_CARD_TYPE_DDR_1_8V | EXT_CSD_CARD_TYPE_DDR_1_2V)
+#define EXT_CSD_CARD_TYPE_SDR_1_8V (1 << 4) /* Card can run at 200MHz */
+#define EXT_CSD_CARD_TYPE_SDR_1_2V (1 << 5) /* Card can run at 200MHz */
+/* SDR mode @1.2V I/O */
+
+#define EXT_CSD_CMD_SET_NORMAL	 (1 << 0)
+#define EXT_CSD_CMD_SET_SECURE	 (1 << 1)
+#define EXT_CSD_CMD_SET_CPSECURE (1 << 2)
+
+#define EXT_CSD_PWR_CL_8BIT_MASK  0xF0 /* 8 bit PWR CLS */
+#define EXT_CSD_PWR_CL_4BIT_MASK  0x0F /* 8 bit PWR CLS */
+#define EXT_CSD_PWR_CL_8BIT_SHIFT 4
+#define EXT_CSD_PWR_CL_4BIT_SHIFT 0
+
+sdmmc_pdata_t card0;
 
 #define UNSTUFF_BITS(resp, start, size)                              \
 	({                                                               \
@@ -61,7 +166,7 @@ static const unsigned char tran_speed_time[] = {
 	0, 10, 12, 13, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 70, 80,
 };
 
-static bool_t go_idle_state(sdhci_t *hci)
+static bool go_idle_state(sdhci_t *hci)
 {
 	sdhci_cmd_t cmd = {0};
 
@@ -73,7 +178,8 @@ static bool_t go_idle_state(sdhci_t *hci)
 	return sdhci_transfer(hci, &cmd, NULL);
 }
 
-static bool_t sd_send_if_cond(sdhci_t *hci, sdcard_t *card)
+#ifdef CONFIG_BOOT_SDCARD
+static bool sd_send_if_cond(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd = {0};
 
@@ -95,7 +201,7 @@ static bool_t sd_send_if_cond(sdhci_t *hci, sdcard_t *card)
 	return TRUE;
 }
 
-static bool_t sd_send_op_cond(sdhci_t *hci, sdcard_t *card)
+static bool sd_send_op_cond(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd		= {0};
 	int			retries = 50;
@@ -152,22 +258,30 @@ static bool_t sd_send_op_cond(sdhci_t *hci, sdcard_t *card)
 
 	return TRUE;
 }
+#endif
 
-static bool_t mmc_send_op_cond(sdhci_t *hci, sdcard_t *card)
+#ifdef CONFIG_BOOT_MMC
+static bool mmc_send_op_cond(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd		= {0};
-	int			retries = 100;
+	int			retries = 50;
+
+	cmd.idx		 = MMC_SEND_OP_COND;
+	cmd.resptype = MMC_RSP_R3;
+	if (hci->voltage == MMC_VDD_27_36) {
+		cmd.arg = 0x40FF8000; // Sector access mode, 2.7-3.6v VCCQ
+	} else if (hci->voltage == MMC_VDD_165_195) {
+		cmd.arg = 0x40FF0080; // Sector access mode, 1.65-1.95v VCCQ
+	}
 
 	do {
-		cmd.idx			= MMC_SEND_OP_COND;
-		cmd.resptype	= MMC_RSP_R3;
-		cmd.arg			= 0xC0FF8080; // size > 2GB mode, mandatory for Samsung
 		cmd.response[0] = 0;
 		if (!sdhci_transfer(hci, &cmd, NULL)) {
 			return FALSE;
 		}
 		udelay(5000);
 	} while (!(cmd.response[0] & OCR_BUSY) && retries--);
+	trace("SHMC: op_cond 0x%x\r\n", cmd.response[0]);
 
 	if (retries <= 0)
 		return FALSE;
@@ -185,8 +299,9 @@ static bool_t mmc_send_op_cond(sdhci_t *hci, sdcard_t *card)
 	card->rca			= 1;
 	return TRUE;
 }
+#endif
 
-static int mmc_status(sdhci_t *hci, sdcard_t *card)
+static int sdmmc_status(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t cmd		= {0};
 	int			retries = 100;
@@ -207,7 +322,7 @@ static int mmc_status(sdhci_t *hci, sdcard_t *card)
 	return -1;
 }
 
-uint64_t mmc_read_blocks(sdhci_t *hci, sdcard_t *card, uint8_t *buf, uint64_t start, uint64_t blkcnt)
+static uint64_t sdmmc_read_blocks(sdhci_t *hci, sdmmc_t *card, uint8_t *buf, uint64_t start, uint64_t blkcnt)
 {
 	sdhci_cmd_t	 cmd = {0};
 	sdhci_data_t dat = {0};
@@ -234,7 +349,7 @@ uint64_t mmc_read_blocks(sdhci_t *hci, sdcard_t *card, uint8_t *buf, uint64_t st
 
 	if (!hci->isspi) {
 		do {
-			status = mmc_status(hci, card);
+			status = sdmmc_status(hci, card);
 			if (status < 0) {
 				return 0;
 			}
@@ -253,7 +368,7 @@ uint64_t mmc_read_blocks(sdhci_t *hci, sdcard_t *card, uint8_t *buf, uint64_t st
 	return blkcnt;
 }
 
-static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
+static bool sdmmc_detect(sdhci_t *hci, sdmmc_t *card)
 {
 	sdhci_cmd_t	 cmd = {0};
 	sdhci_data_t dat = {0};
@@ -263,27 +378,61 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 	int			 status;
 
 	sdhci_reset(hci);
-	sdhci_set_clock(hci, 400 * 1000);
-	sdhci_set_width(hci, MMC_BUS_WIDTH_1);
+	if (!sdhci_set_clock(hci, MMC_CLK_400K) || !sdhci_set_width(hci, MMC_BUS_WIDTH_1)) {
+		error("SMHC: set clock/width failed\r\n");
+		return FALSE;
+	}
 
 	if (!go_idle_state(hci)) {
 		error("SMHC: set idle state failed\r\n");
 		return FALSE;
 	}
-	udelay(5000); // 1ms + 74 clocks @ 400KHz
+	udelay(2000); // 1ms + 74 clocks @ 400KHz (185us)
 
+// Both SD & MMC: try SD first
+// Otherwise there's only one media type if enabled
+#ifdef CONFIG_BOOT_SDCARD
 	if (!sd_send_op_cond(hci, card)) {
-		debug("SMHC: SD detect failed\r\n");
-
+#ifdef CONFIG_BOOT_MMC
 		sdhci_reset(hci);
-		sdhci_set_clock(hci, 400 * 1000);
+		sdhci_set_clock(hci, MMC_CLK_400K);
 		sdhci_set_width(hci, MMC_BUS_WIDTH_1);
 
-		if (!mmc_send_op_cond(hci, card)) {
-			debug("SMHC: MMC detect failed\r\n");
+		if (!go_idle_state(hci)) {
+			error("SMHC: set idle state failed\r\n");
 			return FALSE;
 		}
+		udelay(2000); // 1ms + 74 clocks @ 400KHz (185us)
+
+		if (!mmc_send_op_cond(hci, card)) {
+			debug("SMHC: SD/MMC detect failed\r\n");
+			return FALSE;
+		}
+#else
+		debug("SMHC: SD detect failed\r\n");
+		return FALSE;
+#endif
 	}
+// Only MMC
+#elif defined(CONFIG_BOOT_MMC)
+	// Workaround for eMMC starting in alternative boot mode
+	sdhci_reset(hci);
+	if (!sdhci_set_clock(hci, MMC_CLK_400K) || !sdhci_set_width(hci, MMC_BUS_WIDTH_1)) {
+		error("SMHC: set clock/width failed\r\n");
+		return FALSE;
+	}
+
+	if (!go_idle_state(hci)) {
+		error("SMHC: set idle state failed\r\n");
+		return FALSE;
+	}
+	udelay(2000); // 1ms + 74 clocks @ 400KHz (185us)
+
+	if (!mmc_send_op_cond(hci, card)) {
+		debug("SMHC: MMC detect failed\r\n");
+		return FALSE;
+	}
+#endif
 
 	if (hci->isspi) {
 		cmd.idx		 = MMC_SEND_CID;
@@ -340,7 +489,7 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		if (!sdhci_transfer(hci, &cmd, NULL))
 			return FALSE;
 		do {
-			status = mmc_status(hci, card);
+			status = sdmmc_status(hci, card);
 			if (status < 0)
 				return FALSE;
 		} while (status != MMC_STATUS_TRAN);
@@ -385,24 +534,25 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		card->write_bl_len = 512;
 
 	if ((card->version & MMC_VERSION_MMC) && (card->version >= MMC_VERSION_4)) {
-		cmd.idx		 = MMC_SEND_EXT_CSD;
-		cmd.arg		 = 0;
-		cmd.resptype = MMC_RSP_R1;
-		dat.buf		 = card->extcsd;
-		dat.flag	 = MMC_DATA_READ;
-		dat.blksz	 = 512;
-		dat.blkcnt	 = 1;
+		card->tran_speed = 50000000;
+		cmd.idx			 = MMC_SEND_EXT_CSD;
+		cmd.arg			 = 0;
+		cmd.resptype	 = MMC_RSP_R1;
+		dat.buf			 = card->extcsd;
+		dat.flag		 = MMC_DATA_READ;
+		dat.blksz		 = 512;
+		dat.blkcnt		 = 1;
 		if (!sdhci_transfer(hci, &cmd, &dat))
 			return FALSE;
 		if (!hci->isspi) {
 			do {
-				status = mmc_status(hci, card);
+				status = sdmmc_status(hci, card);
 				if (status < 0)
 					return FALSE;
 			} while (status != MMC_STATUS_TRAN);
 		}
 		const char *strver = "unknown";
-		switch (card->extcsd[192]) {
+		switch (card->extcsd[EXT_CSD_REV]) {
 			case 1:
 				card->version = MMC_VERSION_4_1;
 				strver		  = "4.1";
@@ -442,8 +592,8 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 			csize		   = UNSTUFF_BITS(card->csd, 48, 22);
 			card->capacity = (1 + csize) << 10;
 		} else {
-			card->capacity = card->extcsd[212] << 0 | card->extcsd[212 + 1] << 8 | card->extcsd[212 + 2] << 16 |
-							 card->extcsd[212 + 3] << 24;
+			card->capacity = card->extcsd[EXT_CSD_SEC_CNT] << 0 | card->extcsd[EXT_CSD_SEC_CNT + 1] << 8 |
+							 card->extcsd[EXT_CSD_SEC_CNT + 2] << 16 | card->extcsd[EXT_CSD_SEC_CNT + 3] << 24;
 		}
 	} else {
 		cmult		   = UNSTUFF_BITS(card->csd, 47, 3);
@@ -451,14 +601,16 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 		card->capacity = (csize + 1) << (cmult + 2);
 	}
 	card->capacity *= 1 << UNSTUFF_BITS(card->csd, 80, 4);
-	debug("SMHC: capacity %luGB\r\n", (uint32_t)(card->capacity / 1024u / 1024u / 1024u));
+	debug("SMHC: capacity %.1fGB\r\n", (f32)((f64)card->capacity / (f64)1000000000.0));
 
 	if (hci->isspi) {
-		sdhci_set_clock(hci, min(card->tran_speed, hci->clock));
-		sdhci_set_width(hci, MMC_BUS_WIDTH_1);
+		if (!sdhci_set_clock(hci, min(card->tran_speed, hci->clock)) || !sdhci_set_width(hci, MMC_BUS_WIDTH_1)) {
+			error("SMHC: set clock/width failed\r\n");
+			return FALSE;
+		}
 	} else {
 		if (card->version & SD_VERSION_SD) {
-			if ((hci->width & MMC_BUS_WIDTH_8) || (hci->width & MMC_BUS_WIDTH_4))
+			if (hci->width == MMC_BUS_WIDTH_4)
 				width = 2;
 			else
 				width = 0;
@@ -475,27 +627,47 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 			if (!sdhci_transfer(hci, &cmd, NULL))
 				return FALSE;
 		} else if (card->version & MMC_VERSION_MMC) {
-			if (hci->width & MMC_BUS_WIDTH_8)
-				width = 2;
-			else if (hci->width & MMC_BUS_WIDTH_4)
-				width = 1;
-			else
-				width = 0;
+			switch (hci->width) {
+				case MMC_BUS_WIDTH_4:
+					if (hci->clock == MMC_CLK_50M_DDR)
+						width = EXT_CSD_DDR_BUS_WIDTH_4;
+					else
+						width = EXT_CSD_BUS_WIDTH_4;
+					break;
+				default:
+					width = EXT_CSD_BUS_WIDTH_1;
+					break;
+			}
+
+			if (hci->width >= MMC_BUS_WIDTH_4) {
+				cmd.idx		 = SD_CMD_SWITCH_FUNC;
+				cmd.resptype = MMC_RSP_R1;
+				cmd.arg		 = (3 << 24) | (EXT_CSD_POWER_CLASS << 16) | EXT_CSD_CMD_SET_NORMAL;
+				if (width == EXT_CSD_DDR_BUS_WIDTH_4) {
+					cmd.arg |= ((card->extcsd[EXT_CSD_PWR_CL_DDR_52_360] &
+								 EXT_CSD_PWR_CL_4BIT_MASK >> EXT_CSD_PWR_CL_4BIT_SHIFT)
+								<< 8);
+				} else {
+					cmd.arg |=
+						((card->extcsd[EXT_CSD_PWR_CL_52_360] & EXT_CSD_PWR_CL_4BIT_MASK >> EXT_CSD_PWR_CL_4BIT_SHIFT)
+						 << 8);
+				}
+
+				if (!sdhci_transfer(hci, &cmd, NULL))
+					return FALSE;
+			}
 
 			// Write EXT_CSD register 183 (width) with our value
-			cmd.idx		 = SD_CMD_SWITCH_FUNC;
-			cmd.resptype = MMC_RSP_R1;
-			cmd.arg		 = (3 << 24) | (183 << 16) | (width << 8) | 1;
+			cmd.arg = (3 << 24) | (EXT_CSD_BUS_WIDTH << 16) | (width << 8) | 1;
 			if (!sdhci_transfer(hci, &cmd, NULL))
 				return FALSE;
 
 			udelay(1000);
 		}
-		sdhci_set_clock(hci, min(card->tran_speed, hci->clock));
-		if ((hci->width & MMC_BUS_WIDTH_8) || (hci->width & MMC_BUS_WIDTH_4))
-			sdhci_set_width(hci, MMC_BUS_WIDTH_4);
-		else
-			sdhci_set_width(hci, MMC_BUS_WIDTH_1);
+		if (!sdhci_set_clock(hci, hci->clock) || !sdhci_set_width(hci, hci->width)) {
+			error("SMHC: set clock/width failed\r\n");
+			return FALSE;
+		}
 	}
 
 	cmd.idx		 = MMC_SET_BLOCKLEN;
@@ -507,14 +679,14 @@ static bool_t sdcard_detect(sdhci_t *hci, sdcard_t *card)
 	return TRUE;
 }
 
-uint64_t sdcard_blk_read(sdcard_pdata_t *data, uint8_t *buf, uint64_t blkno, uint64_t blkcnt)
+uint64_t sdmmc_blk_read(sdmmc_pdata_t *data, uint8_t *buf, uint64_t blkno, uint64_t blkcnt)
 {
-	uint64_t  cnt, blks = blkcnt;
-	sdcard_t *sdcard = &data->card;
+	uint64_t cnt, blks = blkcnt;
+	sdmmc_t *sdcard = &data->card;
 
 	while (blks > 0) {
 		cnt = (blks > 127) ? 127 : blks;
-		if (mmc_read_blocks(data->hci, sdcard, buf, blkno, cnt) != cnt)
+		if (sdmmc_read_blocks(data->hci, sdcard, buf, blkno, cnt) != cnt)
 			return 0;
 		blks -= cnt;
 		blkno += cnt;
@@ -523,12 +695,12 @@ uint64_t sdcard_blk_read(sdcard_pdata_t *data, uint8_t *buf, uint64_t blkno, uin
 	return blkcnt;
 }
 
-int sdcard_init(sdcard_pdata_t *data, sdhci_t *hci)
+int sdmmc_init(sdmmc_pdata_t *data, sdhci_t *hci)
 {
 	data->hci	 = hci;
 	data->online = FALSE;
 
-	if (sdcard_detect(data->hci, &data->card) == TRUE) {
+	if (sdmmc_detect(data->hci, &data->card) == TRUE) {
 		info("SHMC: %s card detected\r\n", data->card.version & SD_VERSION_SD ? "SD" : "MMC");
 		return 0;
 	}

@@ -31,8 +31,6 @@ __extension__ typedef unsigned long long   __u64;
 typedef signed char	  s8;
 typedef unsigned char u8;
 
-typedef unsigned char bool_t;
-
 typedef signed short   s16;
 typedef unsigned short u16;
 
@@ -42,17 +40,8 @@ typedef unsigned int u32;
 typedef signed long long   s64;
 typedef unsigned long long u64;
 
-typedef signed char	  s8_t;
-typedef unsigned char u8_t;
-
-typedef signed short   s16_t;
-typedef unsigned short u16_t;
-
-typedef signed int	 s32_t;
-typedef unsigned int u32_t;
-
-typedef signed long long   s64_t;
-typedef unsigned long long u64_t;
+typedef float  f32;
+typedef double f64;
 
 #ifdef CONFIG_ARM64
 #define BITS_PER_LONG 64

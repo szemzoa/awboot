@@ -1,49 +1,27 @@
 #include "main.h"
 #include "fdt.h"
 #include "ff.h"
-#include "div.h"
 #include "sunxi_gpio.h"
 #include "sunxi_sdhci.h"
 #include "sunxi_spi.h"
 #include "sunxi_clk.h"
-#include "sdcard.h"
+#include "sunxi_dma.h"
+#include "sdmmc.h"
 #include "arm32.h"
 #include "reg-ccu.h"
 #include "debug.h"
 #include "board.h"
+#include "barrier.h"
 
 image_info_t image;
-
-#if 0
-void neon_enable(void)
-{
-        /* set NSACR, both Secure and Non-secure access are allowed to NEON */
-        asm volatile("MRC p15, 0, r0, c1, c1, 2");
-        asm volatile("ORR r0, r0, #(0x3<<10) @ enable fpu/neon");
-        asm volatile("MCR p15, 0, r0, c1, c1, 2");
-        /* Set the CPACR for access to CP10 and CP11*/
-        asm volatile("LDR r0, =0xF00000");
-        asm volatile("MCR p15, 0, r0, c1, c0, 2");
-        /* Set the FPEXC EN bit to enable the FPU */
-        asm volatile("MOV r3, #0x40000000");
-        asm volatile("MCR p10, 7, r3, c8, c0, 0");
-}
-
-void enable_smp(void)
-{
-        u32 val;
-
-        /* SMP status is controlled by bit 6 of the CP15 Aux Ctrl Reg:ACTLR */
-        asm volatile("MRC     p15, 0, r0, c1, c0, 1");
-        asm volatile("ORR     r0, r0, #0x040");
-        asm volatile("MCR     p15, 0, r0, c1, c0, 1");
-#ifdef DEBUG_MMU
-                asm volatile("MRC         p15, 0, r0, c1, c0, 1");
-                asm volatile("mov %0, r0" : "=r"(val));
-                debug("val:%x\n", val);
-#endif
-}
-#endif
+extern u32	 _start;
+extern u32	 __spl_start;
+extern u32	 __spl_end;
+extern u32	 __spl_size;
+extern u32	 __stack_srv_start;
+extern u32	 __stack_srv_end;
+extern u32	 __stack_ddr_srv_start;
+extern u32	 __stack_ddr_srv_end;
 
 /* Linux zImage Header */
 #define LINUX_ZIMAGE_MAGIC 0x016f2818
@@ -68,30 +46,39 @@ static int boot_image_setup(unsigned char *addr, unsigned int *entry)
 	return -1;
 }
 
+#if defined(CONFIG_BOOT_SDCARD) || defined(CONFIG_BOOT_MMC)
 #define CHUNK_SIZE 0x20000
-static int sdcard_loadimage(char *filename, BYTE *dest)
+
+static int fatfs_loadimage(char *filename, BYTE *dest)
 {
-	FIL		file;
-	UINT	byte_to_read = CHUNK_SIZE;
-	UINT	byte_read;
-	FRESULT fret;
-	int		ret;
+	FIL		 file;
+	UINT	 byte_to_read = CHUNK_SIZE;
+	UINT	 byte_read;
+	UINT	 total_read = 0;
+	FRESULT	 fret;
+	int		 ret;
+	uint32_t start, time;
 
 	fret = f_open(&file, filename, FA_OPEN_EXISTING | FA_READ);
 	if (fret != FR_OK) {
-		error("FATFS: f_open, filename: [%s]: error %d\r\n", filename, fret);
+		error("FATFS: open, filename: [%s]: error %d\r\n", filename, fret);
 		ret = -1;
 		goto open_fail;
 	}
+
+	start = time_ms();
 
 	do {
 		byte_read = 0;
 		fret	  = f_read(&file, (void *)(dest), byte_to_read, &byte_read);
 		dest += byte_to_read;
-	} while (byte_read >= byte_to_read);
+		total_read += byte_read;
+	} while (byte_read >= byte_to_read && fret == FR_OK);
+
+	time = time_ms() - start + 1;
 
 	if (fret != FR_OK) {
-		error("FATFS: f_read: error %d\r\n", fret);
+		error("FATFS: read: error %d\r\n", fret);
 		ret = -1;
 		goto read_fail;
 	}
@@ -100,51 +87,68 @@ static int sdcard_loadimage(char *filename, BYTE *dest)
 read_fail:
 	fret = f_close(&file);
 
+	debug("FATFS: read in %ums at %.2fMB/S\r\n", time, (f32)(total_read / time) / 1024.0f);
+
 open_fail:
 	return ret;
 }
 
-int load_sdcard(image_info_t *image)
+static int load_sdcard(image_info_t *image)
 {
 	FATFS	fs;
 	FRESULT fret;
 	int		ret;
+	u32		start;
 
+#if defined(CONFIG_SDMMC_SPEED_TEST_SIZE) && LOG_LEVEL >= LOG_DEBUG
+	u32 test_time;
+	start = time_ms();
+	sdmmc_blk_read(&card0, (u8 *)(SDRAM_BASE), 0, CONFIG_SDMMC_SPEED_TEST_SIZE);
+	test_time = time_ms() - start;
+	debug("SDMMC: speedtest %uKB in %ums at %uKB/S\r\n", (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / 1024, test_time,
+		  (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / test_time);
+#endif // SDMMC_SPEED_TEST
+
+	start = time_ms();
 	/* mount fs */
 	fret = f_mount(&fs, "", 1);
 	if (fret != FR_OK) {
-		error("FATFS: f_mount mount error %d\r\n", fret);
+		error("FATFS: mount error: %d\r\n", fret);
 		return -1;
 	} else {
-		debug("FATFS: f_mount OK\r\n");
+		debug("FATFS: mount OK\r\n");
 	}
 
-	info("SMHC: Read %s addr=%x\r\n", image->of_filename, (unsigned int)image->of_dest);
-	ret = sdcard_loadimage(image->of_filename, image->of_dest);
+	info("FATFS: read %s addr=%x\r\n", image->of_filename, (unsigned int)image->of_dest);
+	ret = fatfs_loadimage(image->of_filename, image->of_dest);
 	if (ret)
 		return ret;
 
-	info("SMHC: Read %s addr=%x\r\n", image->filename, (unsigned int)image->dest);
-	ret = sdcard_loadimage(image->filename, image->dest);
+	info("FATFS: read %s addr=%x\r\n", image->filename, (unsigned int)image->dest);
+	ret = fatfs_loadimage(image->filename, image->dest);
 	if (ret)
 		return ret;
 
 	/* umount fs */
 	fret = f_mount(0, "", 0);
 	if (fret != FR_OK) {
-		error("FATFS: f_mount unmount error %d\r\n", fret);
+		error("FATFS: unmount error %d\r\n", fret);
 		return -1;
 	} else {
-		debug("FATFS: f_mount unmount OK\r\n");
+		debug("FATFS: unmount OK\r\n");
 	}
+	debug("FATFS: done in %ums\r\n", time_ms() - start);
 
 	return 0;
 }
+
+#endif
 
 int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 {
 	linux_zimage_header_t *hdr;
 	unsigned int		   size;
+	uint64_t			   start, time;
 
 	if (spi_nand_detect(spi) != 0)
 		return -1;
@@ -155,10 +159,14 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 		error("SPI-NAND: DTB verification failed\r\n");
 		return -1;
 	}
+
 	size = of_get_dt_total_size(image->of_dest);
-	info("SPI-NAND: dt blob: Copy from 0x%08x to 0x%08lx size:0x%08x\r\n", CONFIG_SPINAND_DTB_ADDR,
-		 (uint32_t)image->of_dest, size);
+	debug("SPI-NAND: dt blob: Copy from 0x%08x to 0x%08lx size:0x%08x\r\n", CONFIG_SPINAND_DTB_ADDR,
+		  (uint32_t)image->of_dest, size);
+	start = time_us();
 	spi_nand_read(spi, image->of_dest, CONFIG_SPINAND_DTB_ADDR, (uint32_t)size);
+	time = time_us() - start;
+	info("SPI-NAND: read dt blob of size %u at %.2fMB/S\r\n", size, (f32)(size / time));
 
 	/* get kernel size and read */
 	spi_nand_read(spi, image->dest, CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)sizeof(linux_zimage_header_t));
@@ -168,40 +176,28 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 		return -1;
 	}
 	size = hdr->end - hdr->start;
-	info("SPI-NAND: Image: Copy from 0x%08x to 0x%08lx size:0x%08x\r\n", CONFIG_SPINAND_KERNEL_ADDR,
-		 (uint32_t)image->dest, size);
+	debug("SPI-NAND: Image: Copy from 0x%08x to 0x%08lx size:0x%08x\r\n", CONFIG_SPINAND_KERNEL_ADDR,
+		  (uint32_t)image->dest, size);
+	start = time_us();
 	spi_nand_read(spi, image->dest, CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)size);
+	time = time_us() - start;
+	info("SPI-NAND: read Image of size %u at %.2fMB/S\r\n", size, (f32)(size / time));
 
 	return 0;
 }
 
 int main(void)
 {
-	unsigned int entry_point;
-	uint32_t	 reg32;
-	void (*kernel_entry)(int zero, int arch, unsigned int params);
-
 	board_init();
-
-	info("AWBoot starting\r\n");
 	sunxi_clk_init();
 
-	/* ?? */
-	reg32 = read32(0x070901f4);
-	if ((reg32 & 0x1f) != 0) {
-		reg32 = (reg32 & 0xffffff8f) | 0x40;
-		reg32 = (reg32 & 0xffffff8f) | 0xc0;
-		reg32 = (reg32 & 0xffffff8e) | 0xc0;
-		write32(0x070901f4, reg32);
-		/* debug("fix vccio detect value:0x%x\r\n", reg32); */
-	}
-
-	uint32_t addr = 0x0200180C;
-	uint32_t val  = (1 << 16) | (1 << 0);
-	write32(addr, val);
-	udelay(200);
+	message("\r\n");
+	info("AWBoot r%u starting...\r\n", (u32)BUILD_REVISION);
 
 	init_DRAM(0, &ddr_param);
+
+	unsigned int entry_point = 0;
+	void (*kernel_entry)(int zero, int arch, unsigned int params);
 
 #ifdef CONFIG_ENABLE_CPU_FREQ_DUMP
 	sunxi_clk_dump();
@@ -209,10 +205,10 @@ int main(void)
 
 	memset(&image, 0, sizeof(image_info_t));
 
-	image.of_dest = (unsigned char *)CONFIG_DTB_LOAD_ADDR;
-	image.dest	  = (unsigned char *)CONFIG_KERNEL_LOAD_ADDR;
+	image.of_dest = (u8 *)CONFIG_DTB_LOAD_ADDR;
+	image.dest	  = (u8 *)CONFIG_KERNEL_LOAD_ADDR;
 
-#ifdef CONFIG_BOOT_SDCARD
+#if defined(CONFIG_BOOT_SDCARD) || defined(CONFIG_BOOT_MMC)
 
 	strcpy(image.filename, CONFIG_KERNEL_FILENAME);
 	strcpy(image.of_filename, CONFIG_DTB_FILENAME);
@@ -220,9 +216,9 @@ int main(void)
 	if (sunxi_sdhci_init(&sdhci0) != 0) {
 		fatal("SMHC: %s controller init failed\r\n", sdhci0.name);
 	} else {
-		info("SMHC: %s controller initialized\r\n", sdhci0.name);
+		info("SMHC: %s controller v%x initialized\r\n", sdhci0.name, sdhci0.reg->vers);
 	}
-	if (sdcard_init(&sdcard0, &sdhci0) != 0) {
+	if (sdmmc_init(&card0, &sdhci0) != 0) {
 #ifdef CONFIG_BOOT_SPINAND
 		warning("SMHC: init failed, trying SPI\r\n");
 		goto _spi;
@@ -248,7 +244,9 @@ int main(void)
 
 #ifdef CONFIG_BOOT_SPINAND
 _spi:
-	debug("SPI: init...\r\n");
+	dma_init();
+	dma_test();
+	debug("SPI: init\r\n");
 	if (sunxi_spi_init(&sunxi_spi0) != 0) {
 		fatal("SPI: init failed\r\n");
 	}
@@ -268,13 +266,13 @@ _boot:
 
 	info("booting linux...\r\n");
 
-	//	neon_enable();
-	//	enable_smp();
-
 	arm32_mmu_disable();
 	arm32_dcache_disable();
 	arm32_icache_disable();
+	arm32_interrupt_disable();
 
 	kernel_entry = (void (*)(int, int, unsigned int))entry_point;
 	kernel_entry(0, ~0, (unsigned int)image.of_dest);
+
+	return 0;
 }

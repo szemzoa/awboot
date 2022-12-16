@@ -39,11 +39,11 @@
 #define error(...)
 #endif
 
-#define fatal(fmt, ...)                     \
-	{                                       \
-		message("[F] " fmt, ##__VA_ARGS__); \
-		while (1)                           \
-			;                               \
+#define fatal(fmt, ...)                                         \
+	{                                                           \
+		message("[F] " fmt "restarting...\r\n", ##__VA_ARGS__); \
+		mdelay(100);                                            \
+		reset();                                                \
 	}
 
 void message(const char *fmt, ...);

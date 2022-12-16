@@ -10,7 +10,6 @@ extern "C" {
 #endif
 
 #include "integer.h"
-#include "div.h"
 #include "ff.h"
 
 /* Status of Disk Functions */

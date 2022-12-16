@@ -1,17 +1,18 @@
 #include "main.h"
 #include "board.h"
-#include "div.h"
 #include "sunxi_clk.h"
 #include "reg-ccu.h"
 #include "debug.h"
+
+volatile ccu_reg_t *const ccu = (ccu_reg_t *)T113_CCU_BASE;
 
 void set_pll_cpux_axi(void)
 {
 	uint32_t val;
 
-	/* Select cpux clock src to osc24m, axi divide ratio is 3, system apb clk ratio is 4 */
-	write32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG, (0 << 24) | (3 << 8) | (1 << 0));
-	sdelay(1);
+	/* AXI: Select cpu clock src to PLL_PERI(1x) */
+	write32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG, (4 << 24) | (1 << 0));
+	sdelay(10);
 
 	/* Disable pll gating */
 	val = read32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG);
@@ -24,11 +25,12 @@ void set_pll_cpux_axi(void)
 	write32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG, val);
 	sdelay(5);
 
-	/* Set default clk to 1008mhz */
+	/* Set clk to 1008mhz (default) or CONFIG_CPU_FREQ */
+	/* PLL_CPUX = 24 MHz*N/P */
 	val = read32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG);
 	val &= ~((0x3 << 16) | (0xff << 8) | (0x3 << 0));
 #ifdef CONFIG_CPU_FREQ
-	val |= ((div(CONFIG_CPU_FREQ, 24000000) - 1) << 8);
+	val |= (((CONFIG_CPU_FREQ / 24000000) - 1) << 8);
 #else
 	val |= (41 << 8);
 #endif
@@ -60,10 +62,10 @@ void set_pll_cpux_axi(void)
 	write32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG, val);
 	sdelay(1);
 
-	/* set and change cpu clk src to PLL_CPUX, PLL_CPUX:AXI0 = 1008M:504M */
+	/* AXI: set and change cpu clk src to PLL_CPUX, PLL_CPUX:AXI0 = 1200MHz:600MHz */
 	val = read32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG);
-	val &= ~(0x07 << 24 | 0x3 << 16 | 0x3 << 8 | 0xf << 0);
-	val |= (0x03 << 24 | 0x0 << 16 | 0x3 << 8 | 0x1 << 0);
+	val &= ~(0x07 << 24 | 0x3 << 16 | 0x3 << 8 | 0xf << 0); // Clear
+	val |= (0x03 << 24 | 0x0 << 16 | 0x1 << 8 | 0x1 << 0); // CLK_SEL=PLL_CPU/P, DIVP=0, DIV2=1, DIV1=1
 	write32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG, val);
 	sdelay(1);
 }
@@ -75,11 +77,6 @@ static void set_pll_periph0(void)
 	/* Periph0 has been enabled */
 	if (read32(T113_CCU_BASE + CCU_PLL_PERI0_CTRL_REG) & (1 << 31))
 		return;
-
-	/* Change psi src to osc24m */
-	val = read32(T113_CCU_BASE + CCU_PSI_CLK_REG);
-	val &= (~(0x3 << 24));
-	write32(val, T113_CCU_BASE + CCU_PSI_CLK_REG);
 
 	/* Set default val */
 	write32(T113_CCU_BASE + CCU_PLL_PERI0_CTRL_REG, 0x63 << 8);
@@ -107,15 +104,13 @@ static void set_pll_periph0(void)
 
 static void set_ahb(void)
 {
-	write32(T113_CCU_BASE + CCU_PSI_CLK_REG, (2 << 0) | (0 << 8));
-	write32(T113_CCU_BASE + CCU_PSI_CLK_REG, read32(T113_CCU_BASE + CCU_PSI_CLK_REG) | (0x03 << 24));
+	write32(T113_CCU_BASE + CCU_PSI_CLK_REG, (2 << 0) | (0 << 8) | (0x03 << 24));
 	sdelay(1);
 }
 
 static void set_apb(void)
 {
-	write32(T113_CCU_BASE + CCU_APB0_CLK_REG, (2 << 0) | (1 << 8));
-	write32(T113_CCU_BASE + CCU_APB0_CLK_REG, (0x03 << 24) | read32(T113_CCU_BASE + CCU_APB0_CLK_REG));
+	write32(T113_CCU_BASE + CCU_APB0_CLK_REG, (2 << 0) | (1 << 8) | (0x03 << 24));
 	sdelay(1);
 }
 
@@ -195,7 +190,7 @@ uint32_t sunxi_clk_get_peri1x_rate()
 		pllm = (reg32 & 0x01) + 1;
 		p0	 = ((reg32 >> 16) & 0x03) + 1;
 
-		return ((div((24 * plln), (pllm * p0)) >> 1) * 1000 * 1000);
+		return ((((24 * plln) / (pllm * p0)) >> 1) * 1000 * 1000);
 	}
 
 	return 0;
@@ -204,50 +199,50 @@ uint32_t sunxi_clk_get_peri1x_rate()
 #ifdef CONFIG_ENABLE_CPU_FREQ_DUMP
 void sunxi_clk_dump()
 {
-	uint32_t reg32;
-	//    uint32_t cpu_clk, plln, pllm;
-	uint8_t p0, p1;
+	uint32_t	reg32;
+	uint32_t	cpu_clk_src, plln, pllm;
+	uint8_t		p0, p1;
+	const char *clock_str;
 
 	/* PLL CPU */
-	reg32 = read32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG);
-#if 0
-	cpu_clk = (reg32 >> 24) & 0x7;
-	debug("freq: cpu_clock: ");
-	switch(cpu_clk) {
+	reg32		= read32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG);
+	cpu_clk_src = (reg32 >> 24) & 0x7;
+
+	switch (cpu_clk_src) {
 		case 0x0:
-		    debug("HOSC");
-		    break;
+			clock_str = "OSC24M";
+			break;
 
 		case 0x1:
-		    debug("CLK32");
-		    break;
+			clock_str = "CLK32";
+			break;
 
 		case 0x2:
-		    debug("CLK16M_RC");
-		    break;
+			clock_str = "CLK16M_RC";
+			break;
 
 		case 0x3:
-		    debug("PLL_CPU");
-		    break;
+			clock_str = "PLL_CPU";
+			break;
 
 		case 0x4:
-		    debug("PLL_PERI(1X)");
-		    break;
+			clock_str = "PLL_PERI(1X)";
+			break;
 
 		case 0x5:
-		    debug("PLL_PERI(2X)");
-		    break;
+			clock_str = "PLL_PERI(2X)";
+			break;
 
 		case 0x6:
-		    debug("PLL_PERI(800M)");
-		    break;
+			clock_str = "PLL_PERI(800M)";
+			break;
+
+		default:
+			clock_str = "ERROR";
 	}
-	debug("\r\n");
-	debug("freq: PLL_cpu: ");
-#endif
+
 	reg32 = read32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG);
-	//	if (reg32 & (1 << 31)) {
-	p0 = (reg32 >> 16) & 0x03;
+	p0	  = (reg32 >> 16) & 0x03;
 	if (p0 == 0) {
 		p1 = 1;
 	} else if (p0 == 1) {
@@ -258,47 +253,35 @@ void sunxi_clk_dump()
 		p1 = 1;
 	}
 
-	debug("CPU freq: %u MHz\r\n", div((((reg32 >> 8) & 0xff) + 1) * 24, p1));
+	debug("CLK: CPU PLL=%s FREQ=%uMHz\r\n", clock_str, ((((reg32 >> 8) & 0xff) + 1) * 24 / p1));
 
-	//	} else {
-	//	    debug("disabled\r\n");
-	//	}
-
-#if 0
 	/* PLL PERIx */
 	reg32 = read32(T113_CCU_BASE + CCU_PLL_PERI0_CTRL_REG);
 	if (reg32 & (1 << 31)) {
-	    debug("freq: PLL_peri: enabled, ");
+		plln = ((reg32 >> 8) & 0xff) + 1;
+		pllm = (reg32 & 0x01) + 1;
+		p0	 = ((reg32 >> 16) & 0x03) + 1;
+		p1	 = ((reg32 >> 20) & 0x03) + 1;
 
-	    plln = ((reg32 >> 8) & 0xff) + 1;
-	    pllm = (reg32 & 0x01) + 1;
-	    p0 = ((reg32 >> 16) & 0x03) + 1;
-	    p1 = ((reg32 >> 20) & 0x03) + 1;
-
-	    debug("(2X)=%uMHz, ", div((24 * plln), (pllm * p0)));
-	    debug("(1X)=%uMHz, ", div((24 * plln), (pllm * p0)) >> 1);
-	    debug("(800M)=%uMHz\r\n", div((24 * plln), (pllm * p1)));
-
+		debug("CLK: PLL_peri (2X)=%uMHz, (1X)=%uMHz, (800M)=%uMHz\r\n", (24 * plln) / (pllm * p0),
+			  (24 * plln) / (pllm * p0) >> 1, (24 * plln) / (pllm * p1));
 	} else {
-	    debug("disabled\r\n");
+		debug("CLK: PLL_peri disabled\r\n");
 	}
 
 	/* PLL DDR */
 	reg32 = read32(T113_CCU_BASE + CCU_PLL_DDR_CTRL_REG);
 	if (reg32 & (1 << 31)) {
-	    debug("freq: PLL_ddr: enabled");
+		plln = ((reg32 >> 8) & 0xff) + 1;
 
-	    plln = ((reg32 >> 8) & 0xff) + 1;
+		pllm = (reg32 & 0x01) + 1;
+		p1	 = ((reg32 >> 1) & 0x1) + 1;
+		p0	 = (reg32 & 0x01) + 1;
 
-	    pllm = (reg32 & 0x01) + 1;
-	    p1 = ((reg32 >> 1) & 0x1) + 1;
-	    p0 = (reg32 & 0x01) + 1;
-
-	    debug("=%uMHz\r\n", div((24 * plln), (p0 * p1)));
+		debug("CLK: PLL_ddr=%uMHz\r\n", (24 * plln) / (p0 * p1));
 
 	} else {
-	    debug("disabled\r\n");
+		debug("CLK: PLL_ddr disabled\r\n");
 	}
-#endif
 }
 #endif

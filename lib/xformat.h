@@ -31,7 +31,7 @@
 /**
  * Define XCFG_FORMAT_FLOAT=0 to remove floating point support
  */
-#define XCFG_FORMAT_FLOAT 0
+#define XCFG_FORMAT_FLOAT 1
 
 /**
  * Define to 0 to support long long type (prefix ll)

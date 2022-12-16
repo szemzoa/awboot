@@ -7,6 +7,7 @@
 #include "string.h"
 #include "io.h"
 #include "types.h"
+#include "debug.h"
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 
@@ -48,7 +49,13 @@ typedef struct {
 	char of_filename[FILENAME_MAX_LEN];
 } image_info_t;
 
-extern void udelay(unsigned long us);
-extern void sdelay(unsigned long loops);
+void	 udelay(uint64_t us);
+void	 mdelay(uint32_t ms);
+void	 sdelay(uint32_t loops);
+uint32_t time_ms(void);
+uint64_t time_us(void);
+uint64_t get_arch_counter(void);
+void	 init_sp_irq(uint32_t addr);
+void	 reset();
 
 #endif

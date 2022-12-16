@@ -4,7 +4,7 @@
 #include "sunxi_sdhci.h"
 #include "sunxi_usart.h"
 #include "sunxi_spi.h"
-#include "sdcard.h"
+#include "sdmmc.h"
 
 dram_para_t ddr_param = {
 	.dram_clk	 = 792,
@@ -43,7 +43,7 @@ sunxi_usart_t usart_dbg = {
 sunxi_spi_t sunxi_spi0 = {
 	.base	   = 0x04025000,
 	.id		   = 0,
-	.clk_rate  = 100000000, // Set SDC bit when above 60MHz
+	.clk_rate  = 100 * 1000 * 1000,
 	.gpio_cs   = {GPIO_PIN(PORTC, 3), GPIO_PERIPH_MUX2},
 	.gpio_sck  = {GPIO_PIN(PORTC, 2), GPIO_PERIPH_MUX2},
 	.gpio_mosi = {GPIO_PIN(PORTC, 4), GPIO_PERIPH_MUX2},
@@ -54,11 +54,10 @@ sunxi_spi_t sunxi_spi0 = {
 
 sdhci_t sdhci0 = {
 	.name	   = "sdhci0",
-	.addr	   = 0x04020000,
-	.reset	   = 400,
+	.reg	   = (sdhci_reg_t *)0x04020000,
 	.voltage   = MMC_VDD_27_36,
 	.width	   = MMC_BUS_WIDTH_4,
-	.clock	   = 25 * 1000 * 1000,
+	.clock	   = MMC_CLK_50M,
 	.removable = 0,
 	.isspi	   = FALSE,
 	.gpio_clk  = {GPIO_PIN(PORTF, 2), GPIO_PERIPH_MUX2},
@@ -69,7 +68,7 @@ sdhci_t sdhci0 = {
 	.gpio_d3   = {GPIO_PIN(PORTF, 4), GPIO_PERIPH_MUX2},
 };
 
-gpio_t led_blue = GPIO_PIN(PORTD, 22);
+static gpio_t led_blue = GPIO_PIN(PORTD, 22);
 
 void board_init_led(gpio_t led)
 {
@@ -80,7 +79,7 @@ void board_init_led(gpio_t led)
 int board_sdhci_init()
 {
 	sunxi_sdhci_init(&sdhci0);
-	return sdcard_init(&sdcard0, &sdhci0);
+	return sdmmc_init(&card0, &sdhci0);
 }
 
 void board_init()
