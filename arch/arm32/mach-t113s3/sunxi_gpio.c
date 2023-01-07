@@ -121,3 +121,18 @@ void sunxi_gpio_set_pull(gpio_t pin, enum gpio_pull_t pull)
 	val |= (v << ((pin_num & 0xf) << 1));
 	write32(addr, val);
 }
+
+void sunxi_gpio_set_drive_lvl(const gpio_t pin, uint8_t lvl)
+{
+	uint32_t port_addr = _port_base_get(pin);
+	uint32_t pin_num   = _pin_num(pin);
+	uint32_t addr;
+	uint32_t val;
+
+	lvl &= 3;
+	addr = port_addr + GPIO_DRV0 + ((pin_num >> 4) << 2);
+	val	 = read32(addr);
+	val &= ~(lvl << ((pin_num & 0xf) << 1));
+	val |= (lvl << ((pin_num & 0xf) << 1));
+	write32(addr, val);
+}

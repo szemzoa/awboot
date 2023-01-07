@@ -379,6 +379,13 @@ int sunxi_spi_init(sunxi_spi_t *spi)
 	sunxi_gpio_set_pull(spi->gpio_wp.pin, GPIO_PULL_UP);
 	sunxi_gpio_set_pull(spi->gpio_hold.pin, GPIO_PULL_UP);
 
+	sunxi_gpio_set_drive_lvl(spi->gpio_cs.pin, 3);
+	sunxi_gpio_set_drive_lvl(spi->gpio_sck.pin, 3);
+	sunxi_gpio_set_drive_lvl(spi->gpio_mosi.pin, 3);
+	sunxi_gpio_set_drive_lvl(spi->gpio_miso.pin, 3);
+	sunxi_gpio_set_drive_lvl(spi->gpio_wp.pin, 3);
+	sunxi_gpio_set_drive_lvl(spi->gpio_hold.pin, 3);
+
 	/* Deassert spi0 reset */
 	val = read32(T113_CCU_BASE + CCU_SPI_BGR_REG);
 	val |= (1 << 16);
