@@ -151,9 +151,9 @@ typedef enum {
 static const spi_nand_info_t spi_nand_infos[] = {
 	/* Winbond */
 	{	 "W25N512GV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa20, 2}, 2048,	 64, 64,	 512, 1, 1, SPI_IO_QUAD_RX},
-	{	  "W25N01GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa21, 2}, 2048,	64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
-	{	  "W25M02GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xab21, 2}, 2048,	64, 64, 1024, 1, 2, SPI_IO_QUAD_RX},
-	{	  "W25N02KV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa22, 2}, 2048, 128, 64, 2048, 1, 1, SPI_IO_QUAD_RX},
+	{		 "W25N01GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa21, 2}, 2048,	64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
+	{		 "W25M02GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xab21, 2}, 2048,	64, 64, 1024, 1, 2, SPI_IO_QUAD_RX},
+	{		 "W25N02KV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa22, 2}, 2048, 128, 64, 2048, 1, 1, SPI_IO_QUAD_RX},
 
  /* Gigadevice */
 	{ "GD5F1GQ4UAWxx", {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x10, 1}, 2048,  64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},

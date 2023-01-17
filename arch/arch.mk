@@ -5,7 +5,7 @@ INCLUDE_DIRS += -I $(ARCH)/arm32/include -I $(SOC)/include -I $(SOC) -I $(SOC)/m
 
 CFLAGS += -DCOUNTER_FREQUENCY=24000000
 
-SRCS	+=  $(SOC)/mctl_hal.c
+SRCS	+=  $(SOC)/dram_sun20i_d1.c
 SRCS	+=  $(SOC)/sunxi_usart.c
 SRCS	+=  $(SOC)/arch_timer.c
 SRCS	+=  $(SOC)/sunxi_spi.c

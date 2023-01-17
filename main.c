@@ -194,7 +194,7 @@ int main(void)
 	message("\r\n");
 	info("AWBoot r%u starting...\r\n", (u32)BUILD_REVISION);
 
-	init_DRAM(0, &ddr_param);
+	sunxi_dram_init();
 
 	unsigned int entry_point = 0;
 	void (*kernel_entry)(int zero, int arch, unsigned int params);

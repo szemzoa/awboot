@@ -255,7 +255,7 @@ static int prepare_dma(sdhci_t *sdhci, sdhci_data_t *data)
 {
 	sdhci_idma_desc_t *pdes		= sdhci->dma_desc;
 	u32				   byte_cnt = data->blksz * data->blkcnt;
-	u8				*buff;
+	u8				   *buff;
 	u32				   des_idx		 = 0;
 	u32				   buff_frag_num = 0;
 	u32				   remain;

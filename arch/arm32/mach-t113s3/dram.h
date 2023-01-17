@@ -28,6 +28,13 @@
 
 #define SDRAM_BASE (0x40000000)
 
+enum sunxi_dram_type {
+	SUNXI_DRAM_TYPE_DDR2   = 2,
+	SUNXI_DRAM_TYPE_DDR3   = 3,
+	SUNXI_DRAM_TYPE_LPDDR2 = 6,
+	SUNXI_DRAM_TYPE_LPDDR3 = 7,
+};
+
 typedef struct __DRAM_PARA {
 	// normal configuration
 	unsigned int dram_clk;

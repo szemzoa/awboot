@@ -37,8 +37,8 @@ struct boot_head_t {
 int main(int argc, char *argv[])
 {
 	struct boot_head_t *h;
-	FILE			   *fp;
-	char			   *buffer;
+	FILE				 *fp;
+	char				 *buffer;
 	int					buflen, filelen;
 	uint32_t			 *p;
 	uint32_t			sum;
