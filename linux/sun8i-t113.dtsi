@@ -1327,7 +1327,7 @@
                 };
 
 		can0: can@02504000 {
-			compatible = "allwinner,sun8i-t113-s3-can";
+			compatible = "allwinner,sun20i-d1-can";
 			reg = <0x02504000 0x400>;
 			interrupts = <GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&ccu CLK_BUS_CAN0>;
@@ -1337,7 +1337,7 @@
 		};
 
 		can1: can@02504400 {
-			compatible = "allwinner,sun8i-t113-s3-can";
+			compatible = "allwinner,sun20i-d1-can";
 			reg = <0x02504400 0x400>;
 			interrupts = <GIC_SPI 22 IRQ_TYPE_LEVEL_HIGH>;
 			clocks = <&ccu CLK_BUS_CAN1>;
