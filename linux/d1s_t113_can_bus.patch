@@ -105,52 +105,61 @@ diff -urN linux-6.0.2/drivers/net/can/sun4i_can.c linux-6.0.2-can/drivers/net/ca
  
  	/* clear error counters and error code capture */
  	writel(0, priv->base + SUN4I_REG_ERRC_ADDR);
-@@ -768,10 +777,26 @@
+@@ -767,11 +776,27 @@
+ };
  
  static const struct sun4ican_quirks sun4ican_quirks_a10 = {
- 	.has_reset = false,
+-	.has_reset = false,
 +	.addresses = {
 +		.can_acceptance_code = 0x0040,
 +		.can_acceptance_mask = 0x0044,
-+	}
++	},
++	.has_reset = false
  };
  
  static const struct sun4ican_quirks sun4ican_quirks_r40 = {
- 	.has_reset = true,
+-	.has_reset = true,
 +	.addresses = {
 +		.can_acceptance_code = 0x0040,
 +		.can_acceptance_mask = 0x0044,
-+	}
++	},
++	.has_reset = true
 +};
 +
-+static const struct sun4ican_quirks sun4ican_quirks_d1s = {
-+	.has_reset = true,
++static const struct sun4ican_quirks sun4ican_quirks_d1 = {
 +	.addresses = {
 +		.can_acceptance_code = 0x0028,
 +		.can_acceptance_mask = 0x002c,
-+	}
++	},
++	.has_reset = true
  };
  
  static const struct of_device_id sun4ican_of_match[] = {
-@@ -785,6 +810,12 @@
+@@ -785,6 +810,9 @@
  		.compatible = "allwinner,sun8i-r40-can",
  		.data = &sun4ican_quirks_r40
  	}, {
-+		.compatible = "allwinner,sun8i-d1s-can",
-+		.data = &sun4ican_quirks_d1s
-+	}, {
-+		.compatible = "allwinner,sun8i-t113-s3-can",
-+		.data = &sun4ican_quirks_d1s
++		.compatible = "allwinner,sun20i-d1-can",
++		.data = &sun4ican_quirks_d1
 +	}, {
  		/* sentinel */
  	},
  };
-@@ -909,4 +940,4 @@
+@@ -872,6 +900,8 @@
+ 	priv->base = addr;
+ 	priv->clk = clk;
+ 	priv->reset = reset;
++	priv->addresses.can_acceptance_code = quirks->addresses.can_acceptance_code;
++	priv->addresses.can_acceptance_mask = quirks->addresses.can_acceptance_mask;
+ 	spin_lock_init(&priv->cmdreg_lock);
+ 
+ 	platform_set_drvdata(pdev, dev);
+@@ -909,4 +939,4 @@
  MODULE_AUTHOR("Peter Chen <xingkongcp@gmail.com>");
  MODULE_AUTHOR("Gerhard Bertelsmann <info@gerhard-bertelsmann.de>");
  MODULE_LICENSE("Dual BSD/GPL");
 -MODULE_DESCRIPTION("CAN driver for Allwinner SoCs (A10/A20)");
-+MODULE_DESCRIPTION("CAN driver for Allwinner SoCs (A10/A20/D1S/T113-S3)");
++MODULE_DESCRIPTION("CAN driver for Allwinner SoCs (A10/A20/D1)");
 diff -urN linux-6.0.2/drivers/pinctrl/sunxi/pinctrl-sun20i-d1.c linux-6.0.2-can/drivers/pinctrl/sunxi/pinctrl-sun20i-d1.c
 --- linux-6.0.2/drivers/pinctrl/sunxi/pinctrl-sun20i-d1.c	2022-10-15 08:02:59.000000000 +0200
 +++ linux-6.0.2-can/drivers/pinctrl/sunxi/pinctrl-sun20i-d1.c	2022-11-07 11:29:04.282230174 +0100
