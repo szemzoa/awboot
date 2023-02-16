@@ -1170,10 +1170,10 @@ static int auto_scan_dram_size(dram_para_t *para)
 		if (rank != maxrank) {
 			if (rank == 1) {
 				/* MC_WORK_MODE */
-				clrsetbits_le32(0x3202000, 0xffc, 0x6f0);
+				clrsetbits_le32(0x3102000, 0xffc, 0x6f0);
 
 				/* MC_WORK_MODE2 */
-				clrsetbits_le32(0x3202004, 0xffc, 0x6f0);
+				clrsetbits_le32(0x3102004, 0xffc, 0x6f0);
 			}
 			/* store rank1 config in upper half of para1 */
 			offs += 16;
