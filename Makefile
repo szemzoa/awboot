@@ -68,12 +68,12 @@ build: build_revision $(TARGET)-boot.elf $(TARGET)-boot.bin $(TARGET)-fel.elf $(
 .PRECIOUS : $(OBJS)
 $(TARGET)-fel.elf: $(OBJS)
 	echo "  LD    $@"
-	$(CC) -E -P -x c -D__RAM_BASE=0x00030000 ./arch/arm32/mach-t113s3/link.ld >> build/link-fel.ld
+	$(CC) -E -P -x c -D__RAM_BASE=0x00030000 ./arch/arm32/mach-t113s3/link.ld > build/link-fel.ld
 	$(CC) $^ -o $@ $(LIB_DIR) -T build/link-fel.ld $(LDFLAGS) -Wl,-Map,$(TARGET)-fel.map
 
 $(TARGET)-boot.elf: $(OBJS)
 	echo "  LD    $@"
-	$(CC) -E -P -x c -D__RAM_BASE=0x00020000 ./arch/arm32/mach-t113s3/link.ld >> build/link-boot.ld
+	$(CC) -E -P -x c -D__RAM_BASE=0x00020000 ./arch/arm32/mach-t113s3/link.ld > build/link-boot.ld
 	$(CC) $^ -o $@ $(LIB_DIR) -T build/link-boot.ld $(LDFLAGS) -Wl,-Map,$(TARGET)-boot.map
 
 $(TARGET)-fel.bin: $(TARGET)-fel.elf
