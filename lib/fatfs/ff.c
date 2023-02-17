@@ -5760,7 +5760,7 @@ FRESULT f_setlabel(const TCHAR *label /* Volume label to set with heading logica
 )
 {
 	FRESULT			  res;
-	FATFS			  *fs;
+	FATFS			*fs;
 	DIR				  dj;
 	BYTE			  dirvn[22];
 	UINT			  di;
@@ -6256,8 +6256,8 @@ FRESULT f_mkfs(const TCHAR	   *path, /* Logical drive number */
 	static const WORD	   cst32[] = {1, 2, 4, 8, 16, 32, 0}; /* Cluster size boundary for FAT32 volume (128Ks unit) */
 	static const MKFS_PARM defopt  = {FM_ANY, 0, 0, 0, 0}; /* Default parameter */
 	BYTE				   fsopt, fsty, sys, pdrv, ipart;
-	BYTE					 *buf;
-	BYTE					 *pte;
+	BYTE				  *buf;
+	BYTE				  *pte;
 	WORD				   ss; /* Sector size */
 	DWORD				   sz_buf, sz_blk, n_clst, pau, nsect, n, vsn;
 	LBA_t				   sz_vol, b_vol, b_fat, b_data; /* Size of volume, Base LBA of volume, fat, data */
@@ -7600,7 +7600,7 @@ FRESULT f_setcp(WORD cp /* Value to be set as active code page */
 )
 {
 	static const WORD		 validcp[22] = {437, 720, 737, 771, 775, 850, 852, 855, 857, 860, 861,
-										862, 863, 864, 865, 866, 869, 932, 936, 949, 950, 0};
+											862, 863, 864, 865, 866, 869, 932, 936, 949, 950, 0};
 	static const BYTE *const tables[22]	 = {Ct437, Ct720, Ct737, Ct771, Ct775, Ct850, Ct852, Ct855, Ct857, Ct860, Ct861,
 											Ct862, Ct863, Ct864, Ct865, Ct866, Ct869, Dc932, Dc936, Dc949, Dc950, 0};
 	UINT					 i;

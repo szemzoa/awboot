@@ -1,14 +1,13 @@
 /*-----------------------------------------------------------------------*/
-/* Low level disk I/O module skeleton for FatFs     (C)ChaN, 2007        */
+/* Low level disk I/O module SKELETON for FatFs     (C)ChaN, 2019        */
 /*-----------------------------------------------------------------------*/
-/* This is a stub disk I/O module that acts as front end of the existing */
-/* disk I/O modules and attach it to FatFs module with common interface. */
+/* If a working storage control module is available, it should be        */
+/* attached to the FatFs via a glue function rather than modifying it.   */
+/* This is an example of glue functions to attach various exsisting      */
+/* storage control modules to the FatFs module with a defined API.       */
 /*-----------------------------------------------------------------------*/
+#include "ff.h" /* Obtains integer types */
 #include "diskio.h"
-#include "ffconf.h"
-#include "integer.h"
-#include "media.h"
-
 #include "main.h"
 #include "sdmmc.h"
 #include "debug.h"
@@ -16,27 +15,22 @@
 #include "sunxi_dma.h"
 #include "board.h"
 
-//------------------------------------------------------------------------------
-//         Internal variables
-
-static volatile DSTATUS Stat = STA_NOINIT; /* Disk status */
+static DSTATUS Stat = STA_NOINIT; /* Disk status */
 #ifdef CONFIG_FATFS_CACHE_SIZE
 static u8 *const cache		= (u8 *)SDRAM_BASE;
 static const u32 cache_size = (CONFIG_FATFS_CACHE_SIZE);
 static u32		 cache_first, cache_last;
 #endif
 
-//------------------------------------------------------------------------------
-/* Initialize a Drive                                                    */
+/*-----------------------------------------------------------------------*/
+/* Get Drive Status                                                      */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS disk_initialize(BYTE drv /* Physical drive number (0..) */
+DSTATUS disk_status(BYTE pdrv /* Physical drive nmuber to identify the drive */
 )
 {
-	if (drv)
+	if (pdrv)
 		return STA_NOINIT;
-
-	Stat &= ~STA_NOINIT;
 
 #ifdef CONFIG_FATFS_CACHE_SIZE
 	cache_first = 0xFFFFFFFF - cache_size; // Set to a big sector for a proper init
@@ -47,14 +41,16 @@ DSTATUS disk_initialize(BYTE drv /* Physical drive number (0..) */
 }
 
 /*-----------------------------------------------------------------------*/
-/* Return Disk Status                                                    */
+/* Inidialize a Drive                                                    */
 /*-----------------------------------------------------------------------*/
 
-DSTATUS disk_status(BYTE drv /* Physical drive number (0..) */
+DSTATUS disk_initialize(BYTE pdrv /* Physical drive nmuber to identify the drive */
 )
 {
-	if (drv)
+	if (pdrv)
 		return STA_NOINIT;
+
+	Stat &= ~STA_NOINIT;
 
 	return Stat;
 }
@@ -63,7 +59,7 @@ DSTATUS disk_status(BYTE drv /* Physical drive number (0..) */
 /* Read Sector(s)                                                        */
 /*-----------------------------------------------------------------------*/
 
-DRESULT disk_read(BYTE	drv, /* Physical drive nmuber to identify the drive */
+DRESULT disk_read(BYTE	pdrv, /* Physical drive nmuber to identify the drive */
 				  BYTE *buff, /* Data buffer to store read data */
 				  LBA_t sector, /* Start sector in LBA */
 				  UINT	count /* Number of sectors to read */
@@ -71,7 +67,7 @@ DRESULT disk_read(BYTE	drv, /* Physical drive nmuber to identify the drive */
 {
 	u32 blkread, read_pos, first, last, chunk, bytes;
 
-	if (drv || !count)
+	if (pdrv || !count)
 		return RES_PARERR;
 	if (Stat & STA_NOINIT)
 		return RES_NOTRDY;
@@ -123,8 +119,9 @@ DRESULT disk_read(BYTE	drv, /* Physical drive nmuber to identify the drive */
 /* Write Sector(s)                                                       */
 /*-----------------------------------------------------------------------*/
 
-#if _READONLY == 0
-DRESULT disk_write(BYTE		   drv, /* Physical drive nmuber to identify the drive */
+#if FF_FS_READONLY == 0
+
+DRESULT disk_write(BYTE		   pdrv, /* Physical drive nmuber to identify the drive */
 				   const BYTE *buff, /* Data to be written */
 				   LBA_t	   sector, /* Start sector in LBA */
 				   UINT		   count /* Number of sectors to write */
@@ -132,37 +129,17 @@ DRESULT disk_write(BYTE		   drv, /* Physical drive nmuber to identify the drive 
 {
 	return RES_ERROR;
 }
-#endif /* _READONLY */
+
+#endif
 
 /*-----------------------------------------------------------------------*/
-/* Miscellaneous drive controls other than data read/write               */
+/* Miscellaneous Functions                                               */
 /*-----------------------------------------------------------------------*/
-#if _USE_IOCTL == 1
-DRESULT disk_ioctl(BYTE	 drv, /* Physical drive number (0..) */
-				   BYTE	 ctrl, /* Control code */
+
+DRESULT disk_ioctl(BYTE	 pdrv, /* Physical drive nmuber (0..) */
+				   BYTE	 cmd, /* Control code */
 				   void *buff /* Buffer to send/receive control data */
 )
 {
-}
-#endif
-
-/*----------------------------------------------------------------------*/
-/* User Provided RTC Function for Fats module				*/
-/*----------------------------------------------------------------------*/
-/* Currnet time is returned with packed into a DWORD value.		*/
-/* The bit field is as follows:						*/
-/*   bit31:25  Year from 1980 (0..127)					*/
-/*   bit24:21  Month (1..12)						*/
-/*   bit20:16  Day in month(1..31)					*/
-/*   bit15:11  Hour (0..23)						*/
-/*   bit10:5   Minute (0..59)						*/
-/*   bit4:0    Second / 2 (0..29)					*/
-
-DWORD get_fattime(void)
-{
-	DWORD time;
-
-	time = ((2009 - 1980) << 25) | (9 << 21) | (15 << 16) | (17 << 11) | (45 << 5) | ((59 / 2) << 0);
-
-	return time;
+	return RES_PARERR;
 }

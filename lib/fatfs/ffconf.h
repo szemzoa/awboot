@@ -30,7 +30,7 @@
 #define FF_USE_MKFS 0
 /* This option switches f_mkfs() function. (0:Disable or 1:Enable) */
 
-#define FF_USE_FASTSEEK 0
+#define FF_USE_FASTSEEK 1
 /* This option switches fast seek function. (0:Disable or 1:Enable) */
 
 #define FF_USE_EXPAND 0
@@ -184,7 +184,7 @@
 /  for variable sector size mode and disk_ioctl() function needs to implement
 /  GET_SECTOR_SIZE command. */
 
-#define FF_LBA64 0
+#define FF_LBA64 1
 /* This option switches support for 64-bit LBA. (0:Disable or 1:Enable)
 /  To enable the 64-bit LBA, also exFAT needs to be enabled. (FF_FS_EXFAT == 1) */
 
@@ -207,12 +207,12 @@
 /  Instead of private sector buffer eliminated from the file object, common sector
 /  buffer in the filesystem object (FATFS) is used for the file data transfer. */
 
-#define FF_FS_EXFAT 0
+#define FF_FS_EXFAT 1
 /* This option switches support for exFAT filesystem. (0:Disable or 1:Enable)
 /  To enable exFAT, also LFN needs to be enabled. (FF_USE_LFN >= 1)
 /  Note that enabling exFAT discards ANSI C (C89) compatibility. */
 
-#define FF_FS_NORTC	  0
+#define FF_FS_NORTC	  1
 #define FF_NORTC_MON  1
 #define FF_NORTC_MDAY 1
 #define FF_NORTC_YEAR 2022
