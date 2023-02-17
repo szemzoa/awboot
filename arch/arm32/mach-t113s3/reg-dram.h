@@ -1,7 +1,7 @@
 /*
  * Allwinner D1/D1s/R528/T113-sx DRAM controller register
  *
- * (C) Copyright 2023  YuzukiTsuru <gloomyghost@gloomyghost.com>
+ * (C) Copyright 2023 YuzukiTsuru <gloomyghost@gloomyghost.com>
  *
  * SPDX-License-Identifier:	GPL-2.0+
  */
@@ -112,6 +112,9 @@
 #define SYS_SID_BASE (0x3006000)
 #define SYS_EFUSE_REG (0x228)
 #define SYS_LDOB_SID (0x21c)
+
+#define SUNXI_R_CPUCFG_BASE (0x7000400)
+#define SUNXI_R_CPUCFG_SUP_STAN_FLAG (0x1d4)
 
 #define R_PRCM_BASE (0x7010000)
 #define VDD_SYS_PWROFF_GATING_REG (0x250)
