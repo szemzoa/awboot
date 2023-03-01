@@ -1,0 +1,213 @@
+[I] AWBoot r6403 starting...
+[D] periph0 has been enabled
+[D] sunxi clock init end
+[D] cpu clk reg (#0x500): 0x03000301
+[D] CLK: CPU CLK_reg=0x03000301
+[D] CLK: CPU PLL=PLL_CPU FREQ=912MHz
+[D] CLK: PLL_peri (2X)=1200MHz, (1X)=600MHz, (800M)=800MHz
+[D] CLK: PLL_ddr=1056MHz
+[D] DRAM BOOT DRIVE INFO: V0.24
+[D] DRAM CLK = 528 MHz
+[D] DRAM Type = 2 (2:DDR2,3:DDR3)
+[D] DRAMC read ODT off
+[D] ZQ value = 0x2f
+[D] DRAM ODT off
+[D] DRAM: size = 64MB
+[D] DRAM: simple test OK
+[I] SMHC: sdhci0 controller v50400 initialized
+[D] SMHC: capacity 8.0GB
+[I] SHMC: SD card detected
+[D] SDMMC: speedtest 512KB in 66ms at 7943KB/S
+[D] FATFS: mount OK
+[I] FATFS: read sun8i-v851s-lizard.dtb addr=41000000
+[D] FATFS: read in 1ms at 13.18MB/S
+[I] FATFS: read zImage addr=43000000
+[D] FATFS: read in 124ms at 35.63MB/S
+[D] load RISCV binary, addr=0x43c00000
+[D] FATFS: read in 7ms at 31.15MB/S
+[D] image size: 223252 bytes
+[D] FATFS: unmount OK
+[D] FATFS: done in 1212ms
+[I] booting linux...
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 6.1.0-rc3-443875-gb466df90d48f-dirty (root@devel) (arm-linux-gnueabihf-gcc (Linaro GCC 6.4-2017.11) 6.4.1 20171012, GNU ld (Linaro_Binutils-2017.11) 2.27.0.20161229) #168 PREEMPT Wed Mar  1 10:23:44 CET 2023
+[    0.000000] CPU: ARMv7 Processor [410fc075] revision 5 (ARMv7), cr=10c5387d
+[    0.000000] CPU: div instructions available: patching division code
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
+[    0.000000] OF: fdt: Machine model: Yuzuki-lizard
+[    0.000000] printk: bootconsole [earlycon0] enabled
+[    0.000000] Memory policy: Data cache writeback
+[    0.000000] cma: Reserved 4 MiB at 0x43800000
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000040000000-0x0000000043bfffff]
+[    0.000000]   HighMem  [mem 0x0000000043c00000-0x0000000043ffffff]
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000040000000-0x0000000043bfffff]
+[    0.000000]   node   0: [mem 0x0000000043c00000-0x0000000043ffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000040000000-0x0000000043ffffff]
+[    0.000000] CPU: All CPU(s) started in SVC mode.
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 16264
+[    0.000000] Kernel command line: mem=64M cma=2M root=/dev/mmcblk0p2 init=/sbin/init console=ttyS2,115200 earlyprintk=sunxi-uart,0x02500800 rootwait
+[    0.000000] Dentry cache hash table entries: 8192 (order: 3, 32768 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 4096 (order: 2, 16384 bytes, linear)
+[    0.000000] mem auto-init: stack:off, heap alloc:off, heap free:off
+[    0.000000] Memory: 44488K/65536K available (7168K kernel code, 685K rwdata, 1900K rodata, 1024K init, 204K bss, 16952K reserved, 4096K cma-reserved, 0K highmem)
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] rcu: Preemptible hierarchical RCU implementation.
+[    0.000000] rcu:     RCU event tracing is enabled.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 10 jiffies.
+[    0.000000] NR_IRQS: 16, nr_irqs: 16, preallocated irqs: 16
+[    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention.
+[    0.000000] arch_timer: cp15 timer(s) running at 24.00MHz (virt).
+[    0.000000] clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0x588fe9dc0, max_idle_ns: 440795202592 ns
+[    0.000001] sched_clock: 56 bits at 24MHz, resolution 41ns, wraps every 4398046511097ns
+[    0.008030] Switching to timer-based delay loop, resolution 41ns
+[    0.014234] clocksource: timer: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 79635851949 ns
+[    0.023996] Console: colour dummy device 80x30
+[    0.028526] Calibrating delay loop (skipped), value calculated using timer frequency.. 48.00 BogoMIPS (lpj=240000)
+[    0.038913] pid_max: default: 32768 minimum: 301
+[    0.043798] Mount-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.051161] Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.059684] CPU: Testing write buffer coherency: ok
+[    0.066242] Setting up static identity map for 0x40100000 - 0x40100060
+[    0.073028] rcu: Hierarchical SRCU implementation.
+[    0.077886] rcu:     Max phase no-delay instances is 1000.
+[    0.083923] devtmpfs: initialized
+[    0.091800] VFP support v0.3: implementor 41 architecture 2 part 30 variant 7 rev 5
+[    0.099859] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    0.109744] futex hash table entries: 256 (order: -1, 3072 bytes, linear)
+[    0.116784] pinctrl core: initialized pinctrl subsystem
+[    0.123858] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.131479] DMA: preallocated 256 KiB pool for atomic coherent allocations
+[    0.139604] thermal_sys: Registered thermal governor 'step_wise'
+[    0.139627] thermal_sys: Registered thermal governor 'user_space'
+[    0.145949] hw-breakpoint: found 5 (+1 reserved) breakpoint and 4 watchpoint registers.
+[    0.160115] hw-breakpoint: maximum watchpoint size is 8 bytes.
+[    0.175048] platform 7090000.rtc: Fixing up cyclic dependency with 7010000.clock-controller
+[    0.199447] SCSI subsystem initialized
+[    0.204117] usbcore: registered new interface driver usbfs
+[    0.209696] usbcore: registered new interface driver hub
+[    0.215301] usbcore: registered new device driver usb
+[    0.220793] pps_core: LinuxPPS API ver. 1 registered
+[    0.225822] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.234993] PTP clock support registered
+[    0.241193] clocksource: Switched to clocksource arch_sys_counter
+[    0.261008] NET: Registered PF_INET protocol family
+[    0.266298] IP idents hash table entries: 2048 (order: 2, 16384 bytes, linear)
+[    0.274756] tcp_listen_portaddr_hash hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.283382] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.291170] TCP established hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.298874] TCP bind hash table entries: 1024 (order: 1, 8192 bytes, linear)
+[    0.305960] TCP: Hash tables configured (established 1024 bind 1024)
+[    0.312469] UDP hash table entries: 256 (order: 0, 4096 bytes, linear)
+[    0.319026] UDP-Lite hash table entries: 256 (order: 0, 4096 bytes, linear)
+[    0.326265] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    0.332743] RPC: Registered named UNIX socket transport module.
+[    0.338701] RPC: Registered udp transport module.
+[    0.343529] RPC: Registered tcp transport module.
+[    0.348242] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    0.357081] hw perfevents: enabled with armv7_cortex_a7 PMU driver, 5 counters available
+[    0.366647] Initialise system trusted keyrings
+[    0.371564] workingset: timestamp_bits=30 max_order=14 bucket_order=0
+[    0.386911] NFS: Registering the id_resolver key type
+[    0.392158] Key type id_resolver registered
+[    0.396351] Key type id_legacy registered
+[    0.489018] Key type asymmetric registered
+[    0.493184] Asymmetric key parser 'x509' registered
+[    0.498361] bounce: pool size: 64 pages
+[    0.502435] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 247)
+[    0.509861] io scheduler mq-deadline registered
+[    0.514416] io scheduler kyber registered
+[    0.622117] Serial: 8250/16550 driver, 8 ports, IRQ sharing disabled
+[    0.636686] usbcore: registered new interface driver uas
+[    0.642312] usbcore: registered new interface driver usb-storage
+[    0.648479] usbcore: registered new interface driver usbserial_generic
+[    0.655103] usbserial: USB Serial support registered for generic
+[    0.661173] usbcore: registered new interface driver cp210x
+[    0.666805] usbserial: USB Serial support registered for cp210x
+[    0.672782] usbcore: registered new interface driver ftdi_sio
+[    0.678568] usbserial: USB Serial support registered for FTDI USB Serial Device
+[    0.689051] sun6i-rtc 7090000.rtc: registered as rtc0
+[    0.694315] sun6i-rtc 7090000.rtc: setting system clock to 1970-01-02T00:00:17 UTC (86417)
+[    0.702818] sun6i-rtc 7090000.rtc: RTC enabled
+[    0.707842] i2c_dev: i2c /dev entries driver
+[    0.715542] usbcore: registered new interface driver usbhid
+[    0.721152] usbhid: USB HID core driver
+[    0.726842] NET: Registered PF_PACKET protocol family
+[    0.732184] Key type dns_resolver registered
+[    0.736677] Registering SWP/SWPB emulation handler
+[    0.741761] Loading compiled-in X.509 certificates
+[    0.778538] sun8i-v851s-pinctrl 2000000.pinctrl: initialized sunXi PIO driver
+[    0.808811] 2500000.serial: ttyS0 at MMIO 0x2500000 (irq = 226, base_baud = 1500000) is a 16550A
+[    0.840233] 2500800.serial: ttyS2 at MMIO 0x2500800 (irq = 227, base_baud = 1500000) is a 16550A
+[    0.849206] printk: console [ttyS2] enabled
+[    0.849206] printk: console [ttyS2] enabled
+[    0.857630] printk: bootconsole [earlycon0] disabled
+[    0.857630] printk: bootconsole [earlycon0] disabled
+[    0.870586] spi-nand spi0.0: Longsys SPI NAND was found.
+[    0.876004] spi-nand spi0.0: 128 MiB, block size: 128 KiB, page size: 2048, OOB size: 64
+[    0.885165] 4 fixed-partitions partitions found on MTD device spi0.0
+[    0.891673] Creating 4 MTD partitions on "spi0.0":
+[    0.896486] 0x000000000000-0x000000020000 : "awboot"
+[    0.902659] 0x000000020000-0x000000040000 : "dtb"
+[    0.908431] 0x000000040000-0x000000840000 : "kernel"
+[    0.927455] 0x000000840000-0x000008000000 : "rootfs"
+[    1.129369] phy phy-4100400.phy.0: Changing dr_mode to 1
+[    1.136705] usb_phy_generic usb_phy_generic.1.auto: dummy supplies not allowed for exclusive requests
+[    2.221328] ohci-platform 4101400.usb: Generic Platform OHCI controller
+[    2.228010] ohci-platform 4101400.usb: new USB bus registered, assigned bus number 1
+[    2.235807] ehci-platform 4101000.usb: EHCI Host Controller
+[    2.241778] musb-hdrc musb-hdrc.2.auto: MUSB HDRC host driver
+[    2.247559] musb-hdrc musb-hdrc.2.auto: new USB bus registered, assigned bus number 2
+[    2.255470] ehci-platform 4101000.usb: new USB bus registered, assigned bus number 3
+[    2.263684] ehci-platform 4101000.usb: irq 229, io mem 0x04101000
+[    2.270022] ohci-platform 4101400.usb: irq 230, io mem 0x04101400
+[    2.277340] hub 2-0:1.0: USB hub found
+[    2.281265] hub 2-0:1.0: 1 port detected
+[    2.291268] ehci-platform 4101000.usb: USB 2.0 started, EHCI 1.00
+[    2.305967] hub 3-0:1.0: USB hub found
+[    2.310485] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    2.321067] sunxi-mmc 4021000.mmc: allocated mmc-pwrseq
+[    2.326440] hub 3-0:1.0: 1 port detected
+[    2.335942] cfg80211: Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    2.342646] sunxi-mmc 4020000.mmc: initialized, max. request size: 2047 KB, uses new timings mode
+[    2.357070] hub 1-0:1.0: USB hub found
+[    2.361021] hub 1-0:1.0: 1 port detected
+[    2.365171] sunxi-mmc 4021000.mmc: initialized, max. request size: 2047 KB, uses new timings mode
+[    2.375053] platform regulatory.0: Direct firmware load for regulatory.db failed with error -2
+[    2.386316] Waiting for root device /dev/mmcblk0p2...
+[    2.391661] cfg80211: failed to load regulatory.db
+[    2.416014] mmc1: new high speed SDIO card at address 0001
+[    2.433679] mmc0: new high speed SDHC card at address 5048
+[    2.440150] mmcblk0: mmc0:5048 SDCIT 7.49 GiB 
+[    2.448003]  mmcblk0: p1 p2
+[    2.498931] EXT4-fs (mmcblk0p2): INFO: recovery required on readonly filesystem
+[    2.506359] EXT4-fs (mmcblk0p2): write access will be enabled during recovery
+[    2.725426] EXT4-fs (mmcblk0p2): recovery complete
+[    2.733356] EXT4-fs (mmcblk0p2): mounted filesystem with ordered data mode. Quota mode: disabled.
+[    2.742366] VFS: Mounted root (ext4 filesystem) readonly on device 179:2.
+[    2.752142] devtmpfs: mounted
+[    2.757216] Freeing unused kernel image (initmem) memory: 1024K
+[    2.763499] Run /sbin/init as init process
+[    2.970362] EXT4-fs (mmcblk0p2): re-mounted. Quota mode: disabled.
+[    3.009313] FAT-fs (mmcblk0p1): Volume was not properly unmounted. Some data may be corrupt. Please run fsck.
+Starting syslogd: OK
+Starting klogd: OK
+Running sysctl: OK
+Populating /dev using udev: [    3.559169] udevd[118]: starting version 3.2.11
+[    4.651215] random: crng init done
+[    4.705449] udevd[119]: starting eudev-3.2.11
+done
+Initializing random number generator: OK
+Saving random seed: OK
+Starting system message bus: dbus-daemon[151]: Failed to start message bus: The pid file "/run/messagebus.pid" exists, if the message bus is not running, remove this file
+done
+Starting iptables: OK
+Starting network: ifup: interface lo already configured
+OK
+Starting sshd: OK
+Starting seatd: OK
+
+Welcome to Buildroot
+lizard login:
