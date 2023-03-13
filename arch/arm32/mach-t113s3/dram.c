@@ -724,9 +724,9 @@ static void mctl_phy_ac_remapping(dram_para_t *para)
 					break;
 				case 10:
 				if(chipid == 0x6800){ // 0x6800 is T113-S4 no remap
-				cfg = ac_remapping_tables[0];
+					cfg = ac_remapping_tables[0];
 				} else {
-					  cfg = ac_remapping_tables[5];
+					cfg = ac_remapping_tables[5];
 				}
 					break;
 				case 11:
