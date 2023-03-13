@@ -32,7 +32,7 @@
 
 #define CONFIG_SYS_SDRAM_BASE SDRAM_BASE
 
-#define CONFIG_DRAM_CLK 936
+#define CONFIG_DRAM_CLK 792
 #define CONFIG_SUNXI_DRAM_TYPE 3
 #define CONFIG_DRAM_ZQ 0x7b7bfb
 #define CONFIG_DRAM_SUNXI_ODT_EN 0x00
@@ -700,15 +700,15 @@ static void mctl_phy_ac_remapping(dram_para_t *para)
 		return;
 
 	fuse = (readl(SUNXI_SID_BASE + 0x28) & 0xf00) >> 8;
-  chipid = (readl(SUNXI_SID_BASE) & 0xffff);
+	chipid = (readl(SUNXI_SID_BASE) & 0xffff);
 
 	debug("DDR efuse: 0x%x\r\n", fuse);
-  debug("chip id efuse: 0x%x\r\n", chipid);
+	debug("chip id efuse: 0x%x\r\n", chipid);
 
 	if (para->dram_type == SUNXI_DRAM_TYPE_DDR2) {
 		if (fuse == 15)
 			return;
-    if (fuse == 10) // Support D1s
+		if (fuse == 10) // Support D1s
 			cfg = ac_remapping_tables[0];
 		cfg = ac_remapping_tables[6];
 	} else {
@@ -723,11 +723,11 @@ static void mctl_phy_ac_remapping(dram_para_t *para)
 					cfg = ac_remapping_tables[3];
 					break;
 				case 10:
-          if(chipid == 0x6800){ // 0x6800 is T113-S4 no remap
-            cfg = ac_remapping_tables[0];
-          } else {
+				if(chipid == 0x6800){ // 0x6800 is T113-S4 no remap
+				cfg = ac_remapping_tables[0];
+				} else {
 					  cfg = ac_remapping_tables[5];
-          }
+				}
 					break;
 				case 11:
 					cfg = ac_remapping_tables[4];
