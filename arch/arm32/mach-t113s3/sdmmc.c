@@ -695,15 +695,18 @@ uint64_t sdmmc_blk_read(sdmmc_pdata_t *data, uint8_t *buf, uint64_t blkno, uint6
 	return blkcnt;
 }
 
-int sdmmc_init(sdmmc_pdata_t *data, sdhci_t *hci)
-{
-	data->hci	 = hci;
-	data->online = FALSE;
+int sdmmc_init(sdmmc_pdata_t *data, sdhci_t *hci) {
+    data->hci = hci;
+    data->online = FALSE;
+    int retries = 10;
 
-	if (sdmmc_detect(data->hci, &data->card) == TRUE) {
-		info("SHMC: %s card detected\r\n", data->card.version & SD_VERSION_SD ? "SD" : "MMC");
-		return 0;
-	}
+    do {
+        if (sdmmc_detect(data->hci, &data->card) == TRUE) {
+            info("SHMC: %s card detected\r\n", data->card.version & SD_VERSION_SD ? "SD" : "MMC");
+            return 0;
+        }
+        mdelay(100);
+    } while (retries--);
 
-	return -1;
+    return -1;
 }
