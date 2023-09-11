@@ -144,6 +144,7 @@ static int load_sdcard(image_info_t *image)
 
 #endif
 
+#ifdef CONFIG_BOOT_SPINAND
 int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 {
 	linux_zimage_header_t *hdr;
@@ -185,6 +186,7 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 
 	return 0;
 }
+#endif
 
 int main(void)
 {
