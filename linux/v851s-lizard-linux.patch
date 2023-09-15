@@ -1,0 +1,4076 @@
+diff -urN linux-6.6-rc1.orig/arch/arm/boot/dts/allwinner/Makefile linux-6.6-rc1/arch/arm/boot/dts/allwinner/Makefile
+--- linux-6.6-rc1.orig/arch/arm/boot/dts/allwinner/Makefile	2023-09-11 01:28:41.000000000 +0200
++++ linux-6.6-rc1/arch/arm/boot/dts/allwinner/Makefile	2023-09-15 12:03:34.997491640 +0200
+@@ -254,6 +254,7 @@
+ 	sun8i-s3-lichee-zero-plus.dtb \
+ 	sun8i-s3-pinecube.dtb \
+ 	sun8i-t113s-mangopi-mq-r-t113.dtb \
++	sun8i-v851s-lizard.dtb \
+ 	sun8i-t3-cqa3t-bv3.dtb \
+ 	sun8i-v3-sl631-imx179.dtb \
+ 	sun8i-v3s-licheepi-zero.dtb \
+diff -urN linux-6.6-rc1.orig/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts linux-6.6-rc1/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts
+--- linux-6.6-rc1.orig/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	2023-09-04 10:16:55.000000000 +0200
+@@ -0,0 +1,215 @@
++// SPDX-License-Identifier: (GPL-2.0+ or MIT)
++// Copyright (C) 2022 Samuel Holland <samuel@sholland.org>
++
++/dts-v1/;
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/leds/common.h>
++#include "sun8i-v851s.dtsi"
++
++/ {
++	model = "Yuzuki-lizard";
++	compatible = "allwinner,sun8i-v851s", "allwinner,sun8i";
++
++	aliases {
++/*		serial0 = &uart0; */
++		serial2 = &uart2;
++	};
++
++        chosen {
++		stdout-path = "serial0:115200n8";
++/*                bootargs = "mem=64M cma=4M root=/dev/mmcblk0p2 init=/sbin/init console=ttyS0,115200 earlyprintk=sunxi-uart,0x02500000 rootwait clk_ignore_unused"; */
++                bootargs = "mem=64M root=/dev/mmcblk0p2 init=/sbin/init console=ttyS2,115200 earlyprintk=sunxi-uart,0x02500800 rootwait";
++        };
++
++	reg_vcc: vcc {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++	};
++
++	reg_vcc_1v8: vcc-1v8 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-1v8";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++	};
++
++	reg_usbvbus: usbvbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usbvbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++	reg_vcc_3v3: vcc-3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-3v3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++	reg_vdd_cpu: vdd-cpu {
++		compatible = "regulator-fixed";
++		regulator-name = "vdd-cpu";
++		regulator-min-microvolt = <900000>;
++		regulator-max-microvolt = <900000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++/* A (B) C D E F (G) H */
++
++        leds {
++                compatible = "gpio-leds";
++
++                status_led {
++			linux,default-trigger = "heartbeat";
++                        label = "blue:status";
++                        gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;
++                };
++        };
++
++        wifi_pwrseq: wifi-pwrseq {
++                compatible = "mmc-pwrseq-simple";
++                reset-gpios = <&pio 4 6 GPIO_ACTIVE_LOW>; /* PE6 */
++        };
++};
++
++
++&cpu0 {
++	cpu-supply = <&reg_vdd_cpu>;
++};
++
++&pio {
++
++	vcc-pa-supply = <&reg_vcc_3v3>;
++	vcc-pc-supply = <&reg_vcc_3v3>;
++	vcc-pd-supply = <&reg_vcc_3v3>;
++	vcc-pe-supply = <&reg_vcc_3v3>;
++	vcc-pf-supply = <&reg_vcc_3v3>;
++	vcc-ph-supply = <&reg_vcc_3v3>;
++};
++
++&uart0 {
++	pinctrl-0 = <&uart0_ph9_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&uart2 {
++	pinctrl-0 = <&uart2_pe12_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&spi0 {
++        pinctrl-0 = <&spi0_pins>;
++        pinctrl-names = "default";
++        status = "okay";
++
++        flash@0 {
++                compatible = "spi-nand";
++                reg = <0>;
++
++                partitions {
++                        compatible = "fixed-partitions";
++                        #address-cells = <1>;
++                        #size-cells = <1>;
++
++                        partition@0 {
++                                label = "awboot";
++                                reg = <0x00000000 0x00020000>;	/* 128K */
++                        };
++
++                        partition@20000 {
++                                label = "dtb";
++                                reg = <0x00020000 0x00020000>;  /* 128k */
++                        };
++
++                        partition@40000 {
++                                label = "kernel";
++                                reg = <0x00040000 0x00800000>;  /* 8MB */
++                        };
++
++                        partition@840000 {
++                                label = "rootfs";
++                                reg = <0x00840000 0x077c0000>;
++                        };
++                };
++        };
++
++};
++
++&i2c2 {
++	pinctrl-0 = <&i2c2_ph11_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pwm {
++	pinctrl-0 = <&pwm_ph0_pin>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&mmc0 {
++	bus-width = <4>;
++/*	cd-gpios = <&pio 5 6 (GPIO_ACTIVE_HIGH)>; */
++	disable-wp;
++	vmmc-supply = <&reg_vcc_3v3>;
++	vqmmc-supply = <&reg_vcc_3v3>;
++	pinctrl-0 = <&mmc0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&mmc1 {
++	bus-width = <4>;
++	mmc-pwrseq = <&wifi_pwrseq>;
++	non-removable;
++	vmmc-supply = <&reg_vcc_3v3>;
++	vqmmc-supply = <&reg_vcc_3v3>;
++	pinctrl-0 = <&mmc1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++        xr829: wifi@1 {
++                reg = <1>;
++		interrupt-parent = <&pio>;
++		interrupts = <4 7 IRQ_TYPE_LEVEL_HIGH>; /* PE7 */
++		interrupt-names = "host-wake";
++        };
++};
++
++&usb_otg {
++	dr_mode = "otg";
++	status = "okay";
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&usbphy {
++	usb0_vbus-supply = <&reg_usbvbus>;
++	usb1_vbus-supply = <&reg_usbvbus>;
++	status = "okay";
++};
++
++&gpadc {
++        status = "okay";
++
++        #address-cells = <1>;
++        #size-cells = <0>;
++
++        channel@0 {
++            reg = <0>;
++        };
++};
+diff -urN linux-6.6-rc1.orig/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.6-rc1/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi
+--- linux-6.6-rc1.orig/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi	2023-09-04 10:16:35.000000000 +0200
+@@ -0,0 +1,696 @@
++// SPDX-License-Identifier: (GPL-2.0+ or MIT)
++// Copyright (C) 2021-2022 Samuel Holland <samuel@sholland.org>
++
++#include <dt-bindings/clock/sun6i-rtc.h>
++#include <dt-bindings/clock/sun8i-de2.h>
++#include <dt-bindings/clock/sun8i-tcon-top.h>
++#include <dt-bindings/clock/sun20i-d1-r-ccu.h>
++#include <dt-bindings/reset/sun20i-d1-r-ccu.h>
++#include <dt-bindings/clock/sun8i-v85x-ccu.h>
++#include <dt-bindings/reset/sun8i-v85x-ccu.h>
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/reset/sun8i-de2.h>
++#include <dt-bindings/thermal/thermal.h>
++
++/ {
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	osc24M: osc24M-clk {
++		compatible = "fixed-clock";
++		clock-frequency = <24000000>;
++		clock-output-names = "osc24M";
++		#clock-cells = <0>;
++	};
++
++        cpus {
++                #address-cells = <1>;
++                #size-cells = <0>;
++
++                cpu0: cpu@0 {
++                        device_type = "cpu";
++                        compatible = "arm,cortex-a7";
++                        reg = <0>;
++                        clocks = <&ccu CLK_CPU>;
++			clock-names = "cpu";
++                };
++        };
++
++	memory {
++	    reg = <0x40000000 0x4000000>;
++	};
++
++        reserved-memory {
++                #address-cells = <1>;
++                #size-cells = <1>;
++                ranges;
++
++                riscv_reserved: riscv0@43c00000 {
++                        no-map;
++                        reg = <0x43c00000 0x400000>;
++                };
++        };
++
++	timer {
++		compatible = "arm,armv7-timer";
++		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
++			     <GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
++			     <GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
++			     <GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>;
++		clock-frequency = <24000000>;
++		interrupt-parent = <&gic>;
++/*
++		arm,cpu-registers-not-fw-configured;
++		arm,no-tick-in-suspend;
++*/
++	};
++
++	pmu {
++		compatible = "arm,cortex-a7-pmu";
++		interrupts = <GIC_SPI 172 IRQ_TYPE_LEVEL_HIGH>,
++			     <GIC_SPI 173 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-parent = <&gic>;
++	};
++
++	soc {
++		compatible = "simple-bus";
++		ranges;
++		interrupt-parent = <&gic>;
++		#address-cells = <1>;
++		#size-cells = <1>;
++		dma-noncoherent;
++
++/* A (B) C D E F (G) H */
++
++		pio: pinctrl@2000000 {
++			compatible = "allwinner,sun8i-v851s-pinctrl";
++			reg = <0x2000000 0x800>;
++			interrupts = <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>, /* GPIOA */ 
++				     <GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>, /* GPIOC */ 
++				     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>, /* GPIOD */ 
++				     <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>, /* GPIOE */ 
++				     <GIC_SPI 77 IRQ_TYPE_LEVEL_HIGH>, /* GPIOF */ 
++				     <GIC_SPI 81 IRQ_TYPE_LEVEL_HIGH>; /* GPIOH */ 
++			clocks = <&ccu CLK_APB0>, <&osc24M>, <&rtc CLK_OSC32K>; 
++ 			clock-names = "apb", "hosc", "losc";
++			gpio-controller;
++			interrupt-controller;
++			#gpio-cells = <3>;
++			#interrupt-cells = <3>;
++
++			/omit-if-no-ref/
++			uart0_ph9_pins: uart0-ph9-pins {
++				pins = "PH9", "PH10";
++				function = "uart0";
++			};
++
++			/omit-if-no-ref/
++			uart2_pe12_pins: uart2-pe12-pins {
++				pins = "PE12", "PE13";
++				function = "uart2";
++			};
++
++			/omit-if-no-ref/
++			spi0_pins: spi0-pins {
++				pins = "PC0", "PC1", "PC2", "PC3", "PC4", "PC5";
++				function = "spi0";
++			};
++
++			/omit-if-no-ref/
++			i2c2_ph11_pins: i2c2-ph11-pins {
++				pins = "PH11", "PH12";
++				function = "twi2";
++			};
++
++			/omit-if-no-ref/
++			i2c3_ph13_pins: i2c3-ph13-pins {
++				pins = "PH13", "PH14";
++				function = "twi3";
++			};
++
++			/omit-if-no-ref/
++			mmc0_pins: mmc0-pins {
++				pins = "PF0", "PF1", "PF2", "PF3", "PF4", "PF5";
++				function = "sdc0";
++			};
++
++			/omit-if-no-ref/
++			mmc1_pins: mmc1-pins {
++				pins = "PE0", "PE1", "PE2", "PE3", "PE4", "PE5";
++				function = "sdc1";
++			};
++
++			/omit-if-no-ref/
++			pwm_ph0_pin: pwm-ph0-pin {
++				pins = "PH0";
++				function = "pwm0";
++			};
++		};
++/*
++		msgbox: mailbox@3003000 {
++        		compatible = "allwinner,sun8i-h3-msgbox",
++                        	     "allwinner,sun6i-a31-msgbox";
++			reg = <0x03003000 0x1000>;
++			interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_MSGBOX0>;
++			resets = <&ccu RST_BUS_MSGBOX0>;
++			#mbox-cells = <1>;
++			status = "okay";
++		};
++*/
++
++		mailbox: mailbox@3003000 {
++			compatible = "allwinner,sunxi-msgbox";
++			#mbox-cells = <1>;
++			reg = <0x03003000 0x1000>,
++			      <0x06020000 0x1000>;
++			interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>,
++						 <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>;
++
++			clocks = <&ccu CLK_BUS_MSGBOX0>;
++			clock-names = "msgbox0";
++			resets = <&ccu RST_BUS_MSGBOX0>;
++			local_id = <0>;
++			status = "okay";
++		};
++
++		hwspinlock: hwlock@3005000 {
++		    compatible = "allwinner,sun6i-a31-hwspinlock";
++			reg = <0x3005000 0x1000>;
++			clocks = <&ccu CLK_BUS_SPINLOCK>;
++			clock-names = "ahb";
++			resets = <&ccu RST_BUS_SPINLOCK>;
++			reset-names = "ahb";
++			interrupts = <GIC_SPI 54 IRQ_TYPE_LEVEL_HIGH>;
++		};
++
++		pwm: pwm@2000c00 {
++			compatible = "allwinner,sun8i-v853-pwm";
++			reg = <0x2000c00 0x400>;
++			interrupts = <GIC_SPI 18 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_PWM>, <&osc24M>;
++			clock-names = "bus", "mod";
++			resets = <&ccu RST_BUS_PWM>;
++			status = "disabled";
++			#pwm-cells = <3>;
++		};
++
++		ccu: clock-controller@2001000 {
++			compatible = "allwinner,sun8i-v85x-ccu";
++			reg = <0x2001000 0x1000>;
++			clocks = <&osc24M>,
++				 <&rtc CLK_OSC32K>,
++				 <&rtc CLK_IOSC>;
++			clock-names = "hosc", "losc", "iosc";
++			#clock-cells = <1>;
++			#reset-cells = <1>;
++		};
++
++
++		timer: timer@2050000 {
++			compatible = "allwinner,sun20i-d1-timer",
++				     "allwinner,sun8i-a23-timer";
++			reg = <0x2050000 0xa0>;
++			interrupts = <GIC_SPI 59 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 60 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&osc24M>;
++		};
++
++		uart0: serial@2500000 {
++			compatible = "snps,dw-apb-uart";
++			reg = <0x2500000 0x400>;
++			reg-io-width = <4>;
++			reg-shift = <2>;
++			interrupts = <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_UART0>;
++			resets = <&ccu RST_BUS_UART0>;
++			dmas = <&dma 14>, <&dma 14>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++		};
++
++		uart1: serial@2500400 {
++			compatible = "snps,dw-apb-uart";
++			reg = <0x2500400 0x400>;
++			reg-io-width = <4>;
++			reg-shift = <2>;
++			interrupts = <GIC_SPI 3 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_UART1>;
++			resets = <&ccu RST_BUS_UART1>;
++			dmas = <&dma 15>, <&dma 15>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++		};
++
++		uart2: serial@2500800 {
++			compatible = "snps,dw-apb-uart";
++			reg = <0x2500800 0x400>;
++			reg-io-width = <4>;
++			reg-shift = <2>;
++			interrupts = <GIC_SPI 4 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_UART2>;
++			resets = <&ccu RST_BUS_UART2>;
++			dmas = <&dma 16>, <&dma 16>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++		};
++
++		uart3: serial@2500c00 {
++			compatible = "snps,dw-apb-uart";
++			reg = <0x2500c00 0x400>;
++			reg-io-width = <4>;
++			reg-shift = <2>;
++			interrupts = <GIC_SPI 5 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_UART3>;
++			resets = <&ccu RST_BUS_UART3>;
++			dmas = <&dma 17>, <&dma 17>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++		};
++
++		i2c0: i2c@2502000 {
++			compatible = "allwinner,sun20i-d1-i2c",
++				     "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502000 0x400>;
++			interrupts = <GIC_SPI 9 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C0>;
++			resets = <&ccu RST_BUS_I2C0>;
++			dmas = <&dma 43>, <&dma 43>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		i2c1: i2c@2502400 {
++			compatible = "allwinner,sun20i-d1-i2c",
++				     "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502400 0x400>;
++			interrupts = <GIC_SPI 10 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C1>;
++			resets = <&ccu RST_BUS_I2C1>;
++			dmas = <&dma 44>, <&dma 44>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		i2c2: i2c@2502800 {
++			compatible = "allwinner,sun20i-d1-i2c",
++				     "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502800 0x400>;
++			interrupts = <GIC_SPI 11 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C2>;
++			resets = <&ccu RST_BUS_I2C2>;
++			dmas = <&dma 45>, <&dma 45>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		i2c3: i2c@2502c00 {
++			compatible = "allwinner,sun20i-d1-i2c",
++				     "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502c00 0x400>;
++			interrupts = <GIC_SPI 12 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C3>;
++			resets = <&ccu RST_BUS_I2C3>;
++			dmas = <&dma 46>, <&dma 46>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++
++		i2c4: i2c@2503000 {
++			compatible = "allwinner,sun20i-d1-i2c",
++				     "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2503000 0x400>;
++			interrupts = <GIC_SPI 13 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C4>;
++			resets = <&ccu RST_BUS_I2C4>;
++			dmas = <&dma 47>, <&dma 47>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		syscon: syscon@3000000 {
++			compatible = "allwinner,sun20i-d1-system-control";
++			reg = <0x3000000 0x1000>;
++			ranges;
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			sram_c: sram@20000 {
++				compatible = "mmio-sram";
++				reg = <0x00020000 0x210000>;
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges = <0 0x00020000 0x21000>;
++			};
++		};
++
++		spi0: spi@4025000 {
++			compatible = "allwinner,sun20i-d1-spi",
++				     "allwinner,sun50i-r329-spi";
++			reg = <0x4025000 0x1000>;
++			interrupts = <GIC_SPI 15 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_SPI0>, <&ccu CLK_SPI0>;
++			clock-names = "ahb", "mod";
++			resets = <&ccu RST_BUS_SPI0>;
++			dmas = <&dma 22>, <&dma 22>;
++			dma-names = "rx", "tx";
++			num-cs = <1>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		spi1: spi@4026000 {
++			compatible = "allwinner,sun8i-v851s-spi-dbi",
++				     "allwinner,sun50i-r329-spi-dbi",
++				     "allwinner,sun50i-r329-spi";
++			reg = <0x4026000 0x1000>;
++			interrupts = <GIC_SPI 16 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_SPI1>, <&ccu CLK_SPI1>;
++			clock-names = "ahb", "mod";
++			resets = <&ccu RST_BUS_SPI1>;
++			dmas = <&dma 23>, <&dma 23>;
++			dma-names = "rx", "tx";
++			num-cs = <1>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		spi2: spi@4027000 {
++			compatible = "allwinner,sun20i-d1-spi",
++				     "allwinner,sun50i-r329-spi";
++			reg = <0x4027000 0x1000>;
++			interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_SPI2>, <&ccu CLK_SPI2>;
++			clock-names = "ahb", "mod";
++			resets = <&ccu RST_BUS_SPI2>;
++			dmas = <&dma 24>, <&dma 24>;
++			dma-names = "rx", "tx";
++			num-cs = <1>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		spi3: spi@4028000 {
++			compatible = "allwinner,sun20i-d1-spi",
++				     "allwinner,sun50i-r329-spi";
++			reg = <0x4028000 0x1000>;
++			interrupts = <GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_SPI3>, <&ccu CLK_SPI3>;
++			clock-names = "ahb", "mod";
++			resets = <&ccu RST_BUS_SPI3>;
++			dmas = <&dma 25>, <&dma 25>;
++			dma-names = "rx", "tx";
++			num-cs = <1>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++/*
++		syscon: syscon@3000000 {
++			compatible = "allwinner,sun20i-d1-system-control";
++			reg = <0x3000000 0x1000>;
++			ranges;
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			regulators@3000150 {
++				compatible = "allwinner,sun20i-d1-system-ldos";
++				reg = <0x3000150 0x4>;
++
++				reg_ldoa: ldoa {
++				};
++
++				reg_ldob: ldob {
++				};
++			};
++
++			sram_c: sram@20000 {
++				compatible = "mmio-sram";
++				reg = <0x00020000 0x21000>;
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges = <0 0x00020000 0x21000>;
++
++				ve_sram: sram-section@0 {
++					compatible = "allwinner,sun20i-d1-sram-c1",
++						     "allwinner,sun4i-a10-sram-c1";
++					reg = <0x000000 0x21000>;
++				};
++			};
++		};
++*/
++
++		dma: dma-controller@3002000 {
++			compatible = "allwinner,sun20i-d1-dma";
++			reg = <0x3002000 0x1000>;
++			interrupts = <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_DMA>, <&ccu CLK_MBUS_DMA>;
++			clock-names = "bus", "mbus";
++			resets = <&ccu RST_BUS_DMA>;
++			dma-channels = <16>;
++			dma-requests = <64>;
++			#dma-cells = <1>;
++		};
++
++		sid: efuse@3006000 {
++			compatible = "allwinner,sun20i-d1-sid";
++			reg = <0x3006000 0x1000>;
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			ths_calib: ths-calib@14 {
++				reg = <0x14 0x4>;
++			};
++
++			bg_trim: bg-trim@28 {
++				reg = <0x28 0x4>;
++				bits = <16 8>;
++			};
++		};
++
++		mbus: dram-controller@3102000 {
++			compatible = "allwinner,sun20i-d1-mbus";
++			reg = <0x3102000 0x1000>,
++			      <0x3103000 0x1000>;
++			reg-names = "mbus", "dram";
++			interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_MBUS>,
++				 <&ccu CLK_DRAM>,
++				 <&ccu CLK_BUS_DRAM>;
++			clock-names = "mbus", "dram", "bus";
++			dma-ranges = <0 0x40000000 0x80000000>;
++			#address-cells = <1>;
++			#size-cells = <1>;
++			#interconnect-cells = <1>;
++		};
++
++
++		mmc0: mmc@4020000 {
++			compatible = "allwinner,sun20i-d1-mmc";
++			reg = <0x4020000 0x1000>;
++			interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_MMC0>, <&ccu CLK_MMC0>;
++			clock-names = "ahb", "mmc";
++			resets = <&ccu RST_BUS_MMC0>;
++			reset-names = "ahb";
++			no-sdio;
++			no-mmc;
++			cap-sd-highspeed;
++			max-frequency = <150000000>;
++			mmc-ddr-1_8v;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		mmc1: mmc@4021000 {
++			compatible = "allwinner,sun20i-d1-mmc";
++			reg = <0x4021000 0x1000>;
++			interrupts = <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_MMC1>, <&ccu CLK_MMC1>;
++			clock-names = "ahb", "mmc";
++			resets = <&ccu RST_BUS_MMC1>;
++			reset-names = "ahb";
++			cap-sd-highspeed;
++			cap-mmc-highspeed;
++			max-frequency = <150000000>;
++			mmc-ddr-1_8v;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		mmc2: mmc@4022000 {
++			compatible = "allwinner,sun8i-d1-mmc";
++			reg = <0x4022000 0x1000>;
++			interrupts = <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_MMC2>, <&ccu CLK_MMC2>;
++			clock-names = "ahb", "mmc";
++			resets = <&ccu RST_BUS_MMC2>;
++			reset-names = "ahb";
++			no-sdio;
++			no-sd;
++			cap-mmc-highspeed;
++			max-frequency = <150000000>;
++			mmc-ddr-1_8v;
++			mmc-ddr-3_3v;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		usb_otg: usb@4100000 {
++			compatible = "allwinner,sun20i-d1-musb",
++				     "allwinner,sun8i-a33-musb";
++			reg = <0x4100000 0x400>;
++			interrupts = <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "mc";
++			clocks = <&ccu CLK_BUS_OTG>;
++			resets = <&ccu RST_BUS_OTG>;
++			extcon = <&usbphy 0>;
++			phys = <&usbphy 0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		usbphy: phy@4100400 {
++			compatible = "allwinner,sun8i-v851s-usb-phy";
++			reg = <0x4100400 0x100>,
++			      <0x4101800 0x100>;
++			reg-names = "phy_ctrl",
++				    "pmu0";
++			clocks = <&osc24M>;
++			clock-names = "usb0_phy";
++			resets = <&ccu RST_USB_PHY>;
++			reset-names = "usb0_reset";
++			status = "disabled";
++			#phy-cells = <1>;
++		};
++
++		ehci0: usb@4101000 {
++			compatible = "allwinner,sun20i-d1-ehci",
++				     "generic-ehci";
++			reg = <0x4101000 0x100>;
++			interrupts = <GIC_SPI 30 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_OHCI>,
++				 <&ccu CLK_BUS_EHCI>,
++				 <&ccu CLK_USB_OHCI>;
++			resets = <&ccu RST_BUS_OHCI>,
++				 <&ccu RST_BUS_EHCI>;
++			phys = <&usbphy 0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		ohci0: usb@4101400 {
++			compatible = "allwinner,sun20i-d1-ohci",
++				     "generic-ohci";
++			reg = <0x4101400 0x100>;
++			interrupts = <GIC_SPI 31 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_OHCI>,
++				 <&ccu CLK_USB_OHCI>;
++			resets = <&ccu RST_BUS_OHCI>;
++			phys = <&usbphy 0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		emac: ethernet@4500000 {
++			compatible = "allwinner,sun20i-d1-emac",
++				     "allwinner,sun50i-a64-emac";
++			reg = <0x4500000 0x10000>;
++			interrupts = <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "macirq";
++			clocks = <&ccu CLK_BUS_EMAC>;
++			clock-names = "stmmaceth";
++			resets = <&ccu RST_BUS_EMAC>;
++			reset-names = "stmmaceth";
++			syscon = <&syscon>;
++			status = "disabled";
++
++			mdio: mdio {
++				compatible = "snps,dwmac-mdio";
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++		};
++
++		r_ccu: clock-controller@7010000 {
++			compatible = "allwinner,sun20i-d1-r-ccu";
++			reg = <0x7010000 0x400>;
++			clocks = <&osc24M>,
++				 <&rtc CLK_OSC32K>,
++				 <&rtc CLK_IOSC>,
++/*				 <&ccu CLK_PLL_PERIPH0_DIV3>; */
++				 <&ccu CLK_PLL_PERIPH>;
++			clock-names = "hosc", "losc", "iosc", "pll-periph";
++			#clock-cells = <1>;
++			#reset-cells = <1>;
++		};
++
++		rtc: rtc@7090000 {
++			compatible = "allwinner,sun20i-d1-rtc",
++				     "allwinner,sun50i-r329-rtc";
++			reg = <0x7090000 0x400>;
++			interrupts = <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&r_ccu CLK_BUS_R_RTC>,
++				 <&osc24M>,
++				 <&r_ccu CLK_R_AHB>;
++			clock-names = "bus", "hosc", "ahb";
++			#clock-cells = <1>;
++		};
++
++                gic: interrupt-controller@3021000 {
++                        compatible = "arm,gic-400";
++                        reg = <0x03021000 0x1000>,
++                              <0x03022000 0x2000>,
++                              <0x03024000 0x2000>,
++                              <0x03026000 0x2000>;
++                        interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
++                        interrupt-controller;
++                        #interrupt-cells = <3>;
++                };
++/*
++		iommu: iommu@2010000 {
++			compatible = "allwinner,sun50i-h6-iommu";
++			reg = <0x02010000 0x10000>;
++			interrupts = <GIC_SPI 64 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_IOMMU>;
++			resets = <&ccu RST_BUS_IOMMU>;
++			#iommu-cells = <1>;
++		};
++
++		iommus = <&iommu 5>; 
++*/
++
++                gpadc: adc@2009000 {
++                        compatible = "allwinner,sun20i-d1-gpadc";
++                        reg = <0x2009000 0x1000>;
++                        clocks = <&ccu CLK_BUS_GPADC>;
++                        resets = <&ccu RST_BUS_GPADC>;
++                        interrupts = <GIC_SPI 57 IRQ_TYPE_LEVEL_HIGH>;
++                        status = "disabled";
++                        #io-channel-cells = <1>;
++                };
++
++	};
++};
+diff -urN linux-6.6-rc1.orig/drivers/clk/sunxi-ng/Kconfig linux-6.6-rc1/drivers/clk/sunxi-ng/Kconfig
+--- linux-6.6-rc1.orig/drivers/clk/sunxi-ng/Kconfig	2023-09-11 01:28:41.000000000 +0200
++++ linux-6.6-rc1/drivers/clk/sunxi-ng/Kconfig	2023-09-15 12:00:47.597281991 +0200
+@@ -12,6 +12,11 @@
+ 	default y
+ 	depends on MACH_SUNIV || COMPILE_TEST
+ 
++config SUN8I_V85X_CCU
++	tristate "Support for the Allwinner V853/V851s CCU"
++	default MACH_SUN8I
++	depends on MACH_SUN8I || COMPILE_TEST
++
+ config SUN20I_D1_CCU
+ 	tristate "Support for the Allwinner D1/R528/T113 CCU"
+ 	default y
+diff -urN linux-6.6-rc1.orig/drivers/clk/sunxi-ng/Makefile linux-6.6-rc1/drivers/clk/sunxi-ng/Makefile
+--- linux-6.6-rc1.orig/drivers/clk/sunxi-ng/Makefile	2023-09-11 01:28:41.000000000 +0200
++++ linux-6.6-rc1/drivers/clk/sunxi-ng/Makefile	2023-09-15 12:00:33.385530582 +0200
+@@ -25,6 +25,7 @@
+ 
+ # SoC support
+ obj-$(CONFIG_SUNIV_F1C100S_CCU)	+= suniv-f1c100s-ccu.o
++obj-$(CONFIG_SUN8I_V85X_CCU)	+= sun8i-v85x-ccu.o
+ obj-$(CONFIG_SUN20I_D1_CCU)	+= sun20i-d1-ccu.o
+ obj-$(CONFIG_SUN20I_D1_R_CCU)	+= sun20i-d1-r-ccu.o
+ obj-$(CONFIG_SUN50I_A64_CCU)	+= sun50i-a64-ccu.o
+@@ -50,6 +51,7 @@
+ obj-$(CONFIG_SUN9I_A80_CCU)	+= sun9i-a80-usb-ccu.o
+ 
+ suniv-f1c100s-ccu-y		+= ccu-suniv-f1c100s.o
++sun8i-v85x-ccu-y		+= ccu-sun8i-v85x.o
+ sun20i-d1-ccu-y			+= ccu-sun20i-d1.o
+ sun20i-d1-r-ccu-y		+= ccu-sun20i-d1-r.o
+ sun50i-a64-ccu-y		+= ccu-sun50i-a64.o
+diff -urN linux-6.6-rc1.orig/drivers/clk/sunxi-ng/ccu-sun8i-v85x.c linux-6.6-rc1/drivers/clk/sunxi-ng/ccu-sun8i-v85x.c
+--- linux-6.6-rc1.orig/drivers/clk/sunxi-ng/ccu-sun8i-v85x.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/drivers/clk/sunxi-ng/ccu-sun8i-v85x.c	2023-04-18 11:23:53.000000000 +0200
+@@ -0,0 +1,1151 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * Copyright (C) 2023 Andras Szemzo <szemzo.andras@gmail.com>
++ *
++ * Based on ccu-sun20i-d1.c, which is:
++ * Copyright (C) 2021 Samuel Holland. All rights reserved.
++ */
++
++#include <linux/clk-provider.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/platform_device.h>
++
++#include "../clk.h"
++
++#include "ccu_common.h"
++#include "ccu_reset.h"
++
++#include "ccu_div.h"
++#include "ccu_gate.h"
++#include "ccu_mp.h"
++#include "ccu_mult.h"
++#include "ccu_nk.h"
++#include "ccu_nkm.h"
++#include "ccu_nkmp.h"
++#include "ccu_nm.h"
++
++#include "ccu-sun8i-v85x.h"
++
++static const struct clk_parent_data osc24M[] = {
++	{ .fw_name = "hosc" }
++};
++
++/*
++ * For the CPU PLL, the output divider is described as "only for testing"
++ * in the user manual. So it's not modelled and forced to 0.
++ */
++#define SUN8I_V85X_PLL_CPU_REG		0x000
++static struct ccu_mult pll_cpu_clk = {
++	.enable		= BIT(27),
++	.lock		= BIT(28),
++	.mult		= _SUNXI_CCU_MULT_MIN(8, 8, 11),
++	.common		= {
++		.reg		= 0x000,
++		.hw.init	= CLK_HW_INIT_PARENTS_DATA("pll-cpu", osc24M,
++							   &ccu_mult_ops,
++							   CLK_SET_RATE_UNGATE),
++	},
++};
++
++/* Some PLLs are input * N / div1 / P. Model them as NKMP with no K */
++#define SUN8I_V85X_PLL_DDR_REG		0x010
++static struct ccu_nkmp pll_ddr_clk = {
++	.enable		= BIT(27),
++	.lock		= BIT(28),
++	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 11),
++	.m		= _SUNXI_CCU_DIV(1, 1), /* input divider */
++	.p		= _SUNXI_CCU_DIV(0, 1), /* output divider */
++	.common		= {
++		.reg		= 0x010,
++		.hw.init	= CLK_HW_INIT_PARENTS_DATA("pll-ddr", osc24M,
++							   &ccu_nkmp_ops,
++							   CLK_SET_RATE_UNGATE),
++	},
++};
++
++#define SUN8I_V85X_PLL_PERIPH_REG	0x020
++static struct ccu_nm pll_periph_4x_clk = {
++	.enable		= BIT(27),
++	.lock		= BIT(28),
++	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 12),
++	.m		= _SUNXI_CCU_DIV(1, 1), /* input divider */
++	.common		= {
++		.reg		= 0x020,
++		.hw.init	= CLK_HW_INIT_PARENTS_DATA("pll-periph-4x", osc24M,
++							   &ccu_nm_ops,
++							   CLK_SET_RATE_UNGATE),
++	},
++};
++
++static SUNXI_CCU_M(pll_periph_2x_clk, "pll-periph-2x", "pll-periph-4x",
++		       0x020, 16, 3, 0);
++
++static const struct clk_hw *pll_periph_2x_hws[] = {
++	&pll_periph_2x_clk.common.hw
++};
++
++static SUNXI_CCU_M(pll_periph_800M_clk, "pll-periph-800M", "pll-periph-4x",
++		       0x020, 20, 3, 0);
++
++static SUNXI_CCU_M(pll_periph_480M_clk, "pll-periph-480M", "pll-periph-4x",
++		       0x020, 2, 3, 0);
++
++static CLK_FIXED_FACTOR_HWS(pll_periph_600M_clk, "pll-periph-600M",
++			pll_periph_2x_hws, 2, 1, 0);
++
++static CLK_FIXED_FACTOR_HWS(pll_periph_400M_clk, "pll-periph-400M",
++			pll_periph_2x_hws, 3, 1, 0);
++
++static const struct clk_hw *pll_periph_600M_hws[] = { &pll_periph_600M_clk.hw };
++static CLK_FIXED_FACTOR_HWS(pll_periph_300M_clk, "pll-periph-300M",
++			    pll_periph_600M_hws, 2, 1, 0);
++
++static const struct clk_hw *pll_periph_400M_hws[] = { &pll_periph_400M_clk.hw };
++static CLK_FIXED_FACTOR_HWS(pll_periph_200M_clk, "pll-periph-200M",
++			    pll_periph_400M_hws, 2, 1, 0);
++
++static const struct clk_hw *pll_periph_480M_hws[] = { &pll_periph_480M_clk.common.hw };
++static CLK_FIXED_FACTOR_HWS(pll_periph_160M_clk, "pll-periph-160M",
++			    pll_periph_480M_hws, 3, 1, 0);
++
++static const struct clk_hw *pll_periph_300M_hws[] = { &pll_periph_300M_clk.hw };
++static CLK_FIXED_FACTOR_HWS(pll_periph_150M_clk, "pll-periph-150M",
++			    pll_periph_300M_hws, 2, 1, 0);
++
++
++/*
++ * For Video PLLs, the output divider is described as "only for testing"
++ * in the user manual. So it's not modelled and forced to 0.
++ */
++#define SUN8I_V85X_PLL_VIDEO_REG	0x040
++static struct ccu_nm pll_video_4x_clk = {
++	.enable		= BIT(27),
++	.lock		= BIT(28),
++	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 11),
++	.m		= _SUNXI_CCU_DIV(1, 1), /* input divider */
++	.min_rate	= 192000000U,
++	.max_rate	= 2400000000U,
++	.common		= {
++		.reg		= 0x040,
++		.hw.init	= CLK_HW_INIT_PARENTS_DATA("pll-video-4x", osc24M,
++							   &ccu_nm_ops,
++							   CLK_SET_RATE_UNGATE),
++	},
++};
++
++static const struct clk_hw *pll_video_4x_hws[] = {
++	&pll_video_4x_clk.common.hw
++};
++static CLK_FIXED_FACTOR_HWS(pll_video_2x_clk, "pll-video-2x",
++			    pll_video_4x_hws, 2, 1, CLK_SET_RATE_PARENT);
++static CLK_FIXED_FACTOR_HWS(pll_video_1x_clk, "pll-video-1x",
++			    pll_video_4x_hws, 4, 1, CLK_SET_RATE_PARENT);
++
++
++/*
++ * For CSI PLLs, the output divider is described as "only for testing"
++ * in the user manual. So it's not modelled and forced to 0.
++ */
++#define SUN8I_V85X_PLL_CSI_REG		0x048
++static struct ccu_nm pll_csi_4x_clk = {
++	.enable		= BIT(27),
++	.lock		= BIT(28),
++	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 11),
++	.m		= _SUNXI_CCU_DIV(1, 1), /* input divider */
++	.common		= {
++		.reg		= 0x048,
++		.hw.init	= CLK_HW_INIT_PARENTS_DATA("pll-csi-4x", osc24M,
++							   &ccu_nm_ops,
++							   CLK_SET_RATE_UNGATE),
++	},
++};
++
++static const struct clk_hw *pll_csi_4x_hws[] = {
++	&pll_csi_4x_clk.common.hw
++};
++static CLK_FIXED_FACTOR_HWS(pll_csi_2x_clk, "pll-csi-2x",
++			    pll_csi_4x_hws, 2, 1, CLK_SET_RATE_PARENT);
++static CLK_FIXED_FACTOR_HWS(pll_csi_clk, "pll-csi",
++			    pll_csi_4x_hws, 4, 1, CLK_SET_RATE_PARENT);
++
++
++/*
++ * PLL_AUDIO doesn't need Fractional-N. The output is usually 614.4 MHz for
++ * pll-audio-div5. The ADC or DAC should divide the PLL output further to 24.576 MHz.
++ */
++#define SUN8I_V85X_PLL_AUDIO_REG		0x078
++static struct ccu_nm pll_audio_clk = {
++	.enable		= BIT(27),
++	.lock		= BIT(28),
++	.n		= _SUNXI_CCU_MULT(8, 8),
++	.m		= _SUNXI_CCU_DIV(1, 1),
++	.common		= {
++		.reg		= 0x078,
++		.hw.init	= CLK_HW_INIT_PARENTS_DATA("pll-audio", osc24M,
++							   &ccu_nm_ops,
++							   CLK_SET_RATE_UNGATE),
++	},
++};
++
++static const struct clk_hw *pll_audio_hws[] = {
++	&pll_audio_clk.common.hw
++};
++static SUNXI_CCU_M_HWS(pll_audio_div2_clk, "pll-audio-div2",
++		       pll_audio_hws, 0x078, 16, 3, 0);
++static SUNXI_CCU_M_HWS(pll_audio_div5_clk, "pll-audio-div5",
++		       pll_audio_hws, 0x078, 20, 3, 0);
++
++static SUNXI_CCU_M(pll_audio_4x_clk, "pll-audio-4x", "pll-audio-div2",
++		       0xE00, 5, 5, 0);
++static SUNXI_CCU_M(pll_audio_1x_clk, "pll-audio-1x", "pll-audio-div5",
++		       0xE00, 0, 5, 0);
++
++
++/*
++ * For the NPU PLL, the output divider is described as "only for testing"
++ * in the user manual. So it's not modelled and forced to 0.
++ */
++#define SUN8I_V85X_PLL_NPU_REG		0x080
++static struct ccu_nm pll_npu_4x_clk = {
++	.enable		= BIT(27),
++	.lock		= BIT(28),
++	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 11),
++	.m		= _SUNXI_CCU_DIV(1, 1), /* input divider */
++	.min_rate	= 500000000U,
++	.max_rate	= 2100000000U,
++	.common		= {
++		.reg		= 0x080,
++		.hw.init	= CLK_HW_INIT_PARENTS_DATA("pll-npu-4x", osc24M,
++							   &ccu_nm_ops,
++							   CLK_SET_RATE_UNGATE),
++	},
++};
++
++static const struct clk_hw *pll_npu_4x_hws[] = {
++	&pll_npu_4x_clk.common.hw
++};
++static CLK_FIXED_FACTOR_HWS(pll_npu_2x_clk, "pll-npu-2x",
++			    pll_npu_4x_hws, 2, 1, CLK_SET_RATE_PARENT);
++static CLK_FIXED_FACTOR_HWS(pll_npu_1x_clk, "pll-npu-1x",
++			    pll_npu_4x_hws, 4, 1, CLK_SET_RATE_PARENT);
++
++
++/*
++ * The CPU gate is not modelled - it is in a separate register (0x504)
++ * and has a special key field. The clock does not need to be ungated anyway.
++ */
++static const struct clk_parent_data cpu_parents[] = {
++	{ .fw_name = "hosc" },
++	{ .fw_name = "losc" },
++	{ .fw_name = "iosc" },
++	{ .hw = &pll_cpu_clk.common.hw },
++	{ .hw = &pll_periph_600M_clk.hw },
++	{ .hw = &pll_periph_800M_clk.common.hw },
++};
++
++static SUNXI_CCU_MUX_DATA(cpu_clk, "cpu", cpu_parents,
++			  0x500, 24, 3, CLK_SET_RATE_PARENT | CLK_IS_CRITICAL);
++
++static SUNXI_CCU_M(cpu_axi_clk, "cpu-axi", "cpu",
++		       0x500, 0, 2, 0);
++static SUNXI_CCU_M(cpu_apb_clk, "cpu-apb", "cpu",
++		       0x500, 8, 2, 0);
++
++static const struct clk_parent_data ahb_parents[] = {
++	{ .fw_name = "hosc" },
++	{ .fw_name = "losc" },
++	{ .fw_name = "iosc" },
++	{ .hw = &pll_periph_600M_clk.hw },
++};
++static SUNXI_CCU_MP_DATA_WITH_MUX(ahb_clk, "ahb", ahb_parents, 0x510,
++				  0, 5,		/* M */
++				  8, 2,		/* P */
++				  24, 2,	/* mux */
++				  0);
++
++static SUNXI_CCU_MP_DATA_WITH_MUX(apb0_clk, "apb0", ahb_parents, 0x520,
++				  0, 5,		/* M */
++				  8, 2,		/* P */
++				  24, 2,	/* mux */
++				  0);
++
++static SUNXI_CCU_MP_DATA_WITH_MUX(apb1_clk, "apb1", ahb_parents, 0x524,
++				  0, 5,		/* M */
++				  8, 2,		/* P */
++				  24, 2,	/* mux */
++				  0);
++
++static const struct clk_hw *ahb_hws[] = { &ahb_clk.common.hw };
++static const struct clk_hw *apb0_hws[] = { &apb0_clk.common.hw };
++static const struct clk_hw *apb1_hws[] = { &apb1_clk.common.hw };
++
++
++
++static const struct clk_hw *de_g2d_parents[] = {
++	&pll_periph_300M_clk.hw,
++	&pll_video_1x_clk.hw,
++};
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(de_clk, "de", de_g2d_parents, 0x600,
++				    0, 5,	/* M */
++				    24, 1,	/* mux */
++				    BIT(31),	/* gate */
++				    CLK_SET_RATE_PARENT);
++
++static SUNXI_CCU_GATE_HWS(bus_de_clk, "bus-de", ahb_hws,
++			  0x60c, BIT(0), 0);
++
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(g2d_clk, "g2d", de_g2d_parents, 0x630,
++				    0, 5,	/* M */
++				    24, 1,	/* mux */
++				    BIT(31),	/* gate */
++				    0);
++
++static SUNXI_CCU_GATE_HWS(bus_g2d_clk, "bus-g2d", ahb_hws,
++			  0x63c, BIT(0), 0);
++
++
++static const struct clk_hw *ce_parents[] = {
++	&pll_periph_400M_clk.hw,
++	&pll_periph_300M_clk.hw,
++};
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(ce_clk, "ce", ce_parents, 0x680,
++				       0, 4,	/* M */
++				       24, 3,	/* mux */
++				       BIT(31),	/* gate */
++				       CLK_SET_RATE_PARENT);
++
++static SUNXI_CCU_GATE_HWS(bus_ce_clk, "bus-ce", ahb_hws,
++			  0x68c, BIT(0) | BIT(1), 0);
++
++static const struct clk_hw *ve_parents[] = {
++	&pll_periph_300M_clk.hw,
++	&pll_periph_400M_clk.hw,
++	&pll_periph_480M_clk.common.hw,
++	&pll_npu_4x_clk.common.hw,
++	&pll_video_4x_clk.common.hw,
++	&pll_csi_4x_clk.common.hw,
++};
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(ve_clk, "ve", ve_parents, 0x690,
++				    0, 5,	/* M */
++				    24, 3,	/* mux */
++				    BIT(31),	/* gate */
++				    CLK_SET_RATE_PARENT);
++
++static SUNXI_CCU_GATE_HWS(bus_ve_clk, "bus-ve", ahb_hws,
++			  0x69c, BIT(0), 0);
++
++
++static const struct clk_hw *npu_parents[] = {
++	&pll_periph_480M_clk.common.hw,
++	&pll_periph_600M_clk.hw,
++	&pll_periph_800M_clk.common.hw,
++	&pll_npu_4x_clk.common.hw,
++};
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(npu_clk, "npu", npu_parents, 0x6e0,
++				    0, 5,	/* M */
++				    24, 3,	/* mux */
++				    BIT(31),	/* gate */
++				    CLK_SET_RATE_PARENT);
++
++static SUNXI_CCU_GATE_HWS(bus_npu_clk, "bus-npu", ahb_hws,
++			  0x6ec, BIT(0), 0);
++
++
++static SUNXI_CCU_GATE_HWS(bus_dma_clk, "bus-dma", ahb_hws,
++			  0x70c, BIT(0), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_msgbox0_clk, "bus-msgbox0", ahb_hws,
++			  0x71c, BIT(0), 0);
++static SUNXI_CCU_GATE_HWS(bus_msgbox1_clk, "bus-msgbox1", ahb_hws,
++			  0x71c, BIT(1), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_spinlock_clk, "bus-spinlock", ahb_hws,
++			  0x72c, BIT(0), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_hstimer_clk, "bus-hstimer", ahb_hws,
++			  0x73c, BIT(0), 0);
++
++static SUNXI_CCU_GATE_DATA(avs_clk, "avs", osc24M,
++			   0x740, BIT(31), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_dbg_clk, "bus-dbg", ahb_hws,
++			  0x78c, BIT(0), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_pwm_clk, "bus-pwm", apb0_hws,
++			  0x7ac, BIT(0), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_iommu_clk, "bus-iommu", apb0_hws,
++			  0x7bc, BIT(0), 0);
++
++static const struct clk_hw *dram_parents[] = {
++	&pll_ddr_clk.common.hw,
++	&pll_periph_2x_clk.common.hw,
++	&pll_periph_800M_clk.common.hw,
++};
++static SUNXI_CCU_MP_HW_WITH_MUX_GATE(dram_clk, "dram", dram_parents, 0x800,
++				     0, 5,	/* M */
++				     8, 2,	/* P */
++				     24, 3,	/* mux */
++				     BIT(31), CLK_IS_CRITICAL);
++
++static CLK_FIXED_FACTOR_HW(mbus_clk, "mbus",
++			   &dram_clk.common.hw, 4, 1, 0);
++
++static const struct clk_hw *mbus_hws[] = { &mbus_clk.hw };
++
++static SUNXI_CCU_GATE_HWS(mbus_dma_clk, "mbus-dma", mbus_hws,
++			  0x804, BIT(0), 0);
++static SUNXI_CCU_GATE_HWS(mbus_ve_clk, "mbus-ve", mbus_hws,
++			  0x804, BIT(1), 0);
++static SUNXI_CCU_GATE_HWS(mbus_ce_clk, "mbus-ce", mbus_hws,
++			  0x804, BIT(2), 0);
++static SUNXI_CCU_GATE_HWS(mbus_csi_clk, "mbus-csi", mbus_hws,
++			  0x804, BIT(8), 0);
++static SUNXI_CCU_GATE_HWS(mbus_isp_clk, "mbus-isp", mbus_hws,
++			  0x804, BIT(9), 0);
++static SUNXI_CCU_GATE_HWS(mbus_g2d_clk, "mbus-g2d", mbus_hws,
++			  0x804, BIT(10), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_dram_clk, "bus-dram", ahb_hws,
++			  0x80c, BIT(0), CLK_IS_CRITICAL);
++
++
++static const struct clk_parent_data mmc0_mmc1_parents[] = {
++	{ .fw_name = "hosc" },
++	{ .hw = &pll_periph_400M_clk.hw, },
++	{ .hw = &pll_periph_300M_clk.hw, },
++};
++static SUNXI_CCU_MP_DATA_WITH_MUX_GATE(mmc0_clk, "mmc0", mmc0_mmc1_parents, 0x830,
++				       0, 4,	/* M */
++				       8, 2,	/* P */
++				       24, 3,	/* mux */
++				       BIT(31),	/* gate */
++				       0);
++
++static SUNXI_CCU_MP_DATA_WITH_MUX_GATE(mmc1_clk, "mmc1", mmc0_mmc1_parents, 0x834,
++				       0, 4,	/* M */
++				       8, 2,	/* P */
++				       24, 3,	/* mux */
++				       BIT(31),	/* gate */
++				       0);
++
++static const struct clk_parent_data mmc2_parents[] = {
++	{ .fw_name = "hosc" },
++	{ .hw = &pll_periph_600M_clk.hw, },
++	{ .hw = &pll_periph_400M_clk.hw, },
++};
++static SUNXI_CCU_MP_DATA_WITH_MUX_GATE(mmc2_clk, "mmc2", mmc2_parents, 0x838,
++				       0, 4,	/* M */
++				       8, 2,	/* P */
++				       24, 3,	/* mux */
++				       BIT(31),	/* gate */
++				       0);
++
++static SUNXI_CCU_GATE_HWS(bus_mmc0_clk, "bus-mmc0", ahb_hws,
++			  0x84c, BIT(0), 0);
++static SUNXI_CCU_GATE_HWS(bus_mmc1_clk, "bus-mmc1", ahb_hws,
++			  0x84c, BIT(1), 0);
++static SUNXI_CCU_GATE_HWS(bus_mmc2_clk, "bus-mmc2", ahb_hws,
++			  0x84c, BIT(2), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_uart0_clk, "bus-uart0", apb1_hws,
++			  0x90c, BIT(0), 0);
++static SUNXI_CCU_GATE_HWS(bus_uart1_clk, "bus-uart1", apb1_hws,
++			  0x90c, BIT(1), 0);
++static SUNXI_CCU_GATE_HWS(bus_uart2_clk, "bus-uart2", apb1_hws,
++			  0x90c, BIT(2), 0);
++static SUNXI_CCU_GATE_HWS(bus_uart3_clk, "bus-uart3", apb1_hws,
++			  0x90c, BIT(3), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_i2c0_clk, "bus-i2c0", apb1_hws,
++			  0x91c, BIT(0), 0);
++static SUNXI_CCU_GATE_HWS(bus_i2c1_clk, "bus-i2c1", apb1_hws,
++			  0x91c, BIT(1), 0);
++static SUNXI_CCU_GATE_HWS(bus_i2c2_clk, "bus-i2c2", apb1_hws,
++			  0x91c, BIT(2), 0);
++static SUNXI_CCU_GATE_HWS(bus_i2c3_clk, "bus-i2c3", apb1_hws,
++			  0x91c, BIT(3), 0);
++static SUNXI_CCU_GATE_HWS(bus_i2c4_clk, "bus-i2c4", apb1_hws,
++			  0x91c, BIT(4), 0);
++
++static const struct clk_parent_data spi_parents[] = {
++	{ .fw_name = "hosc" },
++	{ .hw = &pll_periph_300M_clk.hw, },
++	{ .hw = &pll_periph_200M_clk.hw, },
++};
++
++static SUNXI_CCU_MP_DATA_WITH_MUX_GATE(spi0_clk, "spi0", spi_parents, 0x940,
++				       0, 4,	/* M */
++				       8, 2,	/* P */
++				       24, 3,	/* mux */
++				       BIT(31),	/* gate */
++				       0);
++
++static SUNXI_CCU_MP_DATA_WITH_MUX_GATE(spi1_clk, "spi1", spi_parents, 0x944,
++				       0, 4,	/* M */
++				       8, 2,	/* P */
++				       24, 3,	/* mux */
++				       BIT(31),	/* gate */
++				       0);
++
++static SUNXI_CCU_MP_DATA_WITH_MUX_GATE(spi2_clk, "spi2", spi_parents, 0x948,
++				       0, 4,	/* M */
++				       8, 2,	/* P */
++				       24, 3,	/* mux */
++				       BIT(31),	/* gate */
++				       0);
++
++static SUNXI_CCU_MP_DATA_WITH_MUX_GATE(spi3_clk, "spi3", spi_parents, 0x94c,
++				       0, 4,	/* M */
++				       8, 2,	/* P */
++				       24, 3,	/* mux */
++				       BIT(31),	/* gate */
++				       0);
++
++static SUNXI_CCU_GATE_HWS(bus_spi0_clk, "bus-spi0", ahb_hws,
++			  0x96c, BIT(0), 0);
++static SUNXI_CCU_GATE_HWS(bus_spi1_clk, "bus-spi1", ahb_hws,
++			  0x96c, BIT(1), 0);
++static SUNXI_CCU_GATE_HWS(bus_spi2_clk, "bus-spi2", ahb_hws,
++			  0x96c, BIT(2), 0);
++static SUNXI_CCU_GATE_HWS(bus_spi3_clk, "bus-spi3", ahb_hws,
++			  0x96c, BIT(3), 0);
++
++static const struct clk_hw *pll_periph_150M_hws[] = { &pll_periph_150M_clk.hw };
++static SUNXI_CCU_GATE_HWS_WITH_PREDIV(emac_25M_clk, "emac-25M", pll_periph_150M_hws,
++				      0x970, BIT(31) | BIT(30), 6, 0);
++
++static SUNXI_CCU_GATE_HWS(bus_emac_clk, "bus-emac", ahb_hws,
++			  0x97c, BIT(0), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_gpadc_clk, "bus-gpadc", apb0_hws,
++			  0x9ec, BIT(0), 0);
++
++static SUNXI_CCU_GATE_HWS(bus_ths_clk, "bus-ths", apb0_hws,
++			  0x9fc, BIT(0), 0);
++
++
++
++static const struct clk_hw *audio_parents[] = {
++	&pll_audio_1x_clk.common.hw,
++	&pll_audio_4x_clk.common.hw,
++};
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(i2s_clk, "i2s", audio_parents, 0xa14,
++				     0, 4,	/* M */
++				     24, 1,	/* mux */
++				     BIT(31),	/* gate */
++				     0);
++
++static SUNXI_CCU_GATE_HWS(bus_i2s_clk, "bus-i2s", apb0_hws,
++			  0xa20, BIT(1), 0);
++
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(dmic_clk, "dmic", audio_parents, 0xa40,
++				     0, 4,	/* M */
++				     24, 3,	/* mux */
++				     BIT(31),	/* gate */
++				     0);
++
++static SUNXI_CCU_GATE_HWS(bus_dmic_clk, "bus-dmic", apb0_hws,
++			  0xa4c, BIT(0), 0);
++
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(audio_dac_clk, "audio-dac", audio_parents, 0xa50,
++				     0, 4,	/* M */
++				     24, 3,	/* mux */
++				     BIT(31),	/* gate */
++				     0);
++
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(audio_adc_clk, "audio-adc", audio_parents, 0xa54,
++				     0, 4,	/* M */
++				     24, 3,	/* mux */
++				     BIT(31),	/* gate */
++				     0);
++
++static SUNXI_CCU_GATE_HWS(bus_audio_clk, "bus-audio", apb0_hws,
++			  0xa5c, BIT(0), 0);
++
++
++/*
++ * The first parent is a 48 MHz input clock divided by 4. That 48 MHz clock is
++ * a 2x multiplier from osc24M synchronized by pll-periph, and is also used by
++ * the OHCI module.
++ */
++static const struct clk_parent_data usb_ohci_parents[] = {
++	{ .hw = &pll_periph_480M_clk.common.hw },
++	{ .fw_name = "hosc" },
++	{ .fw_name = "losc" },
++};
++static const struct ccu_mux_fixed_prediv usb_ohci_predivs[] = {
++	{ .index = 0, .div = 40 },
++	{ .index = 1, .div = 2 },
++};
++
++static struct ccu_mux usb_ohci_clk = {
++	.enable		= BIT(31),
++	.mux		= {
++		.shift		= 24,
++		.width		= 2,
++		.fixed_predivs	= usb_ohci_predivs,
++		.n_predivs	= ARRAY_SIZE(usb_ohci_predivs),
++	},
++	.common		= {
++		.reg		= 0xa70,
++		.features	= CCU_FEATURE_FIXED_PREDIV,
++		.hw.init	= CLK_HW_INIT_PARENTS_DATA("usb-ohci0",
++							   usb_ohci_parents,
++							   &ccu_mux_ops,
++							   0),
++	},
++};
++
++static SUNXI_CCU_GATE_HWS(bus_ohci_clk, "bus-ohci", ahb_hws,
++			  0xa8c, BIT(0), 0);
++static SUNXI_CCU_GATE_HWS(bus_ehci_clk, "bus-ehci", ahb_hws,
++			  0xa8c, BIT(4), 0);
++static SUNXI_CCU_GATE_HWS(bus_otg_clk, "bus-otg", ahb_hws,
++			  0xa8c, BIT(8), 0);
++
++
++static SUNXI_CCU_GATE_HWS(bus_dpss_top_clk, "bus-dpss-top", ahb_hws,
++			  0xabc, BIT(0), 0);
++
++
++static const struct clk_parent_data mipi_dsi_parents[] = {
++	{ .fw_name = "hosc" },
++	{ .hw = &pll_periph_200M_clk.hw },
++	{ .hw = &pll_periph_150M_clk.hw },
++};
++static SUNXI_CCU_M_DATA_WITH_MUX_GATE(mipi_dsi_clk, "mipi-dsi", mipi_dsi_parents, 0xb24,
++				      0, 4,	/* M */
++				      24, 3,	/* mux */
++				      BIT(31),	/* gate */
++				      CLK_SET_RATE_PARENT);
++
++static SUNXI_CCU_GATE_HWS(bus_mipi_dsi_clk, "bus-mipi-dsi", ahb_hws,
++			  0xb4c, BIT(0), 0);
++
++
++static const struct clk_hw *tcon_lcd_parents[] = {
++	&pll_video_4x_clk.common.hw,
++	&pll_periph_2x_clk.common.hw,
++	&pll_csi_4x_clk.common.hw,
++};
++static SUNXI_CCU_MP_HW_WITH_MUX_GATE(tcon_lcd_clk, "tcon-lcd", tcon_lcd_parents, 0xb60,
++				     0, 4,	/* M */
++				     8, 2,	/* P */
++				     24, 3,	/* mux */
++				     BIT(31),	/* gate */
++				     CLK_SET_RATE_PARENT);
++
++static SUNXI_CCU_GATE_HWS(bus_tcon_lcd_clk, "bus-tcon-lcd", ahb_hws,
++			  0xb7c, BIT(0), 0);
++
++
++static const struct clk_hw *csi_top_parents[] = {
++	&pll_periph_300M_clk.hw,
++	&pll_periph_400M_clk.hw,
++	&pll_video_4x_clk.common.hw,
++	&pll_csi_4x_clk.common.hw,
++};
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(csi_top_clk, "csi-top", csi_top_parents, 0xc04,
++				    0, 5,	/* M */
++				    24, 3,	/* mux */
++				    BIT(31),	/* gate */
++				    0);
++
++
++static const struct clk_parent_data csi_mclk_parents[] = {
++	{ .fw_name = "hosc" },
++	{ .hw = &pll_csi_4x_clk.common.hw },
++	{ .hw = &pll_video_4x_clk.common.hw },
++	{ .hw = &pll_periph_2x_clk.common.hw },
++};
++static SUNXI_CCU_M_DATA_WITH_MUX_GATE(csi_mclk0_clk, "csi-mclk0", csi_mclk_parents, 0xc08,
++				      0, 5,	/* M */
++				      24, 3,	/* mux */
++				      BIT(31),	/* gate */
++				      0);
++
++static SUNXI_CCU_M_DATA_WITH_MUX_GATE(csi_mclk1_clk, "csi-mclk1", csi_mclk_parents, 0xc0c,
++				      0, 5,	/* M */
++				      24, 3,	/* mux */
++				      BIT(31),	/* gate */
++				      0);
++
++static SUNXI_CCU_M_DATA_WITH_MUX_GATE(csi_mclk2_clk, "csi-mclk2", csi_mclk_parents, 0xc10,
++				      0, 5,	/* M */
++				      24, 3,	/* mux */
++				      BIT(31),	/* gate */
++				      0);
++
++static SUNXI_CCU_GATE_HWS(bus_csi_clk, "bus-csi", ahb_hws,
++			  0xc2c, BIT(0), 0);
++
++
++static SUNXI_CCU_GATE_HWS(bus_wiegand_clk, "bus-wiegand", apb0_hws,
++			  0xc7c, BIT(0), 0);
++
++
++
++static const struct clk_parent_data riscv_parents[] = {
++	{ .fw_name = "hosc" },
++	{ .fw_name = "losc" },
++	{ .fw_name = "iosc" },
++	{ .hw = &pll_periph_600M_clk.hw },
++	{ .hw = &pll_periph_480M_clk.common.hw },
++	{ .hw = &pll_cpu_clk.common.hw },
++};
++static SUNXI_CCU_M_DATA_WITH_MUX(riscv_clk, "riscv-cpu", riscv_parents, 0xd00,
++				 0, 5,	/* M */
++				 24, 3,	/* mux */
++				 CLK_SET_RATE_PARENT);
++
++/* The riscv-axi clk must be divided by at least 2. */
++static struct clk_div_table riscv_axi_table[] = {
++	{ .val = 1, .div = 2 },
++	{ .val = 2, .div = 3 },
++	{ .val = 3, .div = 4 },
++	{ /* Sentinel */ }
++};
++static SUNXI_CCU_DIV_TABLE_HW(riscv_axi_clk, "riscv-axi", &riscv_clk.common.hw,
++			      0xd00, 8, 2, riscv_axi_table, 0);
++
++static SUNXI_CCU_GATE_HWS(bus_riscv_cfg_clk, "bus-riscv", ahb_hws,
++			  0xd0c, BIT(0), 0);
++
++
++
++static const struct clk_hw *pll_periph_160M_hws[] = {
++	&pll_periph_160M_clk.hw,
++};
++
++static SUNXI_CCU_GATE_DATA(fanout_24M_clk, "fanout-24M", osc24M,
++				0xf30, BIT(0), 0);
++static SUNXI_CCU_GATE_DATA_WITH_PREDIV(fanout_12M_clk, "fanout-12M", osc24M,
++				0xf30, BIT(1), 2, 0);
++static SUNXI_CCU_GATE_HWS_WITH_PREDIV(fanout_16M_clk, "fanout-16M", pll_periph_160M_hws,
++				0xf30, BIT(2), 10, 0);
++static SUNXI_CCU_GATE_HWS_WITH_PREDIV(fanout_25M_clk, "fanout-25M", pll_periph_150M_hws,
++				0xf30, BIT(3), 6, 0);
++
++
++
++/* This clock has a second divider that is not modelled and forced to 0. */
++#define SUN8I_V85X_FANOUT_27M_REG	0xf34
++static const struct clk_hw *fanout_27M_parents[] = {
++	&pll_video_1x_clk.hw,
++	&pll_csi_clk.hw,
++	&pll_periph_300M_clk.hw,
++};
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(fanout_27M_clk, "fanout-27M", fanout_27M_parents, 0xf34,
++				    0, 5,	/* M */
++				    24, 2,	/* mux */
++				    BIT(31),	/* gate */
++				    0);
++static SUNXI_CCU_M_HWS_WITH_GATE(fanout_pclk_clk, "fanout-pclk", apb0_hws, 0xf38,
++				    0, 5,	/* M */
++				    BIT(31),	/* gate */
++				    0);
++
++static const struct clk_parent_data fanout_parents[] = {
++	{ .fw_name = "losc" },
++	{ .hw = &fanout_12M_clk.common.hw },
++	{ .hw = &fanout_16M_clk.common.hw },
++	{ .hw = &fanout_24M_clk.common.hw },
++	{ .hw = &fanout_25M_clk.common.hw },
++	{ .hw = &fanout_27M_clk.common.hw },
++	{ .hw = &fanout_pclk_clk.common.hw },
++};
++
++static SUNXI_CCU_MUX_DATA_WITH_GATE(fanout0_clk, "fanout0", fanout_parents, 0xf3c,
++				  0, 3,		/* mux */
++				  BIT(21),	/* gate */
++				  0);
++static SUNXI_CCU_MUX_DATA_WITH_GATE(fanout1_clk, "fanout1", fanout_parents, 0xf3c,
++				  3, 3,		/* mux */
++				  BIT(22),	/* gate */
++				  0);
++static SUNXI_CCU_MUX_DATA_WITH_GATE(fanout2_clk, "fanout2", fanout_parents, 0xf3c,
++				  6, 3,		/* mux */
++				  BIT(23),	/* gate */
++				  0);
++
++
++static struct ccu_common *sun8i_v85x_ccu_clks[] = {
++	&pll_cpu_clk.common,
++	&pll_ddr_clk.common,
++	&pll_periph_4x_clk.common,
++	&pll_periph_2x_clk.common,
++	&pll_periph_800M_clk.common,
++	&pll_periph_480M_clk.common,
++	&pll_video_4x_clk.common,
++	&pll_csi_4x_clk.common,
++	&pll_audio_clk.common,
++	&pll_audio_div2_clk.common,
++	&pll_audio_div5_clk.common,
++	&pll_audio_1x_clk.common,
++	&pll_audio_4x_clk.common,
++	&pll_npu_4x_clk.common,
++	&cpu_clk.common,
++	&cpu_axi_clk.common,
++	&cpu_apb_clk.common,
++	&ahb_clk.common,
++	&apb0_clk.common,
++	&apb1_clk.common,
++	&de_clk.common,
++	&bus_de_clk.common,
++	&g2d_clk.common,
++	&bus_g2d_clk.common,
++	&ce_clk.common,
++	&bus_ce_clk.common,
++	&ve_clk.common,
++	&bus_ve_clk.common,
++	&npu_clk.common,
++	&bus_npu_clk.common,
++	&bus_dma_clk.common,
++	&bus_msgbox0_clk.common,
++	&bus_msgbox1_clk.common,
++	&bus_spinlock_clk.common,
++	&bus_hstimer_clk.common,
++	&avs_clk.common,
++	&bus_dbg_clk.common,
++	&bus_pwm_clk.common,
++	&bus_iommu_clk.common,
++	&dram_clk.common,
++	&mbus_dma_clk.common,
++	&mbus_ve_clk.common,
++	&mbus_ce_clk.common,
++	&mbus_csi_clk.common,
++	&mbus_isp_clk.common,
++	&mbus_g2d_clk.common,
++	&bus_dram_clk.common,
++	&mmc0_clk.common,
++	&mmc1_clk.common,
++	&mmc2_clk.common,
++	&bus_mmc0_clk.common,
++	&bus_mmc1_clk.common,
++	&bus_mmc2_clk.common,
++	&bus_uart0_clk.common,
++	&bus_uart1_clk.common,
++	&bus_uart2_clk.common,
++	&bus_uart3_clk.common,
++	&bus_i2c0_clk.common,
++	&bus_i2c1_clk.common,
++	&bus_i2c2_clk.common,
++	&bus_i2c3_clk.common,
++	&bus_i2c4_clk.common,
++	&spi0_clk.common,
++	&spi1_clk.common,
++	&spi2_clk.common,
++	&spi3_clk.common,
++	&bus_spi0_clk.common,
++	&bus_spi1_clk.common,
++	&bus_spi2_clk.common,
++	&bus_spi3_clk.common,
++	&emac_25M_clk.common,
++	&bus_emac_clk.common,
++	&bus_gpadc_clk.common,
++	&bus_ths_clk.common,
++	&usb_ohci_clk.common,
++	&bus_ohci_clk.common,
++	&bus_ehci_clk.common,
++	&bus_otg_clk.common,
++	&i2s_clk.common,
++	&bus_i2s_clk.common,
++	&dmic_clk.common,
++	&bus_dmic_clk.common,
++	&audio_dac_clk.common,
++	&audio_adc_clk.common,
++	&bus_audio_clk.common,
++	&bus_dpss_top_clk.common,
++	&mipi_dsi_clk.common,
++	&bus_mipi_dsi_clk.common,
++	&tcon_lcd_clk.common,
++	&bus_tcon_lcd_clk.common,
++	&csi_top_clk.common,
++	&csi_mclk0_clk.common,
++	&csi_mclk1_clk.common,
++	&csi_mclk2_clk.common,
++	&bus_csi_clk.common,
++	&bus_wiegand_clk.common,
++	&riscv_clk.common,
++	&riscv_axi_clk.common,
++	&bus_riscv_cfg_clk.common,
++	&fanout_24M_clk.common,
++	&fanout_12M_clk.common,
++	&fanout_16M_clk.common,
++	&fanout_25M_clk.common,
++	&fanout_27M_clk.common,
++	&fanout_pclk_clk.common,
++	&fanout0_clk.common,
++	&fanout1_clk.common,
++	&fanout2_clk.common,
++};
++
++static struct clk_hw_onecell_data sun8i_v85x_hw_clks = {
++	.num	= CLK_NUMBER,
++	.hws	= {
++		[CLK_PLL_CPU]		= &pll_cpu_clk.common.hw,
++		[CLK_PLL_DDR]		= &pll_ddr_clk.common.hw,
++		[CLK_PLL_PERIPH_4X]	= &pll_periph_4x_clk.common.hw,
++		[CLK_PLL_PERIPH_2X]	= &pll_periph_2x_clk.common.hw,
++		[CLK_PLL_PERIPH_800M]	= &pll_periph_800M_clk.common.hw,
++		[CLK_PLL_PERIPH_480M]	= &pll_periph_480M_clk.common.hw,
++		[CLK_PLL_PERIPH_600M]	= &pll_periph_600M_clk.hw,
++		[CLK_PLL_PERIPH_400M]	= &pll_periph_400M_clk.hw,
++		[CLK_PLL_PERIPH_300M]	= &pll_periph_300M_clk.hw,
++		[CLK_PLL_PERIPH_200M]	= &pll_periph_200M_clk.hw,
++		[CLK_PLL_PERIPH_160M]	= &pll_periph_160M_clk.hw,
++		[CLK_PLL_PERIPH_150M]	= &pll_periph_150M_clk.hw,
++		[CLK_PLL_VIDEO_4X]	= &pll_video_4x_clk.common.hw,
++		[CLK_PLL_CSI_4X]	= &pll_csi_4x_clk.common.hw,
++		[CLK_PLL_AUDIO]		= &pll_audio_clk.common.hw,
++		[CLK_PLL_AUDIO_DIV2]	= &pll_audio_div2_clk.common.hw,
++		[CLK_PLL_AUDIO_DIV5]	= &pll_audio_div5_clk.common.hw,
++		[CLK_PLL_AUDIO_4X]	= &pll_audio_4x_clk.common.hw,
++		[CLK_PLL_AUDIO_1X]	= &pll_audio_1x_clk.common.hw,
++		[CLK_PLL_NPU_4X]	= &pll_npu_4x_clk.common.hw,
++		[CLK_CPU]		= &cpu_clk.common.hw,
++		[CLK_CPU_AXI]		= &cpu_axi_clk.common.hw,
++		[CLK_CPU_APB]		= &cpu_apb_clk.common.hw,
++		[CLK_AHB]		= &ahb_clk.common.hw,
++		[CLK_APB0]		= &apb0_clk.common.hw,
++		[CLK_APB1]		= &apb1_clk.common.hw,
++		[CLK_MBUS]		= &mbus_clk.hw,
++		[CLK_DE]		= &de_clk.common.hw,
++		[CLK_BUS_DE]		= &bus_de_clk.common.hw,
++		[CLK_G2D]		= &g2d_clk.common.hw,
++		[CLK_BUS_G2D]		= &bus_g2d_clk.common.hw,
++		[CLK_CE]		= &ce_clk.common.hw,
++		[CLK_BUS_CE]		= &bus_ce_clk.common.hw,
++		[CLK_VE]		= &ve_clk.common.hw,
++		[CLK_BUS_VE]		= &bus_ve_clk.common.hw,
++		[CLK_NPU]		= &npu_clk.common.hw,
++		[CLK_BUS_NPU]		= &bus_npu_clk.common.hw,
++		[CLK_BUS_DMA]		= &bus_dma_clk.common.hw,
++		[CLK_BUS_MSGBOX0]	= &bus_msgbox0_clk.common.hw,
++		[CLK_BUS_MSGBOX1]	= &bus_msgbox1_clk.common.hw,
++		[CLK_BUS_SPINLOCK]	= &bus_spinlock_clk.common.hw,
++		[CLK_BUS_HSTIMER]	= &bus_hstimer_clk.common.hw,
++		[CLK_AVS]		= &avs_clk.common.hw,
++		[CLK_BUS_DBG]		= &bus_dbg_clk.common.hw,
++		[CLK_BUS_PWM]		= &bus_pwm_clk.common.hw,
++		[CLK_BUS_IOMMU]		= &bus_iommu_clk.common.hw,
++		[CLK_DRAM]		= &dram_clk.common.hw,
++		[CLK_MBUS_DMA]		= &mbus_dma_clk.common.hw,
++		[CLK_MBUS_VE]		= &mbus_ve_clk.common.hw,
++		[CLK_MBUS_CE]		= &mbus_ce_clk.common.hw,
++		[CLK_MBUS_CSI]		= &mbus_csi_clk.common.hw,
++		[CLK_MBUS_ISP]		= &mbus_isp_clk.common.hw,
++		[CLK_MBUS_G2D]		= &mbus_g2d_clk.common.hw,
++		[CLK_BUS_DRAM]		= &bus_dram_clk.common.hw,
++		[CLK_MMC0]		= &mmc0_clk.common.hw,
++		[CLK_MMC1]		= &mmc1_clk.common.hw,
++		[CLK_MMC2]		= &mmc2_clk.common.hw,
++		[CLK_BUS_MMC0]		= &bus_mmc0_clk.common.hw,
++		[CLK_BUS_MMC1]		= &bus_mmc1_clk.common.hw,
++		[CLK_BUS_MMC2]		= &bus_mmc2_clk.common.hw,
++		[CLK_BUS_UART0]		= &bus_uart0_clk.common.hw,
++		[CLK_BUS_UART1]		= &bus_uart1_clk.common.hw,
++		[CLK_BUS_UART2]		= &bus_uart2_clk.common.hw,
++		[CLK_BUS_UART3]		= &bus_uart3_clk.common.hw,
++		[CLK_BUS_I2C0]		= &bus_i2c0_clk.common.hw,
++		[CLK_BUS_I2C1]		= &bus_i2c1_clk.common.hw,
++		[CLK_BUS_I2C2]		= &bus_i2c2_clk.common.hw,
++		[CLK_BUS_I2C3]		= &bus_i2c3_clk.common.hw,
++		[CLK_BUS_I2C4]		= &bus_i2c4_clk.common.hw,
++		[CLK_SPI0]		= &spi0_clk.common.hw,
++		[CLK_SPI1]		= &spi1_clk.common.hw,
++		[CLK_SPI2]		= &spi2_clk.common.hw,
++		[CLK_SPI3]		= &spi3_clk.common.hw,
++		[CLK_BUS_SPI0]		= &bus_spi0_clk.common.hw,
++		[CLK_BUS_SPI1]		= &bus_spi1_clk.common.hw,
++		[CLK_BUS_SPI2]		= &bus_spi2_clk.common.hw,
++		[CLK_BUS_SPI3]		= &bus_spi3_clk.common.hw,
++		[CLK_EMAC_25M]		= &emac_25M_clk.common.hw,
++		[CLK_BUS_EMAC]		= &bus_emac_clk.common.hw,
++		[CLK_BUS_GPADC]		= &bus_gpadc_clk.common.hw,
++		[CLK_BUS_THS]		= &bus_ths_clk.common.hw,
++		[CLK_I2S]		= &i2s_clk.common.hw,
++		[CLK_BUS_I2S]		= &bus_i2s_clk.common.hw,
++		[CLK_DMIC]		= &dmic_clk.common.hw,
++		[CLK_BUS_DMIC]		= &bus_dmic_clk.common.hw,
++		[CLK_AUDIO_DAC]		= &audio_dac_clk.common.hw,
++		[CLK_AUDIO_ADC]		= &audio_adc_clk.common.hw,
++		[CLK_BUS_AUDIO]		= &bus_audio_clk.common.hw,
++		[CLK_USB_OHCI]		= &usb_ohci_clk.common.hw,
++		[CLK_BUS_OHCI]		= &bus_ohci_clk.common.hw,
++		[CLK_BUS_EHCI]		= &bus_ehci_clk.common.hw,
++		[CLK_BUS_OTG]		= &bus_otg_clk.common.hw,
++		[CLK_MIPI_DSI]		= &mipi_dsi_clk.common.hw,
++		[CLK_BUS_MIPI_DSI]	= &bus_mipi_dsi_clk.common.hw,
++		[CLK_TCON_LCD]		= &tcon_lcd_clk.common.hw,
++		[CLK_BUS_TCON_LCD]	= &bus_tcon_lcd_clk.common.hw,
++		[CLK_CSI_TOP]		= &csi_top_clk.common.hw,
++		[CLK_CSI_MCLK0]		= &csi_mclk0_clk.common.hw,
++		[CLK_CSI_MCLK1]		= &csi_mclk1_clk.common.hw,
++		[CLK_CSI_MCLK2]		= &csi_mclk2_clk.common.hw,
++		[CLK_BUS_CSI]		= &bus_csi_clk.common.hw,
++		[CLK_BUS_WIEGAND]	= &bus_wiegand_clk.common.hw,
++		[CLK_RISCV]		= &riscv_clk.common.hw,
++		[CLK_RISCV_AXI]		= &riscv_axi_clk.common.hw,
++		[CLK_BUS_RISCV]		= &bus_riscv_cfg_clk.common.hw,
++		[CLK_FANOUT_24M]	= &fanout_24M_clk.common.hw,
++		[CLK_FANOUT_16M]	= &fanout_16M_clk.common.hw,
++		[CLK_FANOUT_12M]	= &fanout_12M_clk.common.hw,
++		[CLK_FANOUT_25M]	= &fanout_25M_clk.common.hw,
++		[CLK_FANOUT_27M]	= &fanout_27M_clk.common.hw,
++		[CLK_FANOUT_PCLK]	= &fanout_pclk_clk.common.hw,
++		[CLK_FANOUT0]		= &fanout0_clk.common.hw,
++		[CLK_FANOUT1]		= &fanout1_clk.common.hw,
++		[CLK_FANOUT2]		= &fanout2_clk.common.hw,
++	},
++};
++
++static struct ccu_reset_map sun8i_v85x_ccu_resets[] = {
++	[RST_MBUS]		= { 0x540, BIT(30) },
++	[RST_BUS_DE]		= { 0x60c, BIT(16) },
++	[RST_BUS_G2D]		= { 0x63c, BIT(16) },
++	[RST_BUS_CE]		= { 0x68c, BIT(16) | BIT(17)},
++	[RST_BUS_VE]		= { 0x69c, BIT(16) },
++	[RST_BUS_NPU]		= { 0x6ec, BIT(16) },
++	[RST_BUS_DMA]		= { 0x70c, BIT(16) },
++	[RST_BUS_MSGBOX0]	= { 0x71c, BIT(16) },
++	[RST_BUS_MSGBOX1]	= { 0x71c, BIT(17) },
++	[RST_BUS_SPINLOCK]	= { 0x72c, BIT(16) },
++	[RST_BUS_HSTIMER]	= { 0x73c, BIT(16) },
++	[RST_BUS_DBG]		= { 0x78c, BIT(16) },
++	[RST_BUS_PWM]		= { 0x7ac, BIT(16) },
++	[RST_BUS_DRAM]		= { 0x80c, BIT(16) },
++	[RST_BUS_MMC0]		= { 0x84c, BIT(16) },
++	[RST_BUS_MMC1]		= { 0x84c, BIT(17) },
++	[RST_BUS_MMC2]		= { 0x84c, BIT(18) },
++	[RST_BUS_UART0]		= { 0x90c, BIT(16) },
++	[RST_BUS_UART1]		= { 0x90c, BIT(17) },
++	[RST_BUS_UART2]		= { 0x90c, BIT(18) },
++	[RST_BUS_UART3]		= { 0x90c, BIT(19) },
++	[RST_BUS_I2C0]		= { 0x91c, BIT(16) },
++	[RST_BUS_I2C1]		= { 0x91c, BIT(17) },
++	[RST_BUS_I2C2]		= { 0x91c, BIT(18) },
++	[RST_BUS_I2C3]		= { 0x91c, BIT(19) },
++	[RST_BUS_I2C4]		= { 0x91c, BIT(20) },
++	[RST_BUS_SPI0]		= { 0x96c, BIT(16) },
++	[RST_BUS_SPI1]		= { 0x96c, BIT(17) },
++	[RST_BUS_SPI2]		= { 0x96c, BIT(18) },
++	[RST_BUS_SPI3]		= { 0x96c, BIT(19) },
++	[RST_BUS_EMAC]		= { 0x97c, BIT(16) },
++	[RST_BUS_GPADC]		= { 0x9ec, BIT(16) },
++	[RST_BUS_THS]		= { 0x9fc, BIT(16) },
++	[RST_BUS_I2S]		= { 0xa20, BIT(17) },
++	[RST_BUS_DMIC]		= { 0xa4c, BIT(16) },
++	[RST_BUS_AUDIO]		= { 0xa5c, BIT(16) },
++	[RST_USB_PHY]		= { 0xa70, BIT(30) },
++	[RST_BUS_OHCI]		= { 0xa8c, BIT(16) },
++	[RST_BUS_EHCI]		= { 0xa8c, BIT(20) },
++	[RST_BUS_OTG]		= { 0xa8c, BIT(24) },
++	[RST_BUS_MIPI_DSI]	= { 0xb4c, BIT(16) },
++	[RST_BUS_TCON_LCD]	= { 0xb7c, BIT(16) },
++	[RST_BUS_CSI]		= { 0xc2c, BIT(16) },
++	[RST_BUS_WIEGAND]	= { 0xc7c, BIT(16) },
++	[RST_RISCV]		= { 0xd04, BIT(1) },
++	[RST_BUS_RISCV]		= { 0xd0c, BIT(16) },
++};
++
++static const struct sunxi_ccu_desc sun8i_v85x_ccu_desc = {
++	.ccu_clks	= sun8i_v85x_ccu_clks,
++	.num_ccu_clks	= ARRAY_SIZE(sun8i_v85x_ccu_clks),
++
++	.hw_clks	= &sun8i_v85x_hw_clks,
++
++	.resets		= sun8i_v85x_ccu_resets,
++	.num_resets	= ARRAY_SIZE(sun8i_v85x_ccu_resets),
++};
++
++static const u32 pll_regs[] = {
++	SUN8I_V85X_PLL_CPU_REG,
++	SUN8I_V85X_PLL_DDR_REG,
++	SUN8I_V85X_PLL_PERIPH_REG,
++	SUN8I_V85X_PLL_VIDEO_REG,
++	SUN8I_V85X_PLL_CSI_REG,
++	SUN8I_V85X_PLL_AUDIO_REG,
++	SUN8I_V85X_PLL_NPU_REG,
++};
++
++static int sun8i_v85x_ccu_probe(struct platform_device *pdev)
++{
++	void __iomem *reg;
++	u32 val;
++	int i, ret;
++
++	reg = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(reg))
++		return PTR_ERR(reg);
++
++	/* Enable the enable, LDO, and lock bits on all PLLs. */
++	for (i = 0; i < ARRAY_SIZE(pll_regs); i++) {
++		val = readl(reg + pll_regs[i]);
++		val |= BIT(31) | BIT(30) | BIT(29);
++		writel(val, reg + pll_regs[i]);
++	}
++
++	/* Force PLL_CPU factor M to 0. */
++	val = readl(reg + SUN8I_V85X_PLL_CPU_REG);
++	val &= ~GENMASK(1, 0);
++	writel(val, reg + SUN8I_V85X_PLL_CPU_REG);
++
++	/*
++	 * Force the output divider of video PLL to 0.
++	 *
++	 * See the comment before pll-video0 definition for the reason.
++	 */
++	val = readl(reg + SUN8I_V85X_PLL_VIDEO_REG);
++	val &= ~BIT(0);
++	writel(val, reg + SUN8I_V85X_PLL_VIDEO_REG);
++
++	/*
++	 * Force the output divider of CSI PLL to 0.
++	 *
++	 * See the comment before pll-csi definition for the reason.
++	 */
++	val = readl(reg + SUN8I_V85X_PLL_CSI_REG);
++	val &= ~BIT(0);
++	writel(val, reg + SUN8I_V85X_PLL_CSI_REG);
++
++	/*
++	 * Force the output divider of NPU PLL to 0.
++	 *
++	 * See the comment before pll-npu definition for the reason.
++	 */
++	val = readl(reg + SUN8I_V85X_PLL_NPU_REG);
++	val &= ~BIT(0);
++	writel(val, reg + SUN8I_V85X_PLL_NPU_REG);
++
++	/* Force fanout-27M factor N to 0. */
++	val = readl(reg + SUN8I_V85X_FANOUT_27M_REG);
++	val &= ~GENMASK(9, 8);
++	writel(val, reg + SUN8I_V85X_FANOUT_27M_REG);
++
++	ret = devm_sunxi_ccu_probe(&pdev->dev, reg, &sun8i_v85x_ccu_desc);
++	if (ret)
++		return ret;
++
++	return 0;
++}
++
++static const struct of_device_id sun8i_v85x_ccu_ids[] = {
++	{ .compatible = "allwinner,sun8i-v85x-ccu" },
++	{ }
++};
++
++static struct platform_driver sun8i_v85x_ccu_driver = {
++	.probe	= sun8i_v85x_ccu_probe,
++	.driver	= {
++		.name			= "sun8i-v85x-ccu",
++		.suppress_bind_attrs	= true,
++		.of_match_table		= sun8i_v85x_ccu_ids,
++	},
++};
++module_platform_driver(sun8i_v85x_ccu_driver);
++
++MODULE_IMPORT_NS(SUNXI_CCU);
++MODULE_LICENSE("GPL");
+diff -urN linux-6.6-rc1.orig/drivers/clk/sunxi-ng/ccu-sun8i-v85x.h linux-6.6-rc1/drivers/clk/sunxi-ng/ccu-sun8i-v85x.h
+--- linux-6.6-rc1.orig/drivers/clk/sunxi-ng/ccu-sun8i-v85x.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/drivers/clk/sunxi-ng/ccu-sun8i-v85x.h	2023-03-14 07:52:31.000000000 +0100
+@@ -0,0 +1,15 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (c) 2020 frank@allwinnertech.com
++ * Copyright (C) 2021 Samuel Holland <samuel@sholland.org>
++ */
++
++#ifndef _CCU_SUN8I_V85X_H_
++#define _CCU_SUN8I_V85X_H_
++
++#include <dt-bindings/clock/sun8i-v85x-ccu.h>
++#include <dt-bindings/reset/sun8i-v85x-ccu.h>
++
++#define CLK_NUMBER		(CLK_FANOUT2 + 1)
++
++#endif /* _CCU_SUN8I_V85X_H_ */
+diff -urN linux-6.6-rc1.orig/drivers/pinctrl/sunxi/Kconfig linux-6.6-rc1/drivers/pinctrl/sunxi/Kconfig
+--- linux-6.6-rc1.orig/drivers/pinctrl/sunxi/Kconfig	2023-09-11 01:28:41.000000000 +0200
++++ linux-6.6-rc1/drivers/pinctrl/sunxi/Kconfig	2023-09-15 12:02:05.463978155 +0200
+@@ -81,6 +81,11 @@
+ 	default MACH_SUN9I
+ 	select PINCTRL_SUNXI
+ 
++config PINCTRL_SUN8I_V851S
++	bool "Support for the Allwinner V851s PIO"
++	default MACH_SUN8I
++	select PINCTRL_SUNXI
++
+ config PINCTRL_SUN20I_D1
+ 	bool "Support for the Allwinner D1 PIO"
+ 	default MACH_SUN8I || (RISCV && ARCH_SUNXI)
+diff -urN linux-6.6-rc1.orig/drivers/pinctrl/sunxi/Makefile linux-6.6-rc1/drivers/pinctrl/sunxi/Makefile
+--- linux-6.6-rc1.orig/drivers/pinctrl/sunxi/Makefile	2023-09-11 01:28:41.000000000 +0200
++++ linux-6.6-rc1/drivers/pinctrl/sunxi/Makefile	2023-09-15 12:01:38.012429931 +0200
+@@ -20,6 +20,7 @@
+ obj-$(CONFIG_PINCTRL_SUN8I_H3)		+= pinctrl-sun8i-h3.o
+ obj-$(CONFIG_PINCTRL_SUN8I_H3_R)	+= pinctrl-sun8i-h3-r.o
+ obj-$(CONFIG_PINCTRL_SUN8I_V3S)		+= pinctrl-sun8i-v3s.o
++obj-$(CONFIG_PINCTRL_SUN8I_V851S)	+= pinctrl-sun8i-v851s.o
+ obj-$(CONFIG_PINCTRL_SUN20I_D1)		+= pinctrl-sun20i-d1.o
+ obj-$(CONFIG_PINCTRL_SUN50I_H5)		+= pinctrl-sun50i-h5.o
+ obj-$(CONFIG_PINCTRL_SUN50I_H6)		+= pinctrl-sun50i-h6.o
+diff -urN linux-6.6-rc1.orig/drivers/pinctrl/sunxi/pinctrl-sun8i-v851s.c linux-6.6-rc1/drivers/pinctrl/sunxi/pinctrl-sun8i-v851s.c
+--- linux-6.6-rc1.orig/drivers/pinctrl/sunxi/pinctrl-sun8i-v851s.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/drivers/pinctrl/sunxi/pinctrl-sun8i-v851s.c	2023-03-14 10:47:10.000000000 +0100
+@@ -0,0 +1,590 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Allwinner V851s SoC pinctrl driver.
++ *
++ * Copyright (c) 2016-2021  weidonghui <weidonghui@allwinnertech.com>
++ * Copyright (c) 2023 Andras Szemzo <szemzo.andras@gmail.com>
++ */
++
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/pinctrl/pinctrl.h>
++
++#include "pinctrl-sunxi.h"
++
++static const struct sunxi_desc_pin v851s_pins[] = {
++
++	/* PA */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 0),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipia_rx"),	/* mipia_rx_ckop */
++		SUNXI_FUNCTION(0x3, "ncsi"),		/* ncsi_d8 */
++		SUNXI_FUNCTION(0x5, "test"),		/* test */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 0)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 1),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipia_rx"),	/* mipia_rx_ckon */
++		SUNXI_FUNCTION(0x3, "ncsi"),		/* ncsi_d9 */
++		SUNXI_FUNCTION(0x5, "test"),		/* test */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 1)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 2),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipia_rx"),	/* mipia_rx_d1n */
++		SUNXI_FUNCTION(0x3, "ncsi"),		/* ncsi_d10 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 2)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 3),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipia_rx"),	/* mipia_rx_d1p */
++		SUNXI_FUNCTION(0x3, "ncsi"),		/* ncsi_d11 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 3)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 4),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipia_rx"),	/* mipia_rx_d0p */
++		SUNXI_FUNCTION(0x3, "ncsi"),		/* ncsi_d12 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 4)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 5),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipia_rx"),	/* mipia_rx_d0n */
++		SUNXI_FUNCTION(0x3, "ncsi"),		/* ncsi_d13 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 5)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 6),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipib_rx"),	/* mipib_rx_d0n */
++		SUNXI_FUNCTION(0x3, "ncsi"),		/* ncsi_d14 */
++		SUNXI_FUNCTION(0x4, "twi1"),		/* twi1_sck */
++		SUNXI_FUNCTION(0x5, "pwm0"),		/* pwm0 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 6)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 7),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipib_rx"),	/* mipib_rx_d0p */
++		SUNXI_FUNCTION(0x3, "ncsi"),		/* ncsi_d15 */
++		SUNXI_FUNCTION(0x4, "twi1"),		/* twi1_sda */
++		SUNXI_FUNCTION(0x5, "pwm1"),		/* pwm1 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 7)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 8),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipib_rx"),	/* mipib_rx_d1n */
++		SUNXI_FUNCTION(0x3, "twi4"),		/* twi4_sck */
++		SUNXI_FUNCTION(0x4, "twi3"),		/* twi3_sck */
++		SUNXI_FUNCTION(0x5, "pwm2"),		/* pwm2 */
++		SUNXI_FUNCTION(0x6, "uart2"),		/* uart2_tx */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 8)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 9),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipib_rx"),	/* mipib_rx_d1p */
++		SUNXI_FUNCTION(0x3, "twi4"),		/* twi4_sda */
++		SUNXI_FUNCTION(0x4, "twi3"),		/* twi3_sda */
++		SUNXI_FUNCTION(0x5, "pwm3"),		/* pwm3 */
++		SUNXI_FUNCTION(0x6, "uart2"),		/* uart2_rx */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 9)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 10),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipib_rx"),	/* mipib_rx_ckon */
++		SUNXI_FUNCTION(0x3, "ncsi"),		/* ncsi_hsync */
++		SUNXI_FUNCTION(0x4, "mipi_csi_mclk0"),	/* mipi_csi_mclk0 */
++		SUNXI_FUNCTION(0x5, "twi0"),		/* twi0_sck */
++		SUNXI_FUNCTION(0x6, "clk"),		/* clk_fanout0 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 10)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(A, 11),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "mipib_rx"),	/* mipib_rx_ckop */
++		SUNXI_FUNCTION(0x3, "ncsi"),		/* ncsi_vsync */
++		SUNXI_FUNCTION(0x4, "mipi_csi_mclk1"),	/* mipi_csi_mclk1 */
++		SUNXI_FUNCTION(0x5, "twi0"),		/* twi0_sda */
++		SUNXI_FUNCTION(0x6, "clk"),		/* clk_fanout1 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 0, 11)),	/* eint */
++	/* PC */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(C, 0),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "spif"),		/* spif_clk */
++		SUNXI_FUNCTION(0x3, "sdc2"),		/* sdc2_clk */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_clk */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 1, 0)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(C, 1),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "spif"),		/* spif_cs0 */
++		SUNXI_FUNCTION(0x3, "sdc2"),		/* sdc2_cmd */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_cs0 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 1, 1)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(C, 2),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "spif"),		/* spif_mosi_io0 */
++		SUNXI_FUNCTION(0x3, "sdc2"),		/* sdc2_d2 */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_mosi */
++		SUNXI_FUNCTION(0x5, "boot_sel0"),	/* boot_sel0 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 1, 2)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(C, 3),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "spif"),		/* spif_mosi_io1 */
++		SUNXI_FUNCTION(0x3, "sdc2"),		/* sdc2_d1 */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_miso */
++		SUNXI_FUNCTION(0x5, "boot_sel1"),	/* boot_sel1 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 1, 3)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(C, 4),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "spif"),		/* spif_wp_io2 */
++		SUNXI_FUNCTION(0x3, "sdc2"),		/* sdc2_d0 */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_wp */
++		SUNXI_FUNCTION(0x5, "pwm4"),		/* pwm4 */
++		SUNXI_FUNCTION(0x6, "twi1"),		/* twi1_sck */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 1, 4)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(C, 5),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "spif"),		/* spif_hold_io3 */
++		SUNXI_FUNCTION(0x3, "sdc2"),		/* sdc2_d3 */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_hold */
++		SUNXI_FUNCTION(0x5, "pwm4"),		/* pwm5 */
++		SUNXI_FUNCTION(0x6, "twi1"),		/* twi1_sda */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 1, 5)),	/* eint */
++	/* PD */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 0),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_d2 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 0)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 1),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_d3*/
++		SUNXI_FUNCTION(0x3, "pwm0"),		/* pwm0 */
++		SUNXI_FUNCTION(0x5, "dsi"),		/* dsi_d0n */
++		SUNXI_FUNCTION(0x6, "spi1"),		/* spi1_cs0/dbi_csx */
++		SUNXI_FUNCTION(0x7, "rmii"),		/* rmii_txd0 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 1)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 2),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_d4*/
++		SUNXI_FUNCTION(0x3, "pwm1"),		/* pwm1 */
++		SUNXI_FUNCTION(0x5, "dsi"),		/* dsi_d0p */
++		SUNXI_FUNCTION(0x6, "spi1"),		/* spi1_clk/dbi_sclk */
++		SUNXI_FUNCTION(0x7, "rmii"),		/* rmii_txd1 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 2)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 3),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_d5*/
++		SUNXI_FUNCTION(0x3, "pwm2"),		/* pwm2 */
++		SUNXI_FUNCTION(0x5, "dsi"),		/* dsi_d1n */
++		SUNXI_FUNCTION(0x6, "spi1"),		/* spi1_mosi/dbi_sdo */
++		SUNXI_FUNCTION(0x7, "rmii"),		/* rmii_rxer */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 3)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 4),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_d6*/
++		SUNXI_FUNCTION(0x3, "pwm3"),		/* pwm3 */
++		SUNXI_FUNCTION(0x5, "dsi"),		/* dsi_d1p */
++		SUNXI_FUNCTION(0x6, "spi1"),		/* spi1_miso/dbi_sdi/dbi_te/dbi_dcx */
++		SUNXI_FUNCTION(0x7, "rmii"),		/* rmii_crs_dv */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 4)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 5),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_d7*/
++		SUNXI_FUNCTION(0x3, "pwm4"),		/* pwm4 */
++		SUNXI_FUNCTION(0x5, "dsi"),		/* dsi_ckn */
++		SUNXI_FUNCTION(0x6, "spi1"),		/* spi1_hold/dbi_dcx/dbi_wrx */
++		SUNXI_FUNCTION(0x7, "rmii"),		/* rmii_rxd1 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 5)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 6),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_d10*/
++		SUNXI_FUNCTION(0x3, "pwm5"),		/* pwm5 */
++		SUNXI_FUNCTION(0x5, "dsi"),		/* dsi_ckp */
++		SUNXI_FUNCTION(0x6, "spi1"),		/* spi1_wp/dbi_te */
++		SUNXI_FUNCTION(0x7, "rmii"),		/* rmii_rxd0 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 6)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 7),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_d11*/
++		SUNXI_FUNCTION(0x3, "pwm6"),		/* pwm6 */
++		SUNXI_FUNCTION(0x5, "dsi"),		/* dsi_d2n */
++		SUNXI_FUNCTION(0x6, "spi1"),		/* spi1_cs1 */
++		SUNXI_FUNCTION(0x7, "rmii"),		/* mdc */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 7)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 8),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_d12*/
++		SUNXI_FUNCTION(0x3, "pwm7"),		/* pwm7 */
++		SUNXI_FUNCTION(0x4, "rmii"),		/* rmii_txen */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 8)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 18),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_clk*/
++		SUNXI_FUNCTION(0x4, "ephy_25m"),	/* ephy_25m */
++		SUNXI_FUNCTION(0x5, "spi2"),		/* spi2_clk */
++		SUNXI_FUNCTION(0x6, "twi3"),		/* twi3_sck */
++		SUNXI_FUNCTION(0x7, "uart2"),		/* uart2_tx */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 18)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 19),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_de*/
++		SUNXI_FUNCTION(0x3, "pwm9"),		/* pwm9*/
++		SUNXI_FUNCTION(0x4, "tcon"),		/* tcon_trig */
++		SUNXI_FUNCTION(0x5, "spi2"),		/* spi2_mosi */
++		SUNXI_FUNCTION(0x6, "twi3"),		/* twi3_sda */
++		SUNXI_FUNCTION(0x7, "uart2"),		/* uart2_rx */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 19)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 20),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_hsync*/
++		SUNXI_FUNCTION(0x3, "pwm10"),		/* pwm10*/
++		SUNXI_FUNCTION(0x4, "mdc"),		/* mdc */
++		SUNXI_FUNCTION(0x5, "spi2"),		/* spi2_miso */
++		SUNXI_FUNCTION(0x6, "twi2"),		/* twi2_sck */
++		SUNXI_FUNCTION(0x7, "uart2"),		/* uart2_rts */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 20)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(D, 21),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "lcd"),		/* lcd_vsync*/
++		SUNXI_FUNCTION(0x4, "mdio"),		/* mdio */
++		SUNXI_FUNCTION(0x5, "spi2"),		/* spi2_cs0 */
++		SUNXI_FUNCTION(0x6, "twi2"),		/* twi2_sda */
++		SUNXI_FUNCTION(0x7, "uart2"),		/* uart2_cts */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 2, 21)),	/* eint */
++	/* PE */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 0),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_pclk*/
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_rxd/rmii_rxd1*/
++		SUNXI_FUNCTION(0x4, "i2s1"),		/* i2s1_mclk */
++		SUNXI_FUNCTION(0x5, "pwm0"),		/* pwm0 */
++		SUNXI_FUNCTION(0x6, "sdc1"),		/* sdc_clk */
++		SUNXI_FUNCTION(0x7, "uart3"),		/* uart3_tx */
++		SUNXI_FUNCTION(0x8, "twi3"),		/* twi3_sck */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 0)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 1),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi_mclk"),		/* ncsi_mclk*/
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_rxck/rmii_txck*/
++		SUNXI_FUNCTION(0x4, "i2s1"),		/* i2s1_bclk */
++		SUNXI_FUNCTION(0x5, "pwm1"),		/* pwm1 */
++		SUNXI_FUNCTION(0x6, "sdc1"),		/* sdc_cmd */
++		SUNXI_FUNCTION(0x7, "uart3"),		/* uart3_rx */
++		SUNXI_FUNCTION(0x8, "twi3"),		/* twi3_sda */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 1)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 2),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_hsync*/
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_rxctl/rmii_crs_dv*/
++		SUNXI_FUNCTION(0x4, "i2s1"),		/* i2s1_lclk */
++		SUNXI_FUNCTION(0x5, "pwm2"),		/* pwm2 */
++		SUNXI_FUNCTION(0x6, "sdc1"),		/* sdc_d0 */
++		SUNXI_FUNCTION(0x7, "uart3"),		/* uart3_cts */
++		SUNXI_FUNCTION(0x8, "twi1"),		/* twi1_sck */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 2)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 3),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_vsync*/
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_rxd0/rmii_rxd0*/
++		SUNXI_FUNCTION(0x4, "i2s1"),		/* i2s1_din0 */
++		SUNXI_FUNCTION(0x5, "pwm3"),		/* pwm3 */
++		SUNXI_FUNCTION(0x6, "sdc1"),		/* sdc_d1 */
++		SUNXI_FUNCTION(0x7, "uart3"),		/* uart3_rts */
++		SUNXI_FUNCTION(0x8, "twi1"),		/* twi1_sda */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 3)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 4),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_d0*/
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_txd0/rmii_txd0*/
++		SUNXI_FUNCTION(0x4, "i2s1"),		/* i2s1_dout0 */
++		SUNXI_FUNCTION(0x5, "pwm4"),		/* pwm4 */
++		SUNXI_FUNCTION(0x6, "sdc1"),		/* sdc_d2 */
++		SUNXI_FUNCTION(0x7, "uart3"),		/* uart3_sck */
++		SUNXI_FUNCTION(0x8, "twi0"),		/* twi0_sck */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 4)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 5),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_d1*/
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_txd1/rmii_txd1*/
++		SUNXI_FUNCTION(0x5, "pwm5"),		/* pwm5 */
++		SUNXI_FUNCTION(0x6, "sdc1"),		/* sdc_d3 */
++		SUNXI_FUNCTION(0x7, "uart3"),		/* uart3_sda */
++		SUNXI_FUNCTION(0x8, "twi0"),		/* twi0_sda */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 5)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 6),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_d2*/
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_txctl/rmii_txen*/
++		SUNXI_FUNCTION(0x4, "lcd"),		/* lcd_d2 */
++		SUNXI_FUNCTION(0x5, "pwm6"),		/* pwm6 */
++		SUNXI_FUNCTION(0x6, "uart1"),		/* uart1_tx */
++		SUNXI_FUNCTION(0x8, "twi4"),		/* twi4_sck */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 6)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 7),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_d3*/
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_clkin/rmii_rxer*/
++		SUNXI_FUNCTION(0x4, "lcd"),		/* lcd_d15 */
++		SUNXI_FUNCTION(0x5, "pwm7"),		/* pwm7 */
++		SUNXI_FUNCTION(0x6, "uart1"),		/* uart1_tx */
++		SUNXI_FUNCTION(0x7, "i2s1"),		/* i2s1_dout0 */
++		SUNXI_FUNCTION(0x8, "twi4"),		/* twi4_sda */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 7)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 8),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_d4*/
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* mdc*/
++		SUNXI_FUNCTION(0x4, "lcd"),		/* lcd_d18 */
++		SUNXI_FUNCTION(0x5, "pwm8"),		/* pwm8 */
++		SUNXI_FUNCTION(0x6, "wiegand"),		/* wiegand_d0 */
++		SUNXI_FUNCTION(0x7, "i2s1"),		/* i2s1_din0 */
++		SUNXI_FUNCTION(0x8, "twi1"),		/* twi1_sck */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 8)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 9),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_d5*/
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* mdio*/
++		SUNXI_FUNCTION(0x4, "lcd"),		/* lcd_d19 */
++		SUNXI_FUNCTION(0x5, "pwm9"),		/* pwm9 */
++		SUNXI_FUNCTION(0x6, "wiegand"),		/* wiegand_d1 */
++		SUNXI_FUNCTION(0x7, "i2s1"),		/* i2s1_lrck */
++		SUNXI_FUNCTION(0x8, "twi1"),		/* twi1_sda */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 9)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 10),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_d6 */
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* ephy_25m */
++		SUNXI_FUNCTION(0x4, "lcd"),		/* lcd_d20 */
++		SUNXI_FUNCTION(0x5, "pwm10"),		/* pwm10 */
++		SUNXI_FUNCTION(0x6, "uart2"),		/* uart2_rts */
++		SUNXI_FUNCTION(0x7, "i2s1"),		/* i2s1_bclk */
++		SUNXI_FUNCTION(0x8, "wiegand"),		/* wiegand_d0 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 10)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 11),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_d7 */
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_rxd3 */
++		SUNXI_FUNCTION(0x4, "lcd"),		/* lcd_d21 */
++		SUNXI_FUNCTION(0x5, "csi"),		/* csi_sm_vs */
++		SUNXI_FUNCTION(0x6, "uart2"),		/* uart2_cts */
++		SUNXI_FUNCTION(0x7, "i2s1"),		/* i2s1_mclk */
++		SUNXI_FUNCTION(0x8, "wiegand"),		/* wiegand_d1 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 11)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 12),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_d8 */
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_rxd2 */
++		SUNXI_FUNCTION(0x4, "lcd"),		/* lcd_d22 */
++		SUNXI_FUNCTION(0x5, "mipi_csi_mclk0"),	/* mipi_csi_mclk0 */
++		SUNXI_FUNCTION(0x6, "uart2"),		/* uart2_tx */
++		SUNXI_FUNCTION(0x7, "uart3"),		/* uart3_tx */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 12)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(E, 13),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "ncsi"),		/* ncsi_d9 */
++		SUNXI_FUNCTION(0x3, "rgmii"),		/* rgmii_rxck */
++		SUNXI_FUNCTION(0x4, "lcd"),		/* lcd_d23 */
++		SUNXI_FUNCTION(0x5, "mipi_csi_mclk1"),	/* mipi_csi_mclk1 */
++		SUNXI_FUNCTION(0x6, "uart2"),		/* uart2_rx */
++		SUNXI_FUNCTION(0x7, "uart3"),		/* uart3_rx */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 3, 13)),	/* eint */
++	/* PF */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(F, 0),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "sdc0"),		/* sdc0_d1 */
++		SUNXI_FUNCTION(0x3, "uart0_jtag"),	/* jtag_ms */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_clk */
++		SUNXI_FUNCTION(0x5, "spi2"),		/* spi2_clk */
++		SUNXI_FUNCTION(0x6, "r_jtag"),		/* r_jtag_ms */
++		SUNXI_FUNCTION(0x7, "cpu"),		/* cpu_bist0 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 4, 0)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(F, 1),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "sdc0"),		/* sdc0_d0 */
++		SUNXI_FUNCTION(0x3, "uart0_jtag"),	/* jtag_di */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_mosi */
++		SUNXI_FUNCTION(0x5, "spi2"),		/* spi2_mosi */
++		SUNXI_FUNCTION(0x6, "r_jtag"),		/* r_jtag_di */
++		SUNXI_FUNCTION(0x7, "cpu"),		/* cpu_bist1 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 4, 1)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(F, 2),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "sdc0"),		/* sdc0_clk */
++		SUNXI_FUNCTION(0x3, "uart0_jtag"),	/* uart0_tx */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_miso */
++		SUNXI_FUNCTION(0x5, "spi2"),		/* spi2_miso */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 4, 2)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(F, 3),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "sdc0"),		/* sdc0_cmd */
++		SUNXI_FUNCTION(0x3, "uart0_jtag"),	/* jtag_do */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_cs0 */
++		SUNXI_FUNCTION(0x5, "spi2"),		/* spi2_cs0 */
++		SUNXI_FUNCTION(0x6, "r_jtag"),		/* r_jtag_do */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 4, 3)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(F, 4),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "sdc0"),		/* sdc0_d3 */
++		SUNXI_FUNCTION(0x3, "uart0_jtag"),	/* uart0_rx */
++		SUNXI_FUNCTION(0x4, "spi0"),		/* spi0_cs1 */
++		SUNXI_FUNCTION(0x5, "spi2"),		/* spi2_cs1 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 4, 4)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(F, 5),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "sdc0"),		/* sdc0_d2 */
++		SUNXI_FUNCTION(0x3, "uart0_jtag"),	/* jtag_ck */
++		SUNXI_FUNCTION(0x6, "r_jtag"),		/* r_jtag_ck */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 4, 5)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(F, 6),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "dbg_clk"),		/* dbg_clk */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 4, 6)),	/* eint */
++	/* PH */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(H, 0),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "pwm0"),		/* pwm0 */
++		SUNXI_FUNCTION(0x3, "i2s0"),		/* i2s0_mclk */
++		SUNXI_FUNCTION(0x4, "spi1"),		/* spi1_clk */
++		SUNXI_FUNCTION(0x5, "uart3"),		/* uart3_tx */
++		SUNXI_FUNCTION(0x6, "dmic"),		/* dmic_data3 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 6, 0)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(H, 9),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "pwm9"),		/* pwm9 */
++		SUNXI_FUNCTION(0x3, "rmii"),		/* rmii_txd1 */
++		SUNXI_FUNCTION(0x4, "twi3"),		/* twi3_sck */
++		SUNXI_FUNCTION(0x5, "uart0"),		/* uart0_tx */
++		SUNXI_FUNCTION(0x6, "i2s1"),		/* i2s1_din0 */
++		SUNXI_FUNCTION(0x7, "dmic"),		/* dmic_data0 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 6, 9)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(H, 10),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "pwm10"),		/* pwm10 */
++		SUNXI_FUNCTION(0x3, "rmii"),		/* rmii_txd0 */
++		SUNXI_FUNCTION(0x4, "twi3"),		/* twi3_sda */
++		SUNXI_FUNCTION(0x5, "uart0"),		/* uart0_rx */
++		SUNXI_FUNCTION(0x6, "i2s1"),		/* i2s1_dout0 */
++		SUNXI_FUNCTION(0x7, "dmic"),		/* dmic_clk */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 6, 10)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(H, 11),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "jtag"),		/* jtag_ms */
++		SUNXI_FUNCTION(0x3, "rmii"),		/* rmii_txck */
++		SUNXI_FUNCTION(0x4, "r_jtag"),		/* r_jtag_ms */
++		SUNXI_FUNCTION(0x5, "twi2"),		/* twi2_sck */
++		SUNXI_FUNCTION(0x6, "spi3"),		/* spi3_clk */
++		SUNXI_FUNCTION(0x7, "clk"),		/* clk_fanout0 */
++		SUNXI_FUNCTION(0x8, "pwm4"),		/* pwm4 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 6, 11)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(H, 12),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "jtag"),		/* jtag_ck */
++		SUNXI_FUNCTION(0x3, "rmii"),		/* rmii_txen */
++		SUNXI_FUNCTION(0x4, "r_jtag"),		/* r_jtag_ck */
++		SUNXI_FUNCTION(0x5, "twi2"),		/* twi2_sda */
++		SUNXI_FUNCTION(0x6, "spi3"),		/* spi3_mosi */
++		SUNXI_FUNCTION(0x7, "clk"),		/* clk_fanout1 */
++		SUNXI_FUNCTION(0x8, "pwm5"),		/* pwm5 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 6, 12)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(H, 13),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "jtag"),		/* jtag_do */
++		SUNXI_FUNCTION(0x3, "mdc"),		/* mdc */
++		SUNXI_FUNCTION(0x4, "r_jtag"),		/* r_jtag_do */
++		SUNXI_FUNCTION(0x5, "twi3"),		/* twi3_sck */
++		SUNXI_FUNCTION(0x6, "spi3"),		/* spi3_miso */
++		SUNXI_FUNCTION(0x7, "wiegand"),		/* wiegand_d0 */
++		SUNXI_FUNCTION(0x8, "pwm6"),		/* pwm6 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 6, 13)),	/* eint */
++	SUNXI_PIN(SUNXI_PINCTRL_PIN(H, 14),
++		SUNXI_FUNCTION(0x0, "gpio_in"),		/* gpio_in */
++		SUNXI_FUNCTION(0x1, "gpio_out"),	/* gpio_out */
++		SUNXI_FUNCTION(0x2, "jtag"),		/* jtag_di */
++		SUNXI_FUNCTION(0x3, "mdio"),		/* mdio */
++		SUNXI_FUNCTION(0x4, "r_jtag"),		/* r_jtag_di */
++		SUNXI_FUNCTION(0x5, "twi3"),		/* twi3_sda */
++		SUNXI_FUNCTION(0x6, "spi3"),		/* spi3_cs0 */
++		SUNXI_FUNCTION(0x7, "wiegand"),		/* wiegand_d1 */
++		SUNXI_FUNCTION(0x8, "pwm7"),		/* pwm7 */
++		SUNXI_FUNCTION_IRQ_BANK(0xe, 6, 14)),	/* eint */
++};
++
++static const unsigned int v851s_irq_bank_map[] = { 0, 2, 3, 4, 5, 7 };
++
++static const struct sunxi_pinctrl_desc v851s_pinctrl_data = {
++	.pins			= v851s_pins,
++	.npins			= ARRAY_SIZE(v851s_pins),
++	.irq_banks		= ARRAY_SIZE(v851s_irq_bank_map),
++	.irq_bank_map		= v851s_irq_bank_map,
++	.io_bias_cfg_variant	= BIAS_VOLTAGE_PIO_POW_MODE_CTL,
++};
++
++static int v851s_pinctrl_probe(struct platform_device *pdev)
++{
++	unsigned long variant = (unsigned long)of_device_get_match_data(&pdev->dev);
++
++	return sunxi_pinctrl_init_with_variant(pdev, &v851s_pinctrl_data, variant);
++}
++
++static const struct of_device_id v851s_pinctrl_match[] = {
++	{
++		.compatible = "allwinner,sun8i-v851s-pinctrl",
++		.data = (void *)PINCTRL_SUN20I_D1
++	},
++	{}
++};
++
++static struct platform_driver v851s_pinctrl_driver = {
++	.probe	= v851s_pinctrl_probe,
++	.driver	= {
++		.name		= "sun8i-v851s-pinctrl",
++		.of_match_table	= v851s_pinctrl_match,
++	},
++};
++builtin_platform_driver(v851s_pinctrl_driver);
+diff -urN linux-6.6-rc1.orig/include/dt-bindings/clock/sun8i-v85x-ccu.h linux-6.6-rc1/include/dt-bindings/clock/sun8i-v85x-ccu.h
+--- linux-6.6-rc1.orig/include/dt-bindings/clock/sun8i-v85x-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/include/dt-bindings/clock/sun8i-v85x-ccu.h	2023-03-14 07:53:09.000000000 +0100
+@@ -0,0 +1,129 @@
++/* SPDX-License-Identifier: (GPL-2.0+ or MIT) */
++/*
++ * Copyright (C) 2020 huangzhenwei@allwinnertech.com
++ * Copyright (C) 2023 Andras Szemzo <szemzo.andras@gmail.com.com>
++ */
++
++#ifndef _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_
++#define _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_
++
++#define CLK_PLL_CPU		0
++#define CLK_PLL_DDR		1
++#define CLK_PLL_PERIPH_4X	2
++#define CLK_PLL_PERIPH_2X	3
++#define CLK_PLL_PERIPH_800M	4
++#define CLK_PLL_PERIPH_480M	5
++#define CLK_PLL_PERIPH_600M	6
++#define CLK_PLL_PERIPH_400M	7
++#define CLK_PLL_PERIPH_300M	8
++#define CLK_PLL_PERIPH_200M	9
++#define CLK_PLL_PERIPH_160M	10
++#define CLK_PLL_PERIPH_150M	11
++#define CLK_PLL_PERIPH		12
++#define CLK_PLL_VIDEO_4X	13
++#define CLK_PLL_CSI_4X		14
++
++#define CLK_PLL_AUDIO		15
++#define CLK_PLL_AUDIO_DIV2	16
++#define CLK_PLL_AUDIO_DIV5	17
++#define CLK_PLL_AUDIO_4X	18
++#define CLK_PLL_AUDIO_1X	19
++
++
++#define CLK_PLL_NPU_4X		20
++#define CLK_CPU			21
++#define CLK_CPU_AXI		22
++#define CLK_CPU_APB		23
++#define CLK_AHB			24
++#define CLK_APB0		25
++#define CLK_APB1		26
++#define CLK_MBUS		27
++#define CLK_DE			28
++#define CLK_BUS_DE		29
++#define CLK_G2D			30
++#define CLK_BUS_G2D		31
++#define CLK_CE			32
++#define CLK_BUS_CE		33
++#define CLK_VE			34
++#define CLK_BUS_VE		35
++#define CLK_NPU			36
++#define CLK_BUS_NPU		37
++#define CLK_BUS_DMA		38
++#define CLK_BUS_MSGBOX0		39
++#define CLK_BUS_MSGBOX1		40
++#define CLK_BUS_SPINLOCK	41
++#define CLK_BUS_HSTIMER		42
++#define CLK_AVS			43
++#define CLK_BUS_DBG		44
++#define CLK_BUS_PWM		45
++#define CLK_BUS_IOMMU		46
++#define CLK_DRAM		47
++#define CLK_MBUS_DMA		48
++#define CLK_MBUS_VE		49
++#define CLK_MBUS_CE		50
++#define CLK_MBUS_CSI		51
++#define CLK_MBUS_ISP		52
++#define CLK_MBUS_G2D		53
++#define CLK_BUS_DRAM		54
++#define CLK_MMC0		55
++#define CLK_MMC1		56
++#define CLK_MMC2		57
++#define CLK_BUS_MMC0		58
++#define CLK_BUS_MMC1		59
++#define CLK_BUS_MMC2		60
++#define CLK_BUS_UART0		61
++#define CLK_BUS_UART1		62
++#define CLK_BUS_UART2		63
++#define CLK_BUS_UART3		64
++#define CLK_BUS_I2C0		65
++#define CLK_BUS_I2C1		66
++#define CLK_BUS_I2C2		67
++#define CLK_BUS_I2C3		68
++#define CLK_BUS_I2C4		69
++#define CLK_SPI0		70
++#define CLK_SPI1		71
++#define CLK_SPI2		72
++#define CLK_SPI3		73
++#define CLK_BUS_SPI0		74
++#define CLK_BUS_SPI1		75
++#define CLK_BUS_SPI2		76
++#define CLK_BUS_SPI3		77
++#define CLK_EMAC_25M		78
++#define CLK_BUS_EMAC		79
++#define CLK_BUS_GPADC		80
++#define CLK_BUS_THS		81
++#define CLK_I2S			82
++#define CLK_BUS_I2S		83
++#define CLK_DMIC		84
++#define CLK_BUS_DMIC		85
++#define CLK_AUDIO_DAC		86
++#define CLK_AUDIO_ADC		87
++#define CLK_BUS_AUDIO		88
++#define CLK_USB_OHCI		89
++#define CLK_BUS_OHCI		90
++#define CLK_BUS_EHCI		91
++#define CLK_BUS_OTG		92
++#define CLK_MIPI_DSI		93
++#define CLK_BUS_MIPI_DSI	94
++#define CLK_TCON_LCD		95
++#define CLK_BUS_TCON_LCD	96
++#define CLK_CSI_TOP		97
++#define CLK_CSI_MCLK0		98
++#define CLK_CSI_MCLK1		99
++#define CLK_CSI_MCLK2		100
++#define CLK_BUS_CSI		101
++#define CLK_BUS_WIEGAND		102
++#define CLK_RISCV		103
++#define CLK_RISCV_AXI		104
++#define CLK_BUS_RISCV		105
++#define CLK_FANOUT_24M		106
++#define CLK_FANOUT_12M		107
++#define CLK_FANOUT_16M		108
++#define CLK_FANOUT_25M		109
++#define CLK_FANOUT_27M		110
++#define CLK_FANOUT_PCLK		111
++#define CLK_FANOUT0		112
++#define CLK_FANOUT1		113
++#define CLK_FANOUT2		114
++
++#endif /* _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_ */
+diff -urN linux-6.6-rc1.orig/include/dt-bindings/reset/sun8i-v85x-ccu.h linux-6.6-rc1/include/dt-bindings/reset/sun8i-v85x-ccu.h
+--- linux-6.6-rc1.orig/include/dt-bindings/reset/sun8i-v85x-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/include/dt-bindings/reset/sun8i-v85x-ccu.h	2023-03-14 07:53:37.000000000 +0100
+@@ -0,0 +1,57 @@
++/* SPDX-License-Identifier: (GPL-2.0+ or MIT) */
++/*
++ * Copyright (c) 2020 huangzhenwei@allwinnertech.com
++ * Copyright (C) 2023 Andras Szemzo <szemzo.andras@gmail.com>
++ */
++
++#ifndef _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_
++#define _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_
++
++#define RST_MBUS		0
++#define RST_BUS_DE		1
++#define RST_BUS_G2D		2
++#define RST_BUS_CE		3
++#define RST_BUS_VE		4
++#define RST_BUS_NPU		5
++#define RST_BUS_DMA		6
++#define RST_BUS_MSGBOX0		7
++#define RST_BUS_MSGBOX1		8
++#define RST_BUS_SPINLOCK	9
++#define RST_BUS_HSTIMER		10
++#define RST_BUS_DBG		11
++#define RST_BUS_PWM		12
++#define RST_BUS_DRAM		13
++#define RST_BUS_MMC0		14
++#define RST_BUS_MMC1		15
++#define RST_BUS_MMC2		16
++#define RST_BUS_UART0		17
++#define RST_BUS_UART1		18
++#define RST_BUS_UART2		19
++#define RST_BUS_UART3		20
++#define RST_BUS_I2C0		21
++#define RST_BUS_I2C1		22
++#define RST_BUS_I2C2		23
++#define RST_BUS_I2C3		24
++#define RST_BUS_I2C4		25
++#define RST_BUS_SPI0		26
++#define RST_BUS_SPI1		27
++#define RST_BUS_SPI2		28
++#define RST_BUS_SPI3		29
++#define RST_BUS_EMAC		30
++#define RST_BUS_GPADC		31
++#define RST_BUS_THS		32
++#define RST_BUS_I2S		33
++#define RST_BUS_DMIC		34
++#define RST_BUS_AUDIO		35
++#define RST_USB_PHY		36
++#define RST_BUS_OHCI		37
++#define RST_BUS_EHCI		38
++#define RST_BUS_OTG		39
++#define RST_BUS_MIPI_DSI	40
++#define RST_BUS_TCON_LCD	41
++#define RST_BUS_CSI		42
++#define RST_BUS_WIEGAND		43
++#define RST_RISCV		44
++#define RST_BUS_RISCV		45
++
++#endif /* _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_ */
+diff -urN linux-6.6-rc1.orig/scripts/dtc/include-prefixes/arm/allwinner/Makefile linux-6.6-rc1/scripts/dtc/include-prefixes/arm/allwinner/Makefile
+--- linux-6.6-rc1.orig/scripts/dtc/include-prefixes/arm/allwinner/Makefile	2023-09-11 01:28:41.000000000 +0200
++++ linux-6.6-rc1/scripts/dtc/include-prefixes/arm/allwinner/Makefile	2023-09-15 12:03:34.997491640 +0200
+@@ -254,6 +254,7 @@
+ 	sun8i-s3-lichee-zero-plus.dtb \
+ 	sun8i-s3-pinecube.dtb \
+ 	sun8i-t113s-mangopi-mq-r-t113.dtb \
++	sun8i-v851s-lizard.dtb \
+ 	sun8i-t3-cqa3t-bv3.dtb \
+ 	sun8i-v3-sl631-imx179.dtb \
+ 	sun8i-v3s-licheepi-zero.dtb \
+diff -urN linux-6.6-rc1.orig/scripts/dtc/include-prefixes/arm/allwinner/sun8i-v851s-lizard.dts linux-6.6-rc1/scripts/dtc/include-prefixes/arm/allwinner/sun8i-v851s-lizard.dts
+--- linux-6.6-rc1.orig/scripts/dtc/include-prefixes/arm/allwinner/sun8i-v851s-lizard.dts	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/scripts/dtc/include-prefixes/arm/allwinner/sun8i-v851s-lizard.dts	2023-09-04 10:16:55.000000000 +0200
+@@ -0,0 +1,215 @@
++// SPDX-License-Identifier: (GPL-2.0+ or MIT)
++// Copyright (C) 2022 Samuel Holland <samuel@sholland.org>
++
++/dts-v1/;
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/leds/common.h>
++#include "sun8i-v851s.dtsi"
++
++/ {
++	model = "Yuzuki-lizard";
++	compatible = "allwinner,sun8i-v851s", "allwinner,sun8i";
++
++	aliases {
++/*		serial0 = &uart0; */
++		serial2 = &uart2;
++	};
++
++        chosen {
++		stdout-path = "serial0:115200n8";
++/*                bootargs = "mem=64M cma=4M root=/dev/mmcblk0p2 init=/sbin/init console=ttyS0,115200 earlyprintk=sunxi-uart,0x02500000 rootwait clk_ignore_unused"; */
++                bootargs = "mem=64M root=/dev/mmcblk0p2 init=/sbin/init console=ttyS2,115200 earlyprintk=sunxi-uart,0x02500800 rootwait";
++        };
++
++	reg_vcc: vcc {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++	};
++
++	reg_vcc_1v8: vcc-1v8 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-1v8";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++	};
++
++	reg_usbvbus: usbvbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usbvbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++	reg_vcc_3v3: vcc-3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-3v3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++	reg_vdd_cpu: vdd-cpu {
++		compatible = "regulator-fixed";
++		regulator-name = "vdd-cpu";
++		regulator-min-microvolt = <900000>;
++		regulator-max-microvolt = <900000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++/* A (B) C D E F (G) H */
++
++        leds {
++                compatible = "gpio-leds";
++
++                status_led {
++			linux,default-trigger = "heartbeat";
++                        label = "blue:status";
++                        gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;
++                };
++        };
++
++        wifi_pwrseq: wifi-pwrseq {
++                compatible = "mmc-pwrseq-simple";
++                reset-gpios = <&pio 4 6 GPIO_ACTIVE_LOW>; /* PE6 */
++        };
++};
++
++
++&cpu0 {
++	cpu-supply = <&reg_vdd_cpu>;
++};
++
++&pio {
++
++	vcc-pa-supply = <&reg_vcc_3v3>;
++	vcc-pc-supply = <&reg_vcc_3v3>;
++	vcc-pd-supply = <&reg_vcc_3v3>;
++	vcc-pe-supply = <&reg_vcc_3v3>;
++	vcc-pf-supply = <&reg_vcc_3v3>;
++	vcc-ph-supply = <&reg_vcc_3v3>;
++};
++
++&uart0 {
++	pinctrl-0 = <&uart0_ph9_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&uart2 {
++	pinctrl-0 = <&uart2_pe12_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&spi0 {
++        pinctrl-0 = <&spi0_pins>;
++        pinctrl-names = "default";
++        status = "okay";
++
++        flash@0 {
++                compatible = "spi-nand";
++                reg = <0>;
++
++                partitions {
++                        compatible = "fixed-partitions";
++                        #address-cells = <1>;
++                        #size-cells = <1>;
++
++                        partition@0 {
++                                label = "awboot";
++                                reg = <0x00000000 0x00020000>;	/* 128K */
++                        };
++
++                        partition@20000 {
++                                label = "dtb";
++                                reg = <0x00020000 0x00020000>;  /* 128k */
++                        };
++
++                        partition@40000 {
++                                label = "kernel";
++                                reg = <0x00040000 0x00800000>;  /* 8MB */
++                        };
++
++                        partition@840000 {
++                                label = "rootfs";
++                                reg = <0x00840000 0x077c0000>;
++                        };
++                };
++        };
++
++};
++
++&i2c2 {
++	pinctrl-0 = <&i2c2_ph11_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pwm {
++	pinctrl-0 = <&pwm_ph0_pin>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&mmc0 {
++	bus-width = <4>;
++/*	cd-gpios = <&pio 5 6 (GPIO_ACTIVE_HIGH)>; */
++	disable-wp;
++	vmmc-supply = <&reg_vcc_3v3>;
++	vqmmc-supply = <&reg_vcc_3v3>;
++	pinctrl-0 = <&mmc0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&mmc1 {
++	bus-width = <4>;
++	mmc-pwrseq = <&wifi_pwrseq>;
++	non-removable;
++	vmmc-supply = <&reg_vcc_3v3>;
++	vqmmc-supply = <&reg_vcc_3v3>;
++	pinctrl-0 = <&mmc1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++        xr829: wifi@1 {
++                reg = <1>;
++		interrupt-parent = <&pio>;
++		interrupts = <4 7 IRQ_TYPE_LEVEL_HIGH>; /* PE7 */
++		interrupt-names = "host-wake";
++        };
++};
++
++&usb_otg {
++	dr_mode = "otg";
++	status = "okay";
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&usbphy {
++	usb0_vbus-supply = <&reg_usbvbus>;
++	usb1_vbus-supply = <&reg_usbvbus>;
++	status = "okay";
++};
++
++&gpadc {
++        status = "okay";
++
++        #address-cells = <1>;
++        #size-cells = <0>;
++
++        channel@0 {
++            reg = <0>;
++        };
++};
+diff -urN linux-6.6-rc1.orig/scripts/dtc/include-prefixes/arm/allwinner/sun8i-v851s.dtsi linux-6.6-rc1/scripts/dtc/include-prefixes/arm/allwinner/sun8i-v851s.dtsi
+--- linux-6.6-rc1.orig/scripts/dtc/include-prefixes/arm/allwinner/sun8i-v851s.dtsi	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/scripts/dtc/include-prefixes/arm/allwinner/sun8i-v851s.dtsi	2023-09-04 10:16:35.000000000 +0200
+@@ -0,0 +1,696 @@
++// SPDX-License-Identifier: (GPL-2.0+ or MIT)
++// Copyright (C) 2021-2022 Samuel Holland <samuel@sholland.org>
++
++#include <dt-bindings/clock/sun6i-rtc.h>
++#include <dt-bindings/clock/sun8i-de2.h>
++#include <dt-bindings/clock/sun8i-tcon-top.h>
++#include <dt-bindings/clock/sun20i-d1-r-ccu.h>
++#include <dt-bindings/reset/sun20i-d1-r-ccu.h>
++#include <dt-bindings/clock/sun8i-v85x-ccu.h>
++#include <dt-bindings/reset/sun8i-v85x-ccu.h>
++#include <dt-bindings/interrupt-controller/arm-gic.h>
++#include <dt-bindings/reset/sun8i-de2.h>
++#include <dt-bindings/thermal/thermal.h>
++
++/ {
++	#address-cells = <1>;
++	#size-cells = <1>;
++
++	osc24M: osc24M-clk {
++		compatible = "fixed-clock";
++		clock-frequency = <24000000>;
++		clock-output-names = "osc24M";
++		#clock-cells = <0>;
++	};
++
++        cpus {
++                #address-cells = <1>;
++                #size-cells = <0>;
++
++                cpu0: cpu@0 {
++                        device_type = "cpu";
++                        compatible = "arm,cortex-a7";
++                        reg = <0>;
++                        clocks = <&ccu CLK_CPU>;
++			clock-names = "cpu";
++                };
++        };
++
++	memory {
++	    reg = <0x40000000 0x4000000>;
++	};
++
++        reserved-memory {
++                #address-cells = <1>;
++                #size-cells = <1>;
++                ranges;
++
++                riscv_reserved: riscv0@43c00000 {
++                        no-map;
++                        reg = <0x43c00000 0x400000>;
++                };
++        };
++
++	timer {
++		compatible = "arm,armv7-timer";
++		interrupts = <GIC_PPI 13 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
++			     <GIC_PPI 14 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
++			     <GIC_PPI 11 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>,
++			     <GIC_PPI 10 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_LOW)>;
++		clock-frequency = <24000000>;
++		interrupt-parent = <&gic>;
++/*
++		arm,cpu-registers-not-fw-configured;
++		arm,no-tick-in-suspend;
++*/
++	};
++
++	pmu {
++		compatible = "arm,cortex-a7-pmu";
++		interrupts = <GIC_SPI 172 IRQ_TYPE_LEVEL_HIGH>,
++			     <GIC_SPI 173 IRQ_TYPE_LEVEL_HIGH>;
++		interrupt-parent = <&gic>;
++	};
++
++	soc {
++		compatible = "simple-bus";
++		ranges;
++		interrupt-parent = <&gic>;
++		#address-cells = <1>;
++		#size-cells = <1>;
++		dma-noncoherent;
++
++/* A (B) C D E F (G) H */
++
++		pio: pinctrl@2000000 {
++			compatible = "allwinner,sun8i-v851s-pinctrl";
++			reg = <0x2000000 0x800>;
++			interrupts = <GIC_SPI 67 IRQ_TYPE_LEVEL_HIGH>, /* GPIOA */ 
++				     <GIC_SPI 71 IRQ_TYPE_LEVEL_HIGH>, /* GPIOC */ 
++				     <GIC_SPI 73 IRQ_TYPE_LEVEL_HIGH>, /* GPIOD */ 
++				     <GIC_SPI 75 IRQ_TYPE_LEVEL_HIGH>, /* GPIOE */ 
++				     <GIC_SPI 77 IRQ_TYPE_LEVEL_HIGH>, /* GPIOF */ 
++				     <GIC_SPI 81 IRQ_TYPE_LEVEL_HIGH>; /* GPIOH */ 
++			clocks = <&ccu CLK_APB0>, <&osc24M>, <&rtc CLK_OSC32K>; 
++ 			clock-names = "apb", "hosc", "losc";
++			gpio-controller;
++			interrupt-controller;
++			#gpio-cells = <3>;
++			#interrupt-cells = <3>;
++
++			/omit-if-no-ref/
++			uart0_ph9_pins: uart0-ph9-pins {
++				pins = "PH9", "PH10";
++				function = "uart0";
++			};
++
++			/omit-if-no-ref/
++			uart2_pe12_pins: uart2-pe12-pins {
++				pins = "PE12", "PE13";
++				function = "uart2";
++			};
++
++			/omit-if-no-ref/
++			spi0_pins: spi0-pins {
++				pins = "PC0", "PC1", "PC2", "PC3", "PC4", "PC5";
++				function = "spi0";
++			};
++
++			/omit-if-no-ref/
++			i2c2_ph11_pins: i2c2-ph11-pins {
++				pins = "PH11", "PH12";
++				function = "twi2";
++			};
++
++			/omit-if-no-ref/
++			i2c3_ph13_pins: i2c3-ph13-pins {
++				pins = "PH13", "PH14";
++				function = "twi3";
++			};
++
++			/omit-if-no-ref/
++			mmc0_pins: mmc0-pins {
++				pins = "PF0", "PF1", "PF2", "PF3", "PF4", "PF5";
++				function = "sdc0";
++			};
++
++			/omit-if-no-ref/
++			mmc1_pins: mmc1-pins {
++				pins = "PE0", "PE1", "PE2", "PE3", "PE4", "PE5";
++				function = "sdc1";
++			};
++
++			/omit-if-no-ref/
++			pwm_ph0_pin: pwm-ph0-pin {
++				pins = "PH0";
++				function = "pwm0";
++			};
++		};
++/*
++		msgbox: mailbox@3003000 {
++        		compatible = "allwinner,sun8i-h3-msgbox",
++                        	     "allwinner,sun6i-a31-msgbox";
++			reg = <0x03003000 0x1000>;
++			interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_MSGBOX0>;
++			resets = <&ccu RST_BUS_MSGBOX0>;
++			#mbox-cells = <1>;
++			status = "okay";
++		};
++*/
++
++		mailbox: mailbox@3003000 {
++			compatible = "allwinner,sunxi-msgbox";
++			#mbox-cells = <1>;
++			reg = <0x03003000 0x1000>,
++			      <0x06020000 0x1000>;
++			interrupts = <GIC_SPI 0 IRQ_TYPE_LEVEL_HIGH>,
++						 <GIC_SPI 1 IRQ_TYPE_LEVEL_HIGH>;
++
++			clocks = <&ccu CLK_BUS_MSGBOX0>;
++			clock-names = "msgbox0";
++			resets = <&ccu RST_BUS_MSGBOX0>;
++			local_id = <0>;
++			status = "okay";
++		};
++
++		hwspinlock: hwlock@3005000 {
++		    compatible = "allwinner,sun6i-a31-hwspinlock";
++			reg = <0x3005000 0x1000>;
++			clocks = <&ccu CLK_BUS_SPINLOCK>;
++			clock-names = "ahb";
++			resets = <&ccu RST_BUS_SPINLOCK>;
++			reset-names = "ahb";
++			interrupts = <GIC_SPI 54 IRQ_TYPE_LEVEL_HIGH>;
++		};
++
++		pwm: pwm@2000c00 {
++			compatible = "allwinner,sun8i-v853-pwm";
++			reg = <0x2000c00 0x400>;
++			interrupts = <GIC_SPI 18 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_PWM>, <&osc24M>;
++			clock-names = "bus", "mod";
++			resets = <&ccu RST_BUS_PWM>;
++			status = "disabled";
++			#pwm-cells = <3>;
++		};
++
++		ccu: clock-controller@2001000 {
++			compatible = "allwinner,sun8i-v85x-ccu";
++			reg = <0x2001000 0x1000>;
++			clocks = <&osc24M>,
++				 <&rtc CLK_OSC32K>,
++				 <&rtc CLK_IOSC>;
++			clock-names = "hosc", "losc", "iosc";
++			#clock-cells = <1>;
++			#reset-cells = <1>;
++		};
++
++
++		timer: timer@2050000 {
++			compatible = "allwinner,sun20i-d1-timer",
++				     "allwinner,sun8i-a23-timer";
++			reg = <0x2050000 0xa0>;
++			interrupts = <GIC_SPI 59 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 60 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&osc24M>;
++		};
++
++		uart0: serial@2500000 {
++			compatible = "snps,dw-apb-uart";
++			reg = <0x2500000 0x400>;
++			reg-io-width = <4>;
++			reg-shift = <2>;
++			interrupts = <GIC_SPI 2 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_UART0>;
++			resets = <&ccu RST_BUS_UART0>;
++			dmas = <&dma 14>, <&dma 14>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++		};
++
++		uart1: serial@2500400 {
++			compatible = "snps,dw-apb-uart";
++			reg = <0x2500400 0x400>;
++			reg-io-width = <4>;
++			reg-shift = <2>;
++			interrupts = <GIC_SPI 3 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_UART1>;
++			resets = <&ccu RST_BUS_UART1>;
++			dmas = <&dma 15>, <&dma 15>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++		};
++
++		uart2: serial@2500800 {
++			compatible = "snps,dw-apb-uart";
++			reg = <0x2500800 0x400>;
++			reg-io-width = <4>;
++			reg-shift = <2>;
++			interrupts = <GIC_SPI 4 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_UART2>;
++			resets = <&ccu RST_BUS_UART2>;
++			dmas = <&dma 16>, <&dma 16>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++		};
++
++		uart3: serial@2500c00 {
++			compatible = "snps,dw-apb-uart";
++			reg = <0x2500c00 0x400>;
++			reg-io-width = <4>;
++			reg-shift = <2>;
++			interrupts = <GIC_SPI 5 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_UART3>;
++			resets = <&ccu RST_BUS_UART3>;
++			dmas = <&dma 17>, <&dma 17>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++		};
++
++		i2c0: i2c@2502000 {
++			compatible = "allwinner,sun20i-d1-i2c",
++				     "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502000 0x400>;
++			interrupts = <GIC_SPI 9 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C0>;
++			resets = <&ccu RST_BUS_I2C0>;
++			dmas = <&dma 43>, <&dma 43>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		i2c1: i2c@2502400 {
++			compatible = "allwinner,sun20i-d1-i2c",
++				     "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502400 0x400>;
++			interrupts = <GIC_SPI 10 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C1>;
++			resets = <&ccu RST_BUS_I2C1>;
++			dmas = <&dma 44>, <&dma 44>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		i2c2: i2c@2502800 {
++			compatible = "allwinner,sun20i-d1-i2c",
++				     "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502800 0x400>;
++			interrupts = <GIC_SPI 11 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C2>;
++			resets = <&ccu RST_BUS_I2C2>;
++			dmas = <&dma 45>, <&dma 45>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		i2c3: i2c@2502c00 {
++			compatible = "allwinner,sun20i-d1-i2c",
++				     "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502c00 0x400>;
++			interrupts = <GIC_SPI 12 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C3>;
++			resets = <&ccu RST_BUS_I2C3>;
++			dmas = <&dma 46>, <&dma 46>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++
++		i2c4: i2c@2503000 {
++			compatible = "allwinner,sun20i-d1-i2c",
++				     "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2503000 0x400>;
++			interrupts = <GIC_SPI 13 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C4>;
++			resets = <&ccu RST_BUS_I2C4>;
++			dmas = <&dma 47>, <&dma 47>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		syscon: syscon@3000000 {
++			compatible = "allwinner,sun20i-d1-system-control";
++			reg = <0x3000000 0x1000>;
++			ranges;
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			sram_c: sram@20000 {
++				compatible = "mmio-sram";
++				reg = <0x00020000 0x210000>;
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges = <0 0x00020000 0x21000>;
++			};
++		};
++
++		spi0: spi@4025000 {
++			compatible = "allwinner,sun20i-d1-spi",
++				     "allwinner,sun50i-r329-spi";
++			reg = <0x4025000 0x1000>;
++			interrupts = <GIC_SPI 15 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_SPI0>, <&ccu CLK_SPI0>;
++			clock-names = "ahb", "mod";
++			resets = <&ccu RST_BUS_SPI0>;
++			dmas = <&dma 22>, <&dma 22>;
++			dma-names = "rx", "tx";
++			num-cs = <1>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		spi1: spi@4026000 {
++			compatible = "allwinner,sun8i-v851s-spi-dbi",
++				     "allwinner,sun50i-r329-spi-dbi",
++				     "allwinner,sun50i-r329-spi";
++			reg = <0x4026000 0x1000>;
++			interrupts = <GIC_SPI 16 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_SPI1>, <&ccu CLK_SPI1>;
++			clock-names = "ahb", "mod";
++			resets = <&ccu RST_BUS_SPI1>;
++			dmas = <&dma 23>, <&dma 23>;
++			dma-names = "rx", "tx";
++			num-cs = <1>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		spi2: spi@4027000 {
++			compatible = "allwinner,sun20i-d1-spi",
++				     "allwinner,sun50i-r329-spi";
++			reg = <0x4027000 0x1000>;
++			interrupts = <GIC_SPI 17 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_SPI2>, <&ccu CLK_SPI2>;
++			clock-names = "ahb", "mod";
++			resets = <&ccu RST_BUS_SPI2>;
++			dmas = <&dma 24>, <&dma 24>;
++			dma-names = "rx", "tx";
++			num-cs = <1>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		spi3: spi@4028000 {
++			compatible = "allwinner,sun20i-d1-spi",
++				     "allwinner,sun50i-r329-spi";
++			reg = <0x4028000 0x1000>;
++			interrupts = <GIC_SPI 21 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_SPI3>, <&ccu CLK_SPI3>;
++			clock-names = "ahb", "mod";
++			resets = <&ccu RST_BUS_SPI3>;
++			dmas = <&dma 25>, <&dma 25>;
++			dma-names = "rx", "tx";
++			num-cs = <1>;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++/*
++		syscon: syscon@3000000 {
++			compatible = "allwinner,sun20i-d1-system-control";
++			reg = <0x3000000 0x1000>;
++			ranges;
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			regulators@3000150 {
++				compatible = "allwinner,sun20i-d1-system-ldos";
++				reg = <0x3000150 0x4>;
++
++				reg_ldoa: ldoa {
++				};
++
++				reg_ldob: ldob {
++				};
++			};
++
++			sram_c: sram@20000 {
++				compatible = "mmio-sram";
++				reg = <0x00020000 0x21000>;
++				#address-cells = <1>;
++				#size-cells = <1>;
++				ranges = <0 0x00020000 0x21000>;
++
++				ve_sram: sram-section@0 {
++					compatible = "allwinner,sun20i-d1-sram-c1",
++						     "allwinner,sun4i-a10-sram-c1";
++					reg = <0x000000 0x21000>;
++				};
++			};
++		};
++*/
++
++		dma: dma-controller@3002000 {
++			compatible = "allwinner,sun20i-d1-dma";
++			reg = <0x3002000 0x1000>;
++			interrupts = <GIC_SPI 50 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_DMA>, <&ccu CLK_MBUS_DMA>;
++			clock-names = "bus", "mbus";
++			resets = <&ccu RST_BUS_DMA>;
++			dma-channels = <16>;
++			dma-requests = <64>;
++			#dma-cells = <1>;
++		};
++
++		sid: efuse@3006000 {
++			compatible = "allwinner,sun20i-d1-sid";
++			reg = <0x3006000 0x1000>;
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			ths_calib: ths-calib@14 {
++				reg = <0x14 0x4>;
++			};
++
++			bg_trim: bg-trim@28 {
++				reg = <0x28 0x4>;
++				bits = <16 8>;
++			};
++		};
++
++		mbus: dram-controller@3102000 {
++			compatible = "allwinner,sun20i-d1-mbus";
++			reg = <0x3102000 0x1000>,
++			      <0x3103000 0x1000>;
++			reg-names = "mbus", "dram";
++			interrupts = <GIC_SPI 43 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_MBUS>,
++				 <&ccu CLK_DRAM>,
++				 <&ccu CLK_BUS_DRAM>;
++			clock-names = "mbus", "dram", "bus";
++			dma-ranges = <0 0x40000000 0x80000000>;
++			#address-cells = <1>;
++			#size-cells = <1>;
++			#interconnect-cells = <1>;
++		};
++
++
++		mmc0: mmc@4020000 {
++			compatible = "allwinner,sun20i-d1-mmc";
++			reg = <0x4020000 0x1000>;
++			interrupts = <GIC_SPI 40 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_MMC0>, <&ccu CLK_MMC0>;
++			clock-names = "ahb", "mmc";
++			resets = <&ccu RST_BUS_MMC0>;
++			reset-names = "ahb";
++			no-sdio;
++			no-mmc;
++			cap-sd-highspeed;
++			max-frequency = <150000000>;
++			mmc-ddr-1_8v;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		mmc1: mmc@4021000 {
++			compatible = "allwinner,sun20i-d1-mmc";
++			reg = <0x4021000 0x1000>;
++			interrupts = <GIC_SPI 41 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_MMC1>, <&ccu CLK_MMC1>;
++			clock-names = "ahb", "mmc";
++			resets = <&ccu RST_BUS_MMC1>;
++			reset-names = "ahb";
++			cap-sd-highspeed;
++			cap-mmc-highspeed;
++			max-frequency = <150000000>;
++			mmc-ddr-1_8v;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		mmc2: mmc@4022000 {
++			compatible = "allwinner,sun8i-d1-mmc";
++			reg = <0x4022000 0x1000>;
++			interrupts = <GIC_SPI 42 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_MMC2>, <&ccu CLK_MMC2>;
++			clock-names = "ahb", "mmc";
++			resets = <&ccu RST_BUS_MMC2>;
++			reset-names = "ahb";
++			no-sdio;
++			no-sd;
++			cap-mmc-highspeed;
++			max-frequency = <150000000>;
++			mmc-ddr-1_8v;
++			mmc-ddr-3_3v;
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		usb_otg: usb@4100000 {
++			compatible = "allwinner,sun20i-d1-musb",
++				     "allwinner,sun8i-a33-musb";
++			reg = <0x4100000 0x400>;
++			interrupts = <GIC_SPI 29 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "mc";
++			clocks = <&ccu CLK_BUS_OTG>;
++			resets = <&ccu RST_BUS_OTG>;
++			extcon = <&usbphy 0>;
++			phys = <&usbphy 0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		usbphy: phy@4100400 {
++			compatible = "allwinner,sun8i-v851s-usb-phy";
++			reg = <0x4100400 0x100>,
++			      <0x4101800 0x100>;
++			reg-names = "phy_ctrl",
++				    "pmu0";
++			clocks = <&osc24M>;
++			clock-names = "usb0_phy";
++			resets = <&ccu RST_USB_PHY>;
++			reset-names = "usb0_reset";
++			status = "disabled";
++			#phy-cells = <1>;
++		};
++
++		ehci0: usb@4101000 {
++			compatible = "allwinner,sun20i-d1-ehci",
++				     "generic-ehci";
++			reg = <0x4101000 0x100>;
++			interrupts = <GIC_SPI 30 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_OHCI>,
++				 <&ccu CLK_BUS_EHCI>,
++				 <&ccu CLK_USB_OHCI>;
++			resets = <&ccu RST_BUS_OHCI>,
++				 <&ccu RST_BUS_EHCI>;
++			phys = <&usbphy 0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		ohci0: usb@4101400 {
++			compatible = "allwinner,sun20i-d1-ohci",
++				     "generic-ohci";
++			reg = <0x4101400 0x100>;
++			interrupts = <GIC_SPI 31 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_OHCI>,
++				 <&ccu CLK_USB_OHCI>;
++			resets = <&ccu RST_BUS_OHCI>;
++			phys = <&usbphy 0>;
++			phy-names = "usb";
++			status = "disabled";
++		};
++
++		emac: ethernet@4500000 {
++			compatible = "allwinner,sun20i-d1-emac",
++				     "allwinner,sun50i-a64-emac";
++			reg = <0x4500000 0x10000>;
++			interrupts = <GIC_SPI 46 IRQ_TYPE_LEVEL_HIGH>;
++			interrupt-names = "macirq";
++			clocks = <&ccu CLK_BUS_EMAC>;
++			clock-names = "stmmaceth";
++			resets = <&ccu RST_BUS_EMAC>;
++			reset-names = "stmmaceth";
++			syscon = <&syscon>;
++			status = "disabled";
++
++			mdio: mdio {
++				compatible = "snps,dwmac-mdio";
++				#address-cells = <1>;
++				#size-cells = <0>;
++			};
++		};
++
++		r_ccu: clock-controller@7010000 {
++			compatible = "allwinner,sun20i-d1-r-ccu";
++			reg = <0x7010000 0x400>;
++			clocks = <&osc24M>,
++				 <&rtc CLK_OSC32K>,
++				 <&rtc CLK_IOSC>,
++/*				 <&ccu CLK_PLL_PERIPH0_DIV3>; */
++				 <&ccu CLK_PLL_PERIPH>;
++			clock-names = "hosc", "losc", "iosc", "pll-periph";
++			#clock-cells = <1>;
++			#reset-cells = <1>;
++		};
++
++		rtc: rtc@7090000 {
++			compatible = "allwinner,sun20i-d1-rtc",
++				     "allwinner,sun50i-r329-rtc";
++			reg = <0x7090000 0x400>;
++			interrupts = <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&r_ccu CLK_BUS_R_RTC>,
++				 <&osc24M>,
++				 <&r_ccu CLK_R_AHB>;
++			clock-names = "bus", "hosc", "ahb";
++			#clock-cells = <1>;
++		};
++
++                gic: interrupt-controller@3021000 {
++                        compatible = "arm,gic-400";
++                        reg = <0x03021000 0x1000>,
++                              <0x03022000 0x2000>,
++                              <0x03024000 0x2000>,
++                              <0x03026000 0x2000>;
++                        interrupts = <GIC_PPI 9 (GIC_CPU_MASK_SIMPLE(2) | IRQ_TYPE_LEVEL_HIGH)>;
++                        interrupt-controller;
++                        #interrupt-cells = <3>;
++                };
++/*
++		iommu: iommu@2010000 {
++			compatible = "allwinner,sun50i-h6-iommu";
++			reg = <0x02010000 0x10000>;
++			interrupts = <GIC_SPI 64 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_IOMMU>;
++			resets = <&ccu RST_BUS_IOMMU>;
++			#iommu-cells = <1>;
++		};
++
++		iommus = <&iommu 5>; 
++*/
++
++                gpadc: adc@2009000 {
++                        compatible = "allwinner,sun20i-d1-gpadc";
++                        reg = <0x2009000 0x1000>;
++                        clocks = <&ccu CLK_BUS_GPADC>;
++                        resets = <&ccu RST_BUS_GPADC>;
++                        interrupts = <SOC_PERIPHERAL_IRQ(57) IRQ_TYPE_LEVEL_HIGH>;
++                        status = "disabled";
++                        #io-channel-cells = <1>;
++                };
++
++	};
++};
+diff -urN linux-6.6-rc1.orig/scripts/dtc/include-prefixes/dt-bindings/clock/sun8i-v85x-ccu.h linux-6.6-rc1/scripts/dtc/include-prefixes/dt-bindings/clock/sun8i-v85x-ccu.h
+--- linux-6.6-rc1.orig/scripts/dtc/include-prefixes/dt-bindings/clock/sun8i-v85x-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/scripts/dtc/include-prefixes/dt-bindings/clock/sun8i-v85x-ccu.h	2023-03-14 07:53:09.000000000 +0100
+@@ -0,0 +1,129 @@
++/* SPDX-License-Identifier: (GPL-2.0+ or MIT) */
++/*
++ * Copyright (C) 2020 huangzhenwei@allwinnertech.com
++ * Copyright (C) 2023 Andras Szemzo <szemzo.andras@gmail.com.com>
++ */
++
++#ifndef _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_
++#define _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_
++
++#define CLK_PLL_CPU		0
++#define CLK_PLL_DDR		1
++#define CLK_PLL_PERIPH_4X	2
++#define CLK_PLL_PERIPH_2X	3
++#define CLK_PLL_PERIPH_800M	4
++#define CLK_PLL_PERIPH_480M	5
++#define CLK_PLL_PERIPH_600M	6
++#define CLK_PLL_PERIPH_400M	7
++#define CLK_PLL_PERIPH_300M	8
++#define CLK_PLL_PERIPH_200M	9
++#define CLK_PLL_PERIPH_160M	10
++#define CLK_PLL_PERIPH_150M	11
++#define CLK_PLL_PERIPH		12
++#define CLK_PLL_VIDEO_4X	13
++#define CLK_PLL_CSI_4X		14
++
++#define CLK_PLL_AUDIO		15
++#define CLK_PLL_AUDIO_DIV2	16
++#define CLK_PLL_AUDIO_DIV5	17
++#define CLK_PLL_AUDIO_4X	18
++#define CLK_PLL_AUDIO_1X	19
++
++
++#define CLK_PLL_NPU_4X		20
++#define CLK_CPU			21
++#define CLK_CPU_AXI		22
++#define CLK_CPU_APB		23
++#define CLK_AHB			24
++#define CLK_APB0		25
++#define CLK_APB1		26
++#define CLK_MBUS		27
++#define CLK_DE			28
++#define CLK_BUS_DE		29
++#define CLK_G2D			30
++#define CLK_BUS_G2D		31
++#define CLK_CE			32
++#define CLK_BUS_CE		33
++#define CLK_VE			34
++#define CLK_BUS_VE		35
++#define CLK_NPU			36
++#define CLK_BUS_NPU		37
++#define CLK_BUS_DMA		38
++#define CLK_BUS_MSGBOX0		39
++#define CLK_BUS_MSGBOX1		40
++#define CLK_BUS_SPINLOCK	41
++#define CLK_BUS_HSTIMER		42
++#define CLK_AVS			43
++#define CLK_BUS_DBG		44
++#define CLK_BUS_PWM		45
++#define CLK_BUS_IOMMU		46
++#define CLK_DRAM		47
++#define CLK_MBUS_DMA		48
++#define CLK_MBUS_VE		49
++#define CLK_MBUS_CE		50
++#define CLK_MBUS_CSI		51
++#define CLK_MBUS_ISP		52
++#define CLK_MBUS_G2D		53
++#define CLK_BUS_DRAM		54
++#define CLK_MMC0		55
++#define CLK_MMC1		56
++#define CLK_MMC2		57
++#define CLK_BUS_MMC0		58
++#define CLK_BUS_MMC1		59
++#define CLK_BUS_MMC2		60
++#define CLK_BUS_UART0		61
++#define CLK_BUS_UART1		62
++#define CLK_BUS_UART2		63
++#define CLK_BUS_UART3		64
++#define CLK_BUS_I2C0		65
++#define CLK_BUS_I2C1		66
++#define CLK_BUS_I2C2		67
++#define CLK_BUS_I2C3		68
++#define CLK_BUS_I2C4		69
++#define CLK_SPI0		70
++#define CLK_SPI1		71
++#define CLK_SPI2		72
++#define CLK_SPI3		73
++#define CLK_BUS_SPI0		74
++#define CLK_BUS_SPI1		75
++#define CLK_BUS_SPI2		76
++#define CLK_BUS_SPI3		77
++#define CLK_EMAC_25M		78
++#define CLK_BUS_EMAC		79
++#define CLK_BUS_GPADC		80
++#define CLK_BUS_THS		81
++#define CLK_I2S			82
++#define CLK_BUS_I2S		83
++#define CLK_DMIC		84
++#define CLK_BUS_DMIC		85
++#define CLK_AUDIO_DAC		86
++#define CLK_AUDIO_ADC		87
++#define CLK_BUS_AUDIO		88
++#define CLK_USB_OHCI		89
++#define CLK_BUS_OHCI		90
++#define CLK_BUS_EHCI		91
++#define CLK_BUS_OTG		92
++#define CLK_MIPI_DSI		93
++#define CLK_BUS_MIPI_DSI	94
++#define CLK_TCON_LCD		95
++#define CLK_BUS_TCON_LCD	96
++#define CLK_CSI_TOP		97
++#define CLK_CSI_MCLK0		98
++#define CLK_CSI_MCLK1		99
++#define CLK_CSI_MCLK2		100
++#define CLK_BUS_CSI		101
++#define CLK_BUS_WIEGAND		102
++#define CLK_RISCV		103
++#define CLK_RISCV_AXI		104
++#define CLK_BUS_RISCV		105
++#define CLK_FANOUT_24M		106
++#define CLK_FANOUT_12M		107
++#define CLK_FANOUT_16M		108
++#define CLK_FANOUT_25M		109
++#define CLK_FANOUT_27M		110
++#define CLK_FANOUT_PCLK		111
++#define CLK_FANOUT0		112
++#define CLK_FANOUT1		113
++#define CLK_FANOUT2		114
++
++#endif /* _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_ */
+diff -urN linux-6.6-rc1.orig/scripts/dtc/include-prefixes/dt-bindings/reset/sun8i-v85x-ccu.h linux-6.6-rc1/scripts/dtc/include-prefixes/dt-bindings/reset/sun8i-v85x-ccu.h
+--- linux-6.6-rc1.orig/scripts/dtc/include-prefixes/dt-bindings/reset/sun8i-v85x-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.6-rc1/scripts/dtc/include-prefixes/dt-bindings/reset/sun8i-v85x-ccu.h	2023-03-14 07:53:37.000000000 +0100
+@@ -0,0 +1,57 @@
++/* SPDX-License-Identifier: (GPL-2.0+ or MIT) */
++/*
++ * Copyright (c) 2020 huangzhenwei@allwinnertech.com
++ * Copyright (C) 2023 Andras Szemzo <szemzo.andras@gmail.com>
++ */
++
++#ifndef _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_
++#define _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_
++
++#define RST_MBUS		0
++#define RST_BUS_DE		1
++#define RST_BUS_G2D		2
++#define RST_BUS_CE		3
++#define RST_BUS_VE		4
++#define RST_BUS_NPU		5
++#define RST_BUS_DMA		6
++#define RST_BUS_MSGBOX0		7
++#define RST_BUS_MSGBOX1		8
++#define RST_BUS_SPINLOCK	9
++#define RST_BUS_HSTIMER		10
++#define RST_BUS_DBG		11
++#define RST_BUS_PWM		12
++#define RST_BUS_DRAM		13
++#define RST_BUS_MMC0		14
++#define RST_BUS_MMC1		15
++#define RST_BUS_MMC2		16
++#define RST_BUS_UART0		17
++#define RST_BUS_UART1		18
++#define RST_BUS_UART2		19
++#define RST_BUS_UART3		20
++#define RST_BUS_I2C0		21
++#define RST_BUS_I2C1		22
++#define RST_BUS_I2C2		23
++#define RST_BUS_I2C3		24
++#define RST_BUS_I2C4		25
++#define RST_BUS_SPI0		26
++#define RST_BUS_SPI1		27
++#define RST_BUS_SPI2		28
++#define RST_BUS_SPI3		29
++#define RST_BUS_EMAC		30
++#define RST_BUS_GPADC		31
++#define RST_BUS_THS		32
++#define RST_BUS_I2S		33
++#define RST_BUS_DMIC		34
++#define RST_BUS_AUDIO		35
++#define RST_USB_PHY		36
++#define RST_BUS_OHCI		37
++#define RST_BUS_EHCI		38
++#define RST_BUS_OTG		39
++#define RST_BUS_MIPI_DSI	40
++#define RST_BUS_TCON_LCD	41
++#define RST_BUS_CSI		42
++#define RST_BUS_WIEGAND		43
++#define RST_RISCV		44
++#define RST_BUS_RISCV		45
++
++#endif /* _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_ */
