@@ -206,6 +206,9 @@ static bool sd_send_op_cond(sdhci_t *hci, sdmmc_t *card)
 	sdhci_cmd_t cmd		= {0};
 	int			retries = 50;
 
+	if (!go_idle_state(hci))
+		return FALSE;
+
 	if (!sd_send_if_cond(hci, card)) {
 		return FALSE;
 	}
