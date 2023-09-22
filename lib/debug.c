@@ -7,6 +7,6 @@ void message(const char *fmt, ...)
 {
 	va_list args;
 	va_start(args, fmt);
-	xvformat(sunxi_usart_putc, &usart_dbg, fmt, args);
+	xvformat(sunxi_usart_putc, &USART_DBG, fmt, args);
 	va_end(args);
 }
