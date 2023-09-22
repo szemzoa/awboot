@@ -1,0 +1,19 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ "jethome" ]
+  pull_request:
+    branches: [ "jethome" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: carlosperate/arm-none-eabi-gcc-action@v1
+    - run: arm-none-eabi-gcc --version
+    - name: make
+      run: make
