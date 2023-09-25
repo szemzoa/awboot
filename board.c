@@ -6,11 +6,25 @@
 #include "sunxi_spi.h"
 #include "sdmmc.h"
 
-sunxi_usart_t usart_dbg = {
+sunxi_usart_t usart5_dbg = {
 	.base	 = 0x02501400,
 	.id		 = 5,
 	.gpio_tx = {GPIO_PIN(PORTB, 4), GPIO_PERIPH_MUX7},
 	.gpio_rx = {GPIO_PIN(PORTB, 5), GPIO_PERIPH_MUX7},
+};
+
+sunxi_usart_t usart0_dbg = {
+	.base	 = 0x02500000,
+	.id		 = 0,
+	.gpio_tx = {GPIO_PIN(PORTE, 2), GPIO_PERIPH_MUX7},
+	.gpio_rx = {GPIO_PIN(PORTE, 3), GPIO_PERIPH_MUX7},
+};
+
+sunxi_usart_t usart3_dbg = {
+	.base	 = 0x02500c00,
+	.id		 = 3,
+	.gpio_tx = {GPIO_PIN(PORTB, 6), GPIO_PERIPH_MUX7},
+	.gpio_rx = {GPIO_PIN(PORTB, 7), GPIO_PERIPH_MUX7},
 };
 
 sunxi_spi_t sunxi_spi0 = {
@@ -58,5 +72,5 @@ int board_sdhci_init()
 void board_init()
 {
 	board_init_led(led_blue);
-	sunxi_usart_init(&usart_dbg);
+	sunxi_usart_init(&USART_DBG);
 }
