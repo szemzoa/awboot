@@ -258,6 +258,7 @@ _spi:
 	}
 
 	sunxi_spi_disable(&sunxi_spi0);
+	dma_exit();
 
 #endif // CONFIG_SPI_NAND
 

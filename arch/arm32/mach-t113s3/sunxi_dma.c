@@ -99,6 +99,11 @@ void dma_exit(void)
 	/* close dma clock when dma exit */
 	dma_reg->auto_gate &= ~(1 << DMA_GATING_OFS | 1 << DMA_RST_OFS);
 #endif
+        dma_reg->irq_en0 = 0;
+        dma_reg->irq_en1 = 0;
+
+        dma_reg->irq_pending0 = 0xffffffff;
+        dma_reg->irq_pending1 = 0xffffffff;
 
 	dma_init_ok--;
 }
