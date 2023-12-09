@@ -247,7 +247,7 @@ static void set_read_timeout(sdhci_t *sdhci, u32 timeout)
 	rval |= (rdto_clk << 8);
 	sdhci->reg->timeout = rval;
 
-	trace("rdtoclk:%u, reg-tmout:%u, gctl:%x, clock:%u, nstr:%x\n", rdto_clk, sdhci->reg->timeout, sdhci->reg->gctrl,
+	trace("rdtoclk:%" PRIu32 ", reg-tmout:%" PRIu32 ", gctl:%" PRIx32 ", clock:%u, nstr:%" PRIx32 "\n", rdto_clk, sdhci->reg->timeout, sdhci->reg->gctrl,
 		  sdhci->clock, sdhci->reg->ntsr);
 }
 
@@ -289,8 +289,8 @@ static int prepare_dma(sdhci_t *sdhci, sdhci_data_t *data)
 		} else {
 			pdes[des_idx].next_desc_addr = ((u32)&pdes[des_idx + 1]) >> 2;
 		}
-		trace("SMHC: frag %d, remain %d, des[%d] = 0x%08x:\r\n"
-			  "  [0] = 0x%08x, [1] = 0x%08x, [2] = 0x%08x, [3] = 0x%08x\r\n",
+		trace("SMHC: frag %" PRIu32 ", remain %" PRIu32 ", des[%" PRIu32 "] = 0x%08" PRIx32 ":\r\n"
+			  "  [0] = 0x%08" PRIx32 ", [1] = 0x%08" PRIx32 ", [2] = 0x%08" PRIx32 ", [3] = 0x%08" PRIx32 "\r\n",
 			  i, remain, des_idx, (u32)(&pdes[des_idx]), (u32)((u32 *)&pdes[des_idx])[0],
 			  (u32)((u32 *)&pdes[des_idx])[1], (u32)((u32 *)&pdes[des_idx])[2], (u32)((u32 *)&pdes[des_idx])[3]);
 	}
@@ -335,15 +335,15 @@ static int wait_done(sdhci_t *sdhci, sdhci_data_t *dat, u32 timeout_msecs, u32 f
 	u32 status;
 	u32 done  = 0;
 	u32 start = time_ms();
-	trace("SMHC: wait for flag 0x%x\r\n", flag);
+	trace("SMHC: wait for flag 0x%" PRIx32 "\r\n", flag);
 	do {
 		status = sdhci->reg->rint;
 		if ((time_ms() > (start + timeout_msecs))) {
-			warning("SMHC: wait timeout %x status %x flag %x\r\n", status & SMHC_RINT_INTERRUPT_ERROR_BIT, status,
+			warning("SMHC: wait timeout %" PRIx32 " status %" PRIx32 " flag %" PRIx32 "\r\n", status & SMHC_RINT_INTERRUPT_ERROR_BIT, status,
 					flag);
 			return -1;
 		} else if ((status & SMHC_RINT_INTERRUPT_ERROR_BIT)) {
-			warning("SMHC: error 0x%x status 0x%x\r\n", status & SMHC_RINT_INTERRUPT_ERROR_BIT,
+			warning("SMHC: error 0x%" PRIx32 " status 0x%" PRIx32 "\r\n", status & SMHC_RINT_INTERRUPT_ERROR_BIT,
 					status & ~SMHC_RINT_INTERRUPT_ERROR_BIT);
 			return -1;
 		}
@@ -367,12 +367,12 @@ static bool read_bytes(sdhci_t *sdhci, sdhci_data_t *dat)
 	if (timeout < 250)
 		timeout = 250;
 
-	trace("SMHC: read %u\r\n", count);
+	trace("SMHC: read %" PRIu32 "\r\n", count);
 
 	status = sdhci->reg->status;
 	err	   = sdhci->reg->rint & SMHC_RINT_INTERRUPT_ERROR_BIT;
 	if (err)
-		warning("SMHC: interrupt error 0x%x status 0x%x\r\n", err & SMHC_RINT_INTERRUPT_ERROR_BIT, status);
+		warning("SMHC: interrupt error 0x%" PRIx32 " status 0x%" PRIx32 "\r\n", err & SMHC_RINT_INTERRUPT_ERROR_BIT, status);
 
 	while ((!err) && (count >= sizeof(sdhci->reg->fifo))) {
 		while (sdhci->reg->status & SMHC_STATUS_FIFO_EMPTY) {
@@ -403,12 +403,12 @@ static bool read_bytes(sdhci_t *sdhci, sdhci_data_t *dat)
 	} while (!done && !err);
 
 	if (err & SMHC_RINT_INTERRUPT_ERROR_BIT) {
-		warning("SMHC: interrupt error 0x%x status 0x%x\r\n", err & SMHC_RINT_INTERRUPT_ERROR_BIT, status);
+		warning("SMHC: interrupt error 0x%" PRIx32 " status 0x%" PRIx32 "\r\n", err & SMHC_RINT_INTERRUPT_ERROR_BIT, status);
 		return FALSE;
 	}
 
 	if (count) {
-		warning("SMHC: read %u leftover\r\n", count);
+		warning("SMHC: read %" PRIu32 " leftover\r\n", count);
 		return FALSE;
 	}
 	return TRUE;
@@ -424,7 +424,7 @@ static bool write_bytes(sdhci_t *sdhci, sdhci_data_t *dat)
 	if (timeout < 250)
 		timeout = 250;
 
-	trace("SMHC: write %u\r\n", count);
+	trace("SMHC: write %llu\r\n", count);
 
 	status = sdhci->reg->status;
 	err	   = sdhci->reg->rint & SMHC_RINT_INTERRUPT_ERROR_BIT;
@@ -466,7 +466,7 @@ bool sdhci_transfer(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 	u32	 timeout;
 	bool dma = false;
 
-	trace("SMHC: CMD%u 0x%x dlen:%u\r\n", cmd->idx, cmd->arg, dat ? dat->blkcnt * dat->blksz : 0);
+	trace("SMHC: CMD%" PRIu32 " 0x%" PRIx32 " dlen:%" PRIu32 "\r\n", cmd->idx, cmd->arg, dat ? dat->blkcnt * dat->blksz : 0);
 
 	if (cmd->idx == MMC_STOP_TRANSMISSION) {
 		timeout = time_ms();
@@ -580,7 +580,7 @@ bool sdhci_reset(sdhci_t *sdhci)
 
 bool sdhci_set_width(sdhci_t *sdhci, u32 width)
 {
-	const char *mode = "1 bit";
+	const char UNUSED_TRACE *mode = "1 bit";
 	sdhci->reg->gctrl &= ~SMHC_GCTRL_DDR_MODE;
 	switch (width) {
 		case MMC_BUS_WIDTH_1:
@@ -591,7 +591,7 @@ bool sdhci_set_width(sdhci_t *sdhci, u32 width)
 			mode			  = "4 bit";
 			break;
 		default:
-			error("SMHC: %u width value invalid\r\n", width);
+			error("SMHC: %" PRIu32 " width value invalid\r\n", width);
 			return FALSE;
 	}
 	if (sdhci->clock == MMC_CLK_50M_DDR) {
@@ -721,11 +721,11 @@ bool sdhci_set_clock(sdhci_t *sdhci, smhc_clk_t clock)
 	}
 
 	if (n > 3) {
-		error("mmc %u error cannot set clock to %uHz\n", sdhci->name, hz);
+		error("mmc %s error cannot set clock to %" PRIu32 "Hz\n", sdhci->name, hz);
 		return false;
 	}
 
-	trace("SMHC: clock ratio %u\r\n", div);
+	trace("SMHC: clock ratio %" PRIu32 "\r\n", div);
 
 	sdhci->reg->clkcr &= ~SMHC_CLKCR_CARD_CLOCK_ON; // Disable clock
 	if (!update_card_clock(sdhci))

@@ -76,7 +76,7 @@ DRESULT disk_read(BYTE	pdrv, /* Physical drive nmuber to identify the drive */
 	last  = sector + count;
 	bytes = count * FF_MIN_SS;
 
-	trace("FATFS: read %u sectors at %u\r\n", count, first);
+	trace("FATFS: read %u sectors at %" PRIu32 "\r\n", count, first);
 
 #ifdef CONFIG_FATFS_CACHE_SIZE
 	// Read starts in cache but overflows
@@ -85,12 +85,12 @@ DRESULT disk_read(BYTE	pdrv, /* Physical drive nmuber to identify the drive */
 		memcpy(buff, cache + (first - cache_first) * FF_MIN_SS, chunk);
 		buff += chunk;
 		first += (cache_last - first);
-		trace("FATFS: chunk %u first %u\r\n", chunk, first);
+		trace("FATFS: chunk %" PRIu32 " first %" PRIu32 "\r\n", chunk, first);
 	}
 
 	// Read is NOT in the cache
 	if (last > cache_last || first < cache_first) {
-		trace("FATFS: if %u > %u || %u < %u\r\n", last, cache_last, first, cache_first);
+		trace("FATFS: if %" PRIu32 " > %" PRIu32 " || %" PRIu32 " < %" PRIu32 "\r\n", last, cache_last, first, cache_first);
 
 		read_pos	= (first / cache_size) * cache_size; // TODO: check with card max capacity
 		cache_first = read_pos;
@@ -98,15 +98,15 @@ DRESULT disk_read(BYTE	pdrv, /* Physical drive nmuber to identify the drive */
 		blkread		= sdmmc_blk_read(&card0, cache, read_pos, cache_size);
 
 		if (blkread != cache_size) {
-			warning("FATFS: MMC read %u/%u blocks\r\n", blkread, cache_size);
+			warning("FATFS: MMC read %" PRIu32 "/%" PRIu32 " blocks\r\n", blkread, cache_size);
 			return RES_ERROR;
 		}
-		trace("FATFS: cached %u sectors (%uKB) at %u/[%u-%u]\r\n", blkread, (blkread * FF_MIN_SS) / 1024, first,
+		trace("FATFS: cached %" PRIu32 " sectors (%" PRIu32 "KB) at %" PRIu32 "/[%" PRIu32 "-%" PRIu32 "]\r\n", blkread, (blkread * FF_MIN_SS) / 1024, first,
 			  read_pos, read_pos + cache_size);
 	}
 
 	// Copy from read cache to output buffer
-	trace("FATFS: copy %u from 0x%x to 0x%x\r\n", bytes, (cache + ((first - cache_first) * FF_MIN_SS)), buff);
+	trace("FATFS: copy %" PRIu32 " from 0x%p to 0x%p\r\n", bytes, (cache + ((first - cache_first) * FF_MIN_SS)), buff);
 	memcpy(buff, (cache + ((first - cache_first) * FF_MIN_SS)), bytes);
 
 	return RES_OK;

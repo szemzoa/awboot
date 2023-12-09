@@ -230,8 +230,8 @@ static uint32_t spi_set_clk(sunxi_spi_t *spi, u32 spi_clk, u32 mclk, u32 cdr2)
 		}
 	}
 
-	trace("SPI: clock div=%u \r\n", div);
-	debug("SPI: set clock asked=%dMHz actual=%dMHz mclk=%dMHz\r\n", spi_clk / 1000000, freq / 1000000, mclk / 1000000);
+	trace("SPI: clock div=%" PRIu32 " \r\n", div);
+	debug("SPI: set clock asked=%" PRIu32 "MHz actual=%" PRIu32 "MHz mclk=%" PRIu32 "MHz\r\n", spi_clk / 1000000, freq / 1000000, mclk / 1000000);
 
 	write32(spi->base + SPI_CCR, reg);
 
@@ -290,7 +290,7 @@ static int spi_clk_init(uint32_t mod_clk)
 
 	factor_m = m - 1;
 	rval	 = (1U << 31) | (0x1 << 24) | (n << 8) | factor_m;
-	trace("SPI: parent_clk=%dMHz, div=%d, n=%d, m=%d\r\n", source_clk / 1000 / 1000, divi, n + 1, m);
+	trace("SPI: parent_clk=%" PRIu32 "MHz, div=%" PRIu32 ", n=%" PRIu32 ", m=%" PRIu32 "\r\n", source_clk / 1000 / 1000, divi, n + 1, m);
 	write32(T113_CCU_BASE + CCU_SPI0_CLK_REG, rval);
 
 	return 0;
@@ -525,7 +525,7 @@ static void spi_set_io_mode(sunxi_spi_t *spi, spi_io_mode_t mode)
 static int spi_transfer(sunxi_spi_t *spi, spi_io_mode_t mode, void *txbuf, uint32_t txlen, void *rxbuf, uint32_t rxlen)
 {
 	uint32_t stxlen, fcr;
-	trace("SPI: tsfr mode=%u tx=%u rx=%u\r\n", mode, txlen, rxlen);
+	trace("SPI: tsfr mode=%u tx=%" PRIu32 " rx=%" PRIu32 "\r\n", mode, txlen, rxlen);
 
 	spi_set_io_mode(spi, mode);
 
@@ -574,7 +574,7 @@ static int spi_transfer(sunxi_spi_t *spi, spi_io_mode_t mode, void *txbuf, uint3
 		}
 	}
 
-	trace("SPI: ISR=0x%x\r\n", read32(spi->base + SPI_ISR));
+	trace("SPI: ISR=0x%" PRIx32 "\r\n", read32(spi->base + SPI_ISR));
 
 	return txlen + rxlen;
 }
