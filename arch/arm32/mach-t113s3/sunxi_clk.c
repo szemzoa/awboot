@@ -253,7 +253,7 @@ void sunxi_clk_dump()
 		p1 = 1;
 	}
 
-	debug("CLK: CPU PLL=%s FREQ=%uMHz\r\n", clock_str, ((((reg32 >> 8) & 0xff) + 1) * 24 / p1));
+	debug("CLK: CPU PLL=%s FREQ=%" PRIu32 "MHz\r\n", clock_str, ((((reg32 >> 8) & 0xff) + 1) * 24 / p1));
 
 	/* PLL PERIx */
 	reg32 = read32(T113_CCU_BASE + CCU_PLL_PERI0_CTRL_REG);
@@ -263,7 +263,7 @@ void sunxi_clk_dump()
 		p0	 = ((reg32 >> 16) & 0x03) + 1;
 		p1	 = ((reg32 >> 20) & 0x03) + 1;
 
-		debug("CLK: PLL_peri (2X)=%uMHz, (1X)=%uMHz, (800M)=%uMHz\r\n", (24 * plln) / (pllm * p0),
+		debug("CLK: PLL_peri (2X)=%" PRIu32 "MHz, (1X)=%" PRIu32 "MHz, (800M)=%" PRIu32 "MHz\r\n", (24 * plln) / (pllm * p0),
 			  (24 * plln) / (pllm * p0) >> 1, (24 * plln) / (pllm * p1));
 	} else {
 		debug("CLK: PLL_peri disabled\r\n");
@@ -278,7 +278,7 @@ void sunxi_clk_dump()
 		p1	 = ((reg32 >> 1) & 0x1) + 1;
 		p0	 = (reg32 & 0x01) + 1;
 
-		debug("CLK: PLL_ddr=%uMHz\r\n", (24 * plln) / (p0 * p1));
+		debug("CLK: PLL_ddr=%" PRIu32 "MHz\r\n", (24 * plln) / (p0 * p1));
 
 	} else {
 		debug("CLK: PLL_ddr disabled\r\n");
