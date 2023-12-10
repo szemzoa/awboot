@@ -200,9 +200,11 @@ uint32_t sunxi_clk_get_peri1x_rate()
 void sunxi_clk_dump()
 {
 	uint32_t	reg32;
-	uint32_t	cpu_clk_src, plln, pllm;
-	uint8_t		p0, p1;
-	const char *clock_str;
+	uint32_t	cpu_clk_src;
+	uint32_t UNUSED_DEBUG	plln, pllm;
+	uint8_t		p0;
+	uint8_t	UNUSED_DEBUG	p1;
+	const char * UNUSED_DEBUG clock_str;
 
 	/* PLL CPU */
 	reg32		= read32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG);

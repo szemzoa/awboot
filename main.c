@@ -245,7 +245,9 @@ int main(void)
 #endif
 
 #ifdef CONFIG_BOOT_SPINAND
+#if defined(CONFIG_BOOT_SDCARD) || defined(CONFIG_BOOT_MMC)
 _spi:
+#endif
 	dma_init();
 	dma_test();
 	debug("SPI: init\r\n");
@@ -262,7 +264,9 @@ _spi:
 
 #endif // CONFIG_SPI_NAND
 
+#if defined(CONFIG_BOOT_SDCARD) || defined(CONFIG_BOOT_MMC)
 _boot:
+#endif
 	if (boot_image_setup((unsigned char *)image.dest, &entry_point)) {
 		fatal("boot setup failed\r\n");
 	}
