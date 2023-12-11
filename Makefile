@@ -113,9 +113,11 @@ tools:
 
 mkboot: build tools
 	cp $(TARGET)-boot.bin $(TARGET)-boot-spi.bin
+	cp $(TARGET)-boot.bin $(TARGET)-boot-spi-4k.bin
 	cp $(TARGET)-boot.bin $(TARGET)-boot-sd.bin
 	tools/mksunxi $(TARGET)-fel.bin 8192
 	tools/mksunxi $(TARGET)-boot-spi.bin 8192
+	tools/mksunxi $(TARGET)-boot-spi-4k.bin 8192 4096
 	tools/mksunxi $(TARGET)-boot-sd.bin 512
 
 spi-boot.img: mkboot

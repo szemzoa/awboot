@@ -20,6 +20,8 @@ static inline uint32_t __swab32(uint32_t x)
 #define le32_to_cpu(x) (x)
 #endif
 
+#define BROM_PAGE_SIZE	2048
+
 struct boot_head_t {
 	uint32_t instruction;
 	uint8_t	 magic[8];
@@ -34,6 +36,33 @@ struct boot_head_t {
 	uint32_t string_pool[13];
 };
 
+/*
+ * BUG: the bootrom assumes all SPI flashes are 2KB page size.
+ * If we want to boot from a device with larger page size, we need to adjust
+ * the image in flash so that only the 1st 2KB of each page is used.
+ */
+static char* expand_pagesize(char *buffer, int *buflen, int pagesize)
+{
+	char				 *buffer2;
+	int					offset, multiple;
+
+	multiple = pagesize / BROM_PAGE_SIZE;
+
+	if (multiple == 1) return buffer;
+
+	buffer2 = malloc(*buflen * multiple);
+	memset(buffer2, 0, *buflen * multiple);
+
+	for (offset = 0; offset < *buflen; offset += BROM_PAGE_SIZE) {
+		memcpy(buffer2 + (offset * multiple), buffer + offset, BROM_PAGE_SIZE);
+	}
+
+	free(buffer);
+	*buflen *= multiple;
+	return buffer2;
+}
+
+
 int main(int argc, char *argv[])
 {
 	struct boot_head_t *h;
@@ -42,15 +71,27 @@ int main(int argc, char *argv[])
 	int					buflen, filelen;
 	uint32_t			 *p;
 	uint32_t			sum;
-	int					i, l, loop, padding;
+	int					i, l, loop, padding, pagesize;
 
-	if (argc != 3) {
-		printf("Usage: mksunxi <bootloader> <padding>\n");
+	if (argc < 3 || argc > 4) {
+		printf("Usage: mksunxi <bootloader> <padding> [pagesize]\n");
 		return -1;
 	}
 
 	padding = atoi(argv[2]);
 	printf("padding: %d\n", padding);
+
+	if (argc >= 4) {
+		pagesize = atoi(argv[3]);
+		if ((pagesize < 1) || (pagesize & (BROM_PAGE_SIZE-1))) {
+			printf("pagesize must be multiple of 2048\n");
+			exit(1);
+		}
+		printf("pagesize: %d\n", pagesize);
+	}
+	else {
+		pagesize = BROM_PAGE_SIZE;
+	}
 
 	if (padding != 512 && padding != 8192) {
 		printf("padding must be 512 (block devices) or 8192 (flash)\n");
@@ -94,6 +135,8 @@ int main(int argc, char *argv[])
 		sum += le32_to_cpu(p[i]);
 	h->checksum = cpu_to_le32(sum);
 
+	buffer = expand_pagesize(buffer, &buflen, pagesize);
+
 	fseek(fp, 0L, SEEK_SET);
 	if (fwrite(buffer, 1, buflen, fp) != buflen) {
 		printf("Write bootloader error\n");
@@ -102,7 +145,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	free(buffer);
 	fclose(fp);
-	printf("The bootloader head has been fixed, spl size is %d bytes.\r\n", l);
+	printf("The bootloader head has been fixed, spl size is %d bytes, flash size %d bytes.\r\n", l, buflen);
 	return 0;
 }
