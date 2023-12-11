@@ -2,6 +2,8 @@
 #ifndef __ASM_ARM_TYPES_H
 #define __ASM_ARM_TYPES_H
 
+#include <stdint.h>
+
 typedef unsigned short umode_t;
 
 /*
@@ -34,8 +36,9 @@ typedef unsigned char u8;
 typedef signed short   s16;
 typedef unsigned short u16;
 
-typedef signed int	 s32;
-typedef unsigned int u32;
+/* dont mix stdint and basic types, uint32_t and u32 are intermixed throughout code */
+typedef int32_t s32;
+typedef uint32_t u32;
 
 typedef signed long long   s64;
 typedef unsigned long long u64;

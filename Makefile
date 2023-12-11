@@ -16,7 +16,7 @@ include	arch/arch.mk
 include	lib/fatfs/fatfs.mk
 
 CFLAGS += -mcpu=cortex-a7 -mthumb-interwork -mthumb -mno-unaligned-access -mfpu=neon-vfpv4 -mfloat-abi=hard
-CFLAGS += -ffast-math -Os -std=gnu99 -Wall -g $(INCLUDES) $(DEFINES)
+CFLAGS += -ffast-math -Os -std=gnu99 -Wall -Werror -Wno-unused-function -g $(INCLUDES) $(DEFINES)
 
 ASFLAGS += $(CFLAGS)
 

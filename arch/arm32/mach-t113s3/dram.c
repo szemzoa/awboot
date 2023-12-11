@@ -702,8 +702,8 @@ static void mctl_phy_ac_remapping(dram_para_t *para)
 	fuse = (readl(SUNXI_SID_BASE + 0x28) & 0xf00) >> 8;
 	chipid = (readl(SUNXI_SID_BASE) & 0xffff);
 
-	debug("DDR efuse: 0x%x\r\n", fuse);
-	debug("chip id efuse: 0x%x\r\n", chipid);
+	debug("DDR efuse: 0x%" PRIx32 "\r\n", fuse);
+	debug("chip id efuse: 0x%" PRIx32 "\r\n", chipid);
 
 	if (para->dram_type == SUNXI_DRAM_TYPE_DDR2) {
 		if (fuse == 15)
@@ -1000,8 +1000,8 @@ static int dqs_gate_detect(dram_para_t *para)
 	if ((para->dram_tpr13 & BIT(29)) == 0)
 		return 0;
 
-	debug("DX0 state: %d\r\n", dx0);
-	debug("DX1 state: %d\r\n", dx1);
+	debug("DX0 state: %" PRIu32 "\r\n", dx0);
+	debug("DX1 state: %" PRIu32 "\r\n", dx1);
 
 	return 0;
 }
@@ -1142,7 +1142,7 @@ static int auto_scan_dram_size(dram_para_t *para)
 			i = 16;
 		addr_line += i;
 
-		debug("rank %d row = %d \r\n", current_rank, i);
+		debug("rank %" PRIu32 " row = %" PRIu32 " \r\n", current_rank, i);
 
 		/* Store rows in para 1 */
 		para->dram_para1 &= ~(0xffU << (16 * current_rank + 4));
@@ -1174,7 +1174,7 @@ static int auto_scan_dram_size(dram_para_t *para)
 		}
 
 		addr_line += i + 2;
-		debug("rank %d bank = %d \r\n", current_rank, (4 + i * 4));
+		debug("rank %" PRIu32 " bank = %" PRIu32 " \r\n", current_rank, (4 + i * 4));
 
 		/* Store bank in para 1 */
 		para->dram_para1 &= ~(0xfU << (16 * current_rank + 12));
@@ -1220,7 +1220,7 @@ static int auto_scan_dram_size(dram_para_t *para)
 			i = (0x1U << (i - 10));
 		}
 
-		debug("rank %d page size = %d KB \r\n", current_rank, i);
+		debug("rank %" PRIu32 " page size = %" PRIu32 " KB \r\n", current_rank, i);
 
 		/* Store page in para 1 */
 		para->dram_para1 &= ~(0xfU << (16 * current_rank));
@@ -1322,7 +1322,7 @@ int init_DRAM(int type, dram_para_t *para)
 		udelay(10);
 		setbits_le32((SYS_CONTROL_REG_BASE + ZQ_CAL_CTRL_REG), (1 << 0));
 		udelay(20);
-		debug("ZQ value = 0x%x\r\n", readl((SYS_CONTROL_REG_BASE + ZQ_RES_STATUS_REG)));
+		debug("ZQ value = 0x%" PRIx32 "\r\n", readl((SYS_CONTROL_REG_BASE + ZQ_RES_STATUS_REG)));
 	}
 
 	dram_voltage_set(para);
@@ -1340,7 +1340,7 @@ int init_DRAM(int type, dram_para_t *para)
 	if ((rc & 0x44) == 0)
 		debug("DRAM ODT off\r\n");
 	else
-		debug("DRAM ODT value: 0x%x\r\n", rc);
+		debug("DRAM ODT value: 0x%" PRIx32 "\r\n", rc);
 
 	/* Init core, final run */
 	if (mctl_core_init(para) == 0) {
@@ -1357,7 +1357,7 @@ int init_DRAM(int type, dram_para_t *para)
 		rc = (rc >> 16) & ~(1 << 15);
 	} else {
 		rc = DRAMC_get_dram_size();
-		debug("DRAM: size = %dMB\r\n", rc);
+		debug("DRAM: size = %" PRIu32 "MB\r\n", rc);
 		para->dram_para2 = (para->dram_para2 & 0xffffU) | rc << 16;
 	}
 	mem_size_mb = rc;

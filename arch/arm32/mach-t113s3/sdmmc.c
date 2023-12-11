@@ -284,7 +284,7 @@ static bool mmc_send_op_cond(sdhci_t *hci, sdmmc_t *card)
 		}
 		udelay(5000);
 	} while (!(cmd.response[0] & OCR_BUSY) && retries--);
-	trace("SHMC: op_cond 0x%x\r\n", cmd.response[0]);
+	trace("SHMC: op_cond 0x%" PRIx32 "\r\n", cmd.response[0]);
 
 	if (retries <= 0)
 		return FALSE;
@@ -554,7 +554,7 @@ static bool sdmmc_detect(sdhci_t *hci, sdmmc_t *card)
 					return FALSE;
 			} while (status != MMC_STATUS_TRAN);
 		}
-		const char *strver = "unknown";
+		const char UNUSED_DEBUG *strver = "unknown";
 		switch (card->extcsd[EXT_CSD_REV]) {
 			case 1:
 				card->version = MMC_VERSION_4_1;

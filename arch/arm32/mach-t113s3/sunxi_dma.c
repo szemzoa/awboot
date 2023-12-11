@@ -234,7 +234,7 @@ int dma_test()
 	u32		  i, valid;
 
 	len = ALIGN(len, 4);
-	trace("DMA: test 0x%08x ====> 0x%08x, len %uKB \r\n", (u32)src_addr, (u32)dst_addr, (len / 1024));
+	trace("DMA: test 0x%08" PRIx32 " ====> 0x%08" PRIx32 ", len %" PRIu32 "KB \r\n", (u32)src_addr, (u32)dst_addr, (len / 1024));
 
 	/* dma */
 	dma_set.loop_mode		= 0;
@@ -297,7 +297,7 @@ int dma_test()
 		if (valid) {
 			debug("DMA: test OK in %lums\r\n", (time_ms() - timeout));
 		} else
-			error("DMA: test check failed at %u bytes\r\n", i);
+			error("DMA: test check failed at %" PRIu32 " bytes\r\n", i);
 	}
 
 	dma_stop(hdma);

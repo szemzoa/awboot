@@ -57,7 +57,7 @@ static int fatfs_loadimage(char *filename, BYTE *dest)
 	UINT	 total_read = 0;
 	FRESULT	 fret;
 	int		 ret;
-	uint32_t start, time;
+	uint32_t UNUSED_DEBUG start, time;
 
 	fret = f_open(&file, filename, FA_OPEN_EXISTING | FA_READ);
 	if (fret != FR_OK) {
@@ -87,7 +87,7 @@ static int fatfs_loadimage(char *filename, BYTE *dest)
 read_fail:
 	fret = f_close(&file);
 
-	debug("FATFS: read in %ums at %.2fMB/S\r\n", time, (f32)(total_read / time) / 1024.0f);
+	debug("FATFS: read in %" PRIu32 "ms at %.2fMB/S\r\n", time, (f32)(total_read / time) / 1024.0f);
 
 open_fail:
 	return ret;
@@ -98,14 +98,14 @@ static int load_sdcard(image_info_t *image)
 	FATFS	fs;
 	FRESULT fret;
 	int		ret;
-	u32		start;
+	u32 UNUSED_DEBUG	start;
 
 #if defined(CONFIG_SDMMC_SPEED_TEST_SIZE) && LOG_LEVEL >= LOG_DEBUG
 	u32 test_time;
 	start = time_ms();
 	sdmmc_blk_read(&card0, (u8 *)(SDRAM_BASE), 0, CONFIG_SDMMC_SPEED_TEST_SIZE);
 	test_time = time_ms() - start;
-	debug("SDMMC: speedtest %uKB in %ums at %uKB/S\r\n", (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / 1024, test_time,
+	debug("SDMMC: speedtest %uKB in %" PRIu32 "ms at %" PRIu32 "KB/S\r\n", (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / 1024, test_time,
 		  (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / test_time);
 #endif // SDMMC_SPEED_TEST
 
@@ -137,7 +137,7 @@ static int load_sdcard(image_info_t *image)
 	} else {
 		debug("FATFS: unmount OK\r\n");
 	}
-	debug("FATFS: done in %ums\r\n", time_ms() - start);
+	debug("FATFS: done in %" PRIu32 "ms\r\n", time_ms() - start);
 
 	return 0;
 }
@@ -149,7 +149,7 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 {
 	linux_zimage_header_t *hdr;
 	unsigned int		   size;
-	uint64_t			   start, time;
+	uint64_t UNUSED_DEBUG	   start, time;
 
 	if (spi_nand_detect(spi) != 0)
 		return -1;
@@ -194,7 +194,7 @@ int main(void)
 	sunxi_clk_init();
 
 	message("\r\n");
-	info("AWBoot r%u starting...\r\n", (u32)BUILD_REVISION);
+	info("AWBoot r%" PRIu32 " starting...\r\n", (u32)BUILD_REVISION);
 
 	sunxi_dram_init();
 
@@ -218,7 +218,7 @@ int main(void)
 	if (sunxi_sdhci_init(&sdhci0) != 0) {
 		fatal("SMHC: %s controller init failed\r\n", sdhci0.name);
 	} else {
-		info("SMHC: %s controller v%x initialized\r\n", sdhci0.name, sdhci0.reg->vers);
+		info("SMHC: %s controller v%" PRIx32 " initialized\r\n", sdhci0.name, sdhci0.reg->vers);
 	}
 	if (sdmmc_init(&card0, &sdhci0) != 0) {
 #ifdef CONFIG_BOOT_SPINAND
@@ -245,7 +245,9 @@ int main(void)
 #endif
 
 #ifdef CONFIG_BOOT_SPINAND
+#if defined(CONFIG_BOOT_SDCARD) || defined(CONFIG_BOOT_MMC)
 _spi:
+#endif
 	dma_init();
 	dma_test();
 	debug("SPI: init\r\n");
@@ -262,7 +264,9 @@ _spi:
 
 #endif // CONFIG_SPI_NAND
 
+#if defined(CONFIG_BOOT_SDCARD) || defined(CONFIG_BOOT_MMC)
 _boot:
+#endif
 	if (boot_image_setup((unsigned char *)image.dest, &entry_point)) {
 		fatal("boot setup failed\r\n");
 	}
