@@ -16,10 +16,23 @@
 #include "board.h"
 
 static DSTATUS Stat = STA_NOINIT; /* Disk status */
+
 #ifdef CONFIG_FATFS_CACHE_SIZE
-static u8 *const cache		= (u8 *)SDRAM_BASE;
-static const u32 cache_size = (CONFIG_FATFS_CACHE_SIZE);
-static u32		 cache_first, cache_last;
+/* we can consume up to CONFIG_FATFS_CACHE_SIZE of SDRAM starting at SDRAM_BASE */
+#define FATFS_CACHE_CHUNK_SIZE		(32*1024)
+#define FATFS_CACHE_SECTORS		(CONFIG_FATFS_CACHE_SIZE / FF_MIN_SS)
+#define FATFS_CACHE_SECTORS_PER_BIT	(FATFS_CACHE_CHUNK_SIZE / FF_MIN_SS)
+#define FATFS_CACHE_CHUNKS		(FATFS_CACHE_SECTORS / FATFS_CACHE_SECTORS_PER_BIT)
+
+static u8 *const cache_data = (u8 *)SDRAM_BASE; /* in SDRAM */
+static u8 cache_bitmap[FATFS_CACHE_CHUNKS/8]; /* in SRAM */
+static BYTE cache_pdrv = -1;
+
+#define CACHE_SECTOR_TO_OFFSET(ss)	(((ss)/FATFS_CACHE_SECTORS_PER_BIT) / 8)
+#define CACHE_SECTOR_TO_BIT(ss)		(((ss)/FATFS_CACHE_SECTORS_PER_BIT) % 8)
+
+#define CACHE_IS_VALID(ss)	({ __typeof(ss) _ss = (ss); cache_bitmap[CACHE_SECTOR_TO_OFFSET(_ss)] & (1 << CACHE_SECTOR_TO_BIT(_ss)); })
+#define CACHE_SET_VALID(ss)	do { __typeof(ss) _ss = (ss); cache_bitmap[CACHE_SECTOR_TO_OFFSET(_ss)] |= (1 << CACHE_SECTOR_TO_BIT(_ss)); } while(0)
 #endif
 
 /*-----------------------------------------------------------------------*/
@@ -31,11 +44,6 @@ DSTATUS disk_status(BYTE pdrv /* Physical drive nmuber to identify the drive */
 {
 	if (pdrv)
 		return STA_NOINIT;
-
-#ifdef CONFIG_FATFS_CACHE_SIZE
-	cache_first = 0xFFFFFFFF - cache_size; // Set to a big sector for a proper init
-	cache_last	= 0xFFFFFFFF;
-#endif
 
 	return Stat;
 }
@@ -65,50 +73,50 @@ DRESULT disk_read(BYTE	pdrv, /* Physical drive nmuber to identify the drive */
 				  UINT	count /* Number of sectors to read */
 )
 {
-	u32 blkread, read_pos, first, last, chunk, bytes;
-
 	if (pdrv || !count)
 		return RES_PARERR;
 	if (Stat & STA_NOINIT)
 		return RES_NOTRDY;
 
-	first = sector;
-	last  = sector + count;
-	bytes = count * FF_MIN_SS;
-
-	trace("FATFS: read %u sectors at %" PRIu32 "\r\n", count, first);
+	trace("FATFS: read %u sectors at %llu\r\n", count, sector);
 
 #ifdef CONFIG_FATFS_CACHE_SIZE
-	// Read starts in cache but overflows
-	if (first >= cache_first && first < cache_last && last > cache_last) {
-		chunk = (cache_last - first) * FF_MIN_SS;
-		memcpy(buff, cache + (first - cache_first) * FF_MIN_SS, chunk);
-		buff += chunk;
-		first += (cache_last - first);
-		trace("FATFS: chunk %" PRIu32 " first %" PRIu32 "\r\n", chunk, first);
+	if (pdrv != cache_pdrv) {
+		info("FATFS: cache: %u bytes in %u chunks\r\n", CONFIG_FATFS_CACHE_SIZE, FATFS_CACHE_CHUNKS);
+		if (cache_pdrv != -1)
+			memset(cache_bitmap, 0, sizeof(cache_bitmap));
+		cache_pdrv = pdrv;
 	}
 
-	// Read is NOT in the cache
-	if (last > cache_last || first < cache_first) {
-		trace("FATFS: if %" PRIu32 " > %" PRIu32 " || %" PRIu32 " < %" PRIu32 "\r\n", last, cache_last, first, cache_first);
-
-		read_pos	= (first / cache_size) * cache_size; // TODO: check with card max capacity
-		cache_first = read_pos;
-		cache_last	= read_pos + cache_size;
-		blkread		= sdmmc_blk_read(&card0, cache, read_pos, cache_size);
-
-		if (blkread != cache_size) {
-			warning("FATFS: MMC read %" PRIu32 "/%" PRIu32 " blocks\r\n", blkread, cache_size);
-			return RES_ERROR;
+	while (count) {
+		if (sector >= FATFS_CACHE_SECTORS) {
+			trace("FATFS: beyond cache %llu count %u\r\n", sector, count);
+			/* beyond end of cache, read remaining */
+			if (sdmmc_blk_read(&card0, buff, sector, count) != count) {
+				warning("FATFS: read failed %llu count %u\r\n", sector, count);
+				return RES_ERROR;
+			}
+			return RES_OK;
 		}
-		trace("FATFS: cached %" PRIu32 " sectors (%" PRIu32 "KB) at %" PRIu32 "/[%" PRIu32 "-%" PRIu32 "]\r\n", blkread, (blkread * FF_MIN_SS) / 1024, first,
-			  read_pos, read_pos + cache_size);
+
+		if (!CACHE_IS_VALID(sector)) {
+			LBA_t chunk = sector & ~(FATFS_CACHE_SECTORS_PER_BIT-1);
+			trace("FATFS: cache miss %llu, loading %llu count %u\r\n", sector, chunk, FATFS_CACHE_SECTORS_PER_BIT);
+			if (sdmmc_blk_read(&card0, &cache_data[chunk*FF_MIN_SS], chunk, FATFS_CACHE_SECTORS_PER_BIT) != FATFS_CACHE_SECTORS_PER_BIT) {
+				warning("FATFS: read failed %llu count %u\r\n", sector, FATFS_CACHE_SECTORS_PER_BIT);
+				return RES_ERROR;
+			}
+			CACHE_SET_VALID(sector);
+		}
+		else {
+			trace("FATFS: cache hit %llu\r\n", sector);
+		}
+		memcpy(buff, &cache_data[sector*FF_MIN_SS], FF_MIN_SS);
+
+		sector++;
+		buff += FF_MIN_SS;
+		count--;
 	}
-
-	// Copy from read cache to output buffer
-	trace("FATFS: copy %" PRIu32 " from 0x%p to 0x%p\r\n", bytes, (cache + ((first - cache_first) * FF_MIN_SS)), buff);
-	memcpy(buff, (cache + ((first - cache_first) * FF_MIN_SS)), bytes);
-
 	return RES_OK;
 #else
 	return (sdmmc_blk_read(&card0, buff, sector, count) == count ? RES_OK : RES_ERROR);
