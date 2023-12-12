@@ -8,20 +8,14 @@
 #include "sunxi_dma.h"
 #include "sdmmc.h"
 #include "arm32.h"
-#include "reg-ccu.h"
 #include "debug.h"
 #include "board.h"
 #include "barrier.h"
 
+extern void board_init(void);
+extern unsigned long sunxi_dram_init(void);
+
 image_info_t image;
-extern u32	 _start;
-extern u32	 __spl_start;
-extern u32	 __spl_end;
-extern u32	 __spl_size;
-extern u32	 __stack_srv_start;
-extern u32	 __stack_srv_end;
-extern u32	 __stack_ddr_srv_start;
-extern u32	 __stack_ddr_srv_end;
 
 /* Linux zImage Header */
 #define LINUX_ZIMAGE_MAGIC 0x016f2818

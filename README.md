@@ -1,10 +1,10 @@
 # AWBoot
 
-Small linux bootloader for Allwinner T113-S3
+Small linux bootloader for Allwinner T113-S3/S4 and V853/851s
 
 ## Building
 
-Run `make LOG_LEVEL=40`.  
+Run `make BOARD=mangopi-dual SOC=t113-s3 LOG_LEVEL=40`.  
 This will generate the bootloader with a valid EGON header, usable with the xfel tool or BOOTROM  
 You can change the log level with the LOG_LEVEL argument. Default is 30 (info).  
 
@@ -50,4 +50,4 @@ sudo dd if=awboot-boot-sd.bin of=/dev/(your sd device) bs=1024 seek=8
 - copy zImage to the FAT partition.
 
 ### Linux kernel:
-WIP kernel from here: https://github.com/smaeul/linux/tree/d1/all
+mainline kernel for T113-S3: https://kernel.org

@@ -5,21 +5,20 @@ CROSS_COMPILE ?= arm-none-eabi
 # Log level defaults to info
 LOG_LEVEL ?= 30
 
-SRCS := main.c board.c lib/debug.c lib/xformat.c lib/fdt.c lib/string.c
+SRCS := main.c boards/board-$(BOARD).c
 
-INCLUDE_DIRS :=-I . -I include -I lib
+INCLUDE_DIRS :=-I . -I lib -I boards
 LIB_DIR := -L ./
 LIBS := -lgcc -nostdlib
 DEFINES := -DLOG_LEVEL=$(LOG_LEVEL) -DBUILD_REVISION=$(shell cat .build_revision)
 
-include	arch/arch.mk
-include	lib/fatfs/fatfs.mk
+include	arch/arm32/arm32.mk
+include	lib/lib.mk
 
 CFLAGS += -mcpu=cortex-a7 -mthumb-interwork -mthumb -mno-unaligned-access -mfpu=neon-vfpv4 -mfloat-abi=hard
 CFLAGS += -ffast-math -Os -std=gnu99 -Wall -Werror -Wno-unused-function -g $(INCLUDES) $(DEFINES)
 
-ASFLAGS += $(CFLAGS)
-
+ASFLAGS += $(CFLAGS) -Wl,--entry=reset
 LDFLAGS += $(CFLAGS) $(LIBS)
 
 STRIP=$(CROSS_COMPILE)-strip
@@ -29,7 +28,6 @@ OBJCOPY=$(CROSS_COMPILE)-objcopy
 
 HOSTCC=gcc
 HOSTSTRIP=strip
-
 DATE=/bin/date
 CAT=/bin/cat
 ECHO=/bin/echo
@@ -43,8 +41,6 @@ BUILD_OBJS = $(SRCS:%.c=$(OBJ_DIR)/%.o)
 BUILD_OBJSA = $(ASRCS:%.S=$(OBJ_DIR)/%.o)
 OBJS = $(BUILD_OBJSA) $(BUILD_OBJS) $(EXT_OBJS)
 
-DTB ?= sun8i-t113-mangopi-dual.dtb
-KERNEL ?= zImage
 
 all: git begin build mkboot
 
@@ -56,24 +52,27 @@ begin:
 build_revision:
 	@/bin/expr `cat .build_revision` + 1 > .build_revision
 
+link_board:
+	@/bin/ln -fs board-$(BOARD).h boards/board.h
+
 .PHONY: tools boot.img
-.SILENT:
+#.SILENT:
 
 git:
 	cp -f tools/hooks/* .git/hooks/
 
-build: build_revision $(TARGET)-boot.elf $(TARGET)-boot.bin $(TARGET)-fel.elf $(TARGET)-fel.bin
+build: build_revision link_board $(TARGET)-boot.elf $(TARGET)-boot.bin $(TARGET)-fel.elf $(TARGET)-fel.bin
 
 .SECONDARY : $(TARGET)
 .PRECIOUS : $(OBJS)
 $(TARGET)-fel.elf: $(OBJS)
 	echo "  LD    $@"
-	$(CC) -E -P -x c -D__RAM_BASE=0x00030000 ./arch/arm32/mach-t113s3/link.ld > build/link-fel.ld
+	$(CC) -E -P -x c -D__RAM_BASE=0x00030000 ./arch/arm32/sunxi/$(SOC)/link.ld > build/link-fel.ld
 	$(CC) $^ -o $@ $(LIB_DIR) -T build/link-fel.ld $(LDFLAGS) -Wl,-Map,$(TARGET)-fel.map
 
 $(TARGET)-boot.elf: $(OBJS)
 	echo "  LD    $@"
-	$(CC) -E -P -x c -D__RAM_BASE=0x00020000 ./arch/arm32/mach-t113s3/link.ld > build/link-boot.ld
+	$(CC) -E -P -x c -D__RAM_BASE=0x00020000 ./arch/arm32/sunxi/$(SOC)/link.ld > build/link-boot.ld
 	$(CC) $^ -o $@ $(LIB_DIR) -T build/link-boot.ld $(LDFLAGS) -Wl,-Map,$(TARGET)-boot.map
 
 $(TARGET)-fel.bin: $(TARGET)-fel.elf
@@ -102,6 +101,7 @@ clean:
 	rm -f $(TARGET)-*.bin
 	rm -f $(TARGET)-*.map
 	rm -f $(TARGET)-*.elf
+	rm -f boards/board.h
 	rm -f *.img
 	$(MAKE) -C tools clean
 
