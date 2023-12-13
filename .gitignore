@@ -1,11 +1,12 @@
 
+*.d
 *.o
 *.bin
 *.elf
 *.map
 *.lfs
 
-build/*
+build-*/*
 
 tools/mksunxi
 
