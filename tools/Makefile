@@ -1,5 +1,5 @@
 
-BUILD_DIR=$(CURDIR)/build
+BUILD_DIR=build
 
 MKSUNXI = mksunxi
 
@@ -17,22 +17,25 @@ CC  ?= gcc
 CXX ?= g++
 
 all: tools
-tools: $(BUILD_DIR) $(MKSUNXI)
+tools: $(MKSUNXI)
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+.PHONY: all tools clean
+.SILENT:
 
 clean:
 	rm -rf build
 	rm -f $(MKSUNXI)
 
 $(BUILD_DIR)/%.o : %.c
-	echo "  CC    $<"
+	echo "  CC    $@"
+	mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/%.opp : %.cpp
-	echo "  CXX   $<"
+	echo "  CXX   $@"
+	mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(MKSUNXI): $(COBJS)
-	$(CC) $(CFLAGS) $(BUILD_DIR)/mksunxi.o -o $(MKSUNXI)
+	echo "  LD    $@"
+	$(CC) $(CFLAGS) $(COBJS) -o $(MKSUNXI)
