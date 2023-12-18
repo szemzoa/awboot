@@ -1,0 +1,128 @@
+diff -urN linux-6.7-rc4/drivers/thermal/sun8i_thermal.c linux-6.7-rc4-saam/drivers/thermal/sun8i_thermal.c
+--- linux-6.7-rc4/drivers/thermal/sun8i_thermal.c	2023-12-03 10:52:56.000000000 +0100
++++ linux-6.7-rc4-saam/drivers/thermal/sun8i_thermal.c	2023-12-08 12:33:02.807531166 +0100
+@@ -133,6 +133,15 @@
+ 	return 0;
+ }
+ 
++static int sun8i_v853_calc_temp(struct ths_device *tmdev,
++                               int id, int reg)
++{
++        if (reg > 1869)
++                return ((reg + tmdev->chip->offset) * tmdev->chip->scale);
++        else
++                return ((reg + -2822) * -68);
++}
++
+ static const struct thermal_zone_device_ops ths_ops = {
+ 	.get_temp = sun8i_ths_get_temp,
+ };
+@@ -319,6 +328,80 @@
+ 	return ret;
+ }
+ 
++/* Temp Unit: millidegree Celsius */
++static int sun8i_v853_ths_reg2temp(struct ths_device *tmdev, int reg)
++{
++        return (reg + tmdev->chip->offset) * tmdev->chip->scale;
++}
++
++static int sun8i_v853_ths_calibrate(struct ths_device *tmdev,
++				   u16 *caldata, int callen)
++{
++	struct device *dev = tmdev->dev;
++	int i, ft_temp;
++
++	if (!caldata[0])
++		return -EINVAL;
++
++	ft_temp = caldata[0] & FT_TEMP_MASK;
++
++	for (i = 0; i < tmdev->chip->sensor_num; i++) {
++		int delta, cdata, offset, reg;
++
++                switch (i) {
++                case 0:
++                        reg = (caldata[2] >> 4) & TEMP_CALIB_MASK;
++                        break;
++                case 1:
++                        reg = ((caldata[1] >> 8) | (caldata[2] << 8)) & TEMP_CALIB_MASK;
++                        break;
++                case 2:
++                        reg = ((caldata[0] >> 12) | (caldata[1] << 4)) & TEMP_CALIB_MASK;
++                        break;
++                default:
++                        return -EINVAL;
++                }
++
++		/*
++		 * Our calculation formula is like this,
++		 * the temp unit above is Celsius:
++		 *
++		 * T = (sensor_data + a) / b
++		 * cdata = 0x800 - [(ft_temp - T) * b]
++		 *
++		 * b is a floating-point number
++		 * with an absolute value less than 1000.
++		 *
++		 * sunxi_ths_reg2temp uses milli-degrees Celsius,
++		 * with offset and scale parameters.
++		 * T = (sensor_data + a) * 1000 / b
++		 *
++		 * ----------------------------------------------
++		 *
++		 * So:
++		 *
++		 * offset = a, scale = 1000 / b
++		 * cdata = 0x800 - [(ft_temp - T) * 1000 / scale]
++		 */
++		delta = (ft_temp * 100 + 7000 - sun8i_v853_ths_reg2temp(tmdev, reg))
++			/ tmdev->chip->scale;
++		cdata = CALIBRATE_DEFAULT - delta;
++		if (cdata & ~TEMP_CALIB_MASK) {
++			dev_warn(dev, "sensor%d is not calibrated.\n", i);
++			continue;
++		}
++
++		offset = (i % 2) * 16;
++		regmap_update_bits(tmdev->regmap,
++				   SUN50I_H6_THS_TEMP_CALIB + (i / 2 * 4),
++				   0xfff << offset,
++				   cdata << offset);
++	}
++
++//	tmdev->has_calibration = true;
++	return 0;
++}
++
+ static void sun8i_ths_reset_control_assert(void *data)
+ {
+ 	reset_control_assert(data);
+@@ -606,6 +689,19 @@
+ 	.calc_temp = sun8i_ths_calc_temp,
+ };
+ 
++static const struct ths_thermal_chip sun8i_v853_ths = {
++	.sensor_num = 3,
++	.has_bus_clk_reset = true,
++	.ft_deviation = 0,
++	.offset = -2796,
++	.scale = -70,
++	.temp_data_base = SUN50I_H6_THS_TEMP_DATA,
++	.calibrate = sun8i_v853_ths_calibrate,
++	.init = sun50i_h6_thermal_init,
++	.irq_ack = sun50i_h6_irq_ack,
++	.calc_temp = sun8i_v853_calc_temp,
++};
++
+ static const struct of_device_id of_ths_match[] = {
+ 	{ .compatible = "allwinner,sun8i-a83t-ths", .data = &sun8i_a83t_ths },
+ 	{ .compatible = "allwinner,sun8i-h3-ths", .data = &sun8i_h3_ths },
+@@ -614,6 +710,7 @@
+ 	{ .compatible = "allwinner,sun50i-a100-ths", .data = &sun50i_a100_ths },
+ 	{ .compatible = "allwinner,sun50i-h5-ths", .data = &sun50i_h5_ths },
+ 	{ .compatible = "allwinner,sun50i-h6-ths", .data = &sun50i_h6_ths },
++	{ .compatible = "allwinner,sun8i-v853-ths", .data = &sun8i_v853_ths },
+ 	{ /* sentinel */ },
+ };
+ MODULE_DEVICE_TABLE(of, of_ths_match);
