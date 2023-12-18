@@ -5,9 +5,10 @@ CPU:=$(SUNXI)/$(SOC)
 
 INCLUDE_DIRS += -I $(ARCH)/include -I $(CPU) -I $(SUNXI)
 
+ASRCS	+=  $(SUNXI)/start.S
+
 SRCS	+=  $(ARCH)/arch_timer.c
 SRCS	+=  $(ARCH)/exception.c
-ASRCS	+=  $(ARCH)/start.S
 ASRCS	+=  $(ARCH)/memcpy.S
 
 SRCS	+=  $(SUNXI)/sunxi_usart.c
