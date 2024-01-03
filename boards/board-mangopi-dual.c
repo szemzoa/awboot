@@ -16,8 +16,8 @@ sunxi_usart_t usart5_dbg = {
 sunxi_usart_t usart0_dbg = {
 	.base	 = 0x02500000,
 	.id		 = 0,
-	.gpio_tx = {GPIO_PIN(PORTE, 2), GPIO_PERIPH_MUX7},
-	.gpio_rx = {GPIO_PIN(PORTE, 3), GPIO_PERIPH_MUX7},
+	.gpio_tx = {GPIO_PIN(PORTE, 2), GPIO_PERIPH_MUX6},
+	.gpio_rx = {GPIO_PIN(PORTE, 3), GPIO_PERIPH_MUX6},
 };
 
 sunxi_usart_t usart3_dbg = {
