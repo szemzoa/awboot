@@ -13,7 +13,6 @@
 #define CONFIG_BOOT_MMC
 
 //#define CONFIG_ENABLE_CONSOLE
-#define CONFIG_CONSOLE_USART usart5_dbg
 
 #define CONFIG_FATFS_CACHE_SIZE		 (CONFIG_DTB_LOAD_ADDR - SDRAM_BASE) // in bytes
 #define CONFIG_SDMMC_SPEED_TEST_SIZE 1024 // (unit: 512B sectors)

@@ -203,7 +203,7 @@ int main(void)
 	//	arm32_mmu_enable(SDRAM_BASE, msize);
 
 #ifdef CONFIG_ENABLE_CONSOLE
-	console_init(&CONFIG_CONSOLE_USART);
+	console_init(&USART_DBG);
 	console_handler(CONSOLE_NO_TIMEOUT);
 #endif
 
