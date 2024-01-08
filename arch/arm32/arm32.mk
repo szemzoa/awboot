@@ -3,13 +3,14 @@ SUNXI:=$(ARCH)/sunxi
 
 CPU:=$(SUNXI)/$(SOC)
 
-INCLUDE_DIRS += -I $(ARCH)/include -I $(CPU) -I $(SUNXI)
+INCLUDE_DIRS += -I $(ARCH)/include -I $(CPU) -I $(SUNXI) -I ./
+#-I $(ARCH)/include/cmsis
 
 ASRCS	+=  $(SUNXI)/start.S
 
 SRCS	+=  $(ARCH)/arch_timer.c
-SRCS	+=  $(ARCH)/exception.c
-ASRCS	+=  $(ARCH)/memcpy.S
+SRCS	+=  $(ARCH)/irq.c
+ASRCS	+=  $(ARCH)/cache.S
 
 SRCS	+=  $(SUNXI)/sunxi_usart.c
 SRCS	+=  $(SUNXI)/sunxi_dma.c

@@ -54,8 +54,6 @@ void	 mdelay(uint32_t ms);
 void	 sdelay(uint32_t loops);
 uint32_t time_ms(void);
 uint64_t time_us(void);
-uint64_t get_arch_counter(void);
-void	 init_sp_irq(uint32_t addr);
 void	 reset();
 
 #endif

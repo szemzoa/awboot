@@ -8,7 +8,6 @@ LOG_LEVEL ?= 30
 SRCS := main.c boards/board-$(BOARD).c
 
 INCLUDE_DIRS :=-I . -I lib -I boards
-LIB_DIR := -L ./
 LIBS := -lgcc -nostdlib
 DEFINES := -DLOG_LEVEL=$(LOG_LEVEL) -DBUILD_REVISION=$(shell cat .build_revision)
 
@@ -16,10 +15,10 @@ include	arch/arm32/arm32.mk
 include	lib/lib.mk
 
 CFLAGS += -mcpu=cortex-a7 -mthumb-interwork -mthumb -mno-unaligned-access -mfpu=neon-vfpv4 -mfloat-abi=hard
-CFLAGS += -ffast-math -Os -std=gnu99 -Wall -Werror -Wno-unused-function -g $(INCLUDES) $(DEFINES)
+CFLAGS += -ffast-math -ffunction-sections -fdata-sections -Os -std=gnu99 -Wall -Werror -Wno-unused-function -g -MMD $(INCLUDES) $(DEFINES)
 
-ASFLAGS += $(CFLAGS) -Wl,--entry=reset
-LDFLAGS += $(CFLAGS) $(LIBS)
+ASFLAGS += $(CFLAGS)
+LDFLAGS += $(CFLAGS) $(LIBS) -Wl,--gc-sections
 
 STRIP=$(CROSS_COMPILE)-strip
 CC=$(CROSS_COMPILE)-gcc
@@ -56,7 +55,7 @@ link_board:
 	@/bin/ln -fs board-$(BOARD).h boards/board.h
 
 .PHONY: tools boot.img
-#.SILENT:
+.SILENT:
 
 git:
 	cp -f tools/hooks/* .git/hooks/

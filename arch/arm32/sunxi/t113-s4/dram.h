@@ -70,7 +70,7 @@ typedef struct __DRAM_PARA {
 
 } dram_para_t;
 
-int init_DRAM(int type, dram_para_t *para);
+int			  init_DRAM(int type, dram_para_t *para);
 unsigned long sunxi_dram_init(void);
 
 #endif

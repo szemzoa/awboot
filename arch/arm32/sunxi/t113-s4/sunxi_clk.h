@@ -7,7 +7,7 @@
 
 void	 sunxi_clk_init(void);
 uint32_t sunxi_clk_get_peri1x_rate(void);
-int spi_clk_init(sunxi_spi_t *spi);
+int		 spi_clk_init(sunxi_spi_t *spi);
 
 void sunxi_clk_dump(void);
 

@@ -55,6 +55,11 @@ void mdelay(uint32_t ms)
 	};
 }
 
+uint32_t get_sys_ticks(void)
+{
+	return (uint32_t)get_arch_counter() / 24000;
+}
+
 /************************************************************
  * sdelay() - simple spin loop.  Will be constant time as
  *  its generally used in bypass conditions only.  This

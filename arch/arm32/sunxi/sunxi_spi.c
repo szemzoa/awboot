@@ -31,6 +31,8 @@
 #include "sunxi_dma.h"
 #include "debug.h"
 
+extern void v7_flush_dcache_all(void);
+
 enum {
 	SPI_GCR = 0x04,
 	SPI_TCR = 0x08,
@@ -145,8 +147,8 @@ typedef enum {
 	SPI_NAND_MFR_WINBOND	= 0xef,
 	SPI_NAND_MFR_GIGADEVICE = 0xc8,
 	SPI_NAND_MFR_MACRONIX	= 0xc2,
-	SPI_NAND_MFR_MICRON	= 0x2c,
-	SPI_NAND_MFR_FORESEE    = 0xcd,
+	SPI_NAND_MFR_MICRON		= 0x2c,
+	SPI_NAND_MFR_FORESEE	= 0xcd,
 } spi_mfr_id;
 
 static const spi_nand_info_t spi_nand_infos[] = {
@@ -192,8 +194,8 @@ static const spi_nand_info_t spi_nand_infos[] = {
 	{"MT29F4G01ADAGD",	   {.mfr = SPI_NAND_MFR_MICRON, .dev = 0x36, 1}, 2048, 128, 64, 2048, 2, 2, SPI_IO_DUAL_RX},
 	{"MT29F8G01ADAFD",	   {.mfr = SPI_NAND_MFR_MICRON, .dev = 0x46, 1}, 4096, 256, 64, 2048, 1, 2, SPI_IO_DUAL_RX},
 
-/* FORESEE */
-        {"FS35SQA001G",    	   {.mfr = SPI_NAND_MFR_FORESEE, .dev = 0x7171, 2}, 2048, 64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
+ /* FORESEE */
+	{	 "FS35SQA001G",	{.mfr = SPI_NAND_MFR_FORESEE, .dev = 0x7171, 2}, 2048,  64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
 };
 
 sunxi_spi_t		*spip;
@@ -233,7 +235,8 @@ static uint32_t spi_set_clk(sunxi_spi_t *spi, u32 spi_clk, u32 mclk, u32 cdr2)
 	}
 
 	trace("SPI: clock div=%" PRIu32 " \r\n", div);
-	debug("SPI: set clock asked=%" PRIu32 "MHz actual=%" PRIu32 "MHz mclk=%" PRIu32 "MHz\r\n", spi_clk / 1000000, freq / 1000000, mclk / 1000000);
+	debug("SPI: set clock asked=%" PRIu32 "MHz actual=%" PRIu32 "MHz mclk=%" PRIu32 "MHz\r\n", spi_clk / 1000000,
+		  freq / 1000000, mclk / 1000000);
 
 	write32(spi->base + SPI_CCR, reg);
 
@@ -511,8 +514,10 @@ static int spi_transfer(sunxi_spi_t *spi, spi_io_mode_t mode, void *txbuf, uint3
 				error("SPI: DMA transfer failed\r\n");
 				return -1;
 			}
-			while (dma_querystatus(spi_rx_dma_hd)) {
-			};
+
+			while (dma_querystatus(spi_rx_dma_hd))
+				;
+
 		} else {
 			spi_read_rx_fifo(spi, rxbuf, rxlen);
 		}
@@ -647,12 +652,15 @@ int spi_nand_detect(sunxi_spi_t *spi)
 			}
 		}
 
-		if (spi->info.id.mfr == (uint8_t)SPI_NAND_MFR_GIGADEVICE || spi->info.id.mfr == (uint8_t)SPI_NAND_MFR_FORESEE) {
-			if ((spi_nand_get_config(spi, CONFIG_ADDR_OTP, &val) == 0) && !(val & 0x01)) {
-				debug("SPI-NAND: enable Quad mode\r\n");
-				val |= (1 << 0);
-				spi_nand_set_config(spi, CONFIG_ADDR_OTP, val);
-				spi_nand_wait_while_busy(spi);
+		if (spi->info.mode == SPI_IO_QUAD_RX) {
+			if (spi->info.id.mfr == (uint8_t)SPI_NAND_MFR_GIGADEVICE ||
+				spi->info.id.mfr == (uint8_t)SPI_NAND_MFR_FORESEE) {
+				if ((spi_nand_get_config(spi, CONFIG_ADDR_OTP, &val) == 0) && !(val & 0x01)) {
+					debug("SPI-NAND: enable Quad mode\r\n");
+					val |= (1 << 0);
+					spi_nand_set_config(spi, CONFIG_ADDR_OTP, val);
+					spi_nand_wait_while_busy(spi);
+				}
 			}
 		}
 
@@ -719,7 +727,7 @@ uint32_t spi_nand_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t r
 		return -1;
 	}
 
-        if (spi->info.id.mfr == SPI_NAND_MFR_GIGADEVICE || spi->info.id.mfr == SPI_NAND_MFR_FORESEE) {
+	if (spi->info.id.mfr == SPI_NAND_MFR_GIGADEVICE || spi->info.id.mfr == SPI_NAND_MFR_FORESEE) {
 		while (cnt > 0) {
 			ca = address & (spi->info.page_size - 1);
 			n  = cnt > (spi->info.page_size - ca) ? (spi->info.page_size - ca) : cnt;

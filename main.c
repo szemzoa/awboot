@@ -10,9 +10,10 @@
 #include "arm32.h"
 #include "debug.h"
 #include "board.h"
+#include "console.h"
 #include "barrier.h"
 
-extern void board_init(void);
+extern void			 board_init(void);
 extern unsigned long sunxi_dram_init(void);
 
 image_info_t image;
@@ -45,12 +46,12 @@ static int boot_image_setup(unsigned char *addr, unsigned int *entry)
 
 static int fatfs_loadimage(char *filename, BYTE *dest)
 {
-	FIL		 file;
-	UINT	 byte_to_read = CHUNK_SIZE;
-	UINT	 byte_read;
-	UINT	 total_read = 0;
-	FRESULT	 fret;
-	int		 ret;
+	FIL					  file;
+	UINT				  byte_to_read = CHUNK_SIZE;
+	UINT				  byte_read;
+	UINT				  total_read = 0;
+	FRESULT				  fret;
+	int					  ret;
 	uint32_t UNUSED_DEBUG start, time;
 
 	fret = f_open(&file, filename, FA_OPEN_EXISTING | FA_READ);
@@ -89,18 +90,18 @@ open_fail:
 
 static int load_sdcard(image_info_t *image)
 {
-	FATFS	fs;
-	FRESULT fret;
-	int		ret;
-	u32 UNUSED_DEBUG	start;
+	FATFS			 fs;
+	FRESULT			 fret;
+	int				 ret;
+	u32 UNUSED_DEBUG start;
 
 #if defined(CONFIG_SDMMC_SPEED_TEST_SIZE) && LOG_LEVEL >= LOG_DEBUG
 	u32 test_time;
 	start = time_ms();
 	sdmmc_blk_read(&card0, (u8 *)(SDRAM_BASE), 0, CONFIG_SDMMC_SPEED_TEST_SIZE);
 	test_time = time_ms() - start;
-	debug("SDMMC: speedtest %uKB in %" PRIu32 "ms at %" PRIu32 "KB/S\r\n", (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / 1024, test_time,
-		  (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / test_time);
+	debug("SDMMC: speedtest %uKB in %" PRIu32 "ms at %" PRIu32 "KB/S\r\n", (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / 1024,
+		  test_time, (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / test_time);
 #endif // SDMMC_SPEED_TEST
 
 	start = time_ms();
@@ -143,13 +144,14 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 {
 	linux_zimage_header_t *hdr;
 	unsigned int		   size;
-	uint64_t UNUSED_DEBUG	   start, time;
+	uint64_t UNUSED_DEBUG  start, time;
 
 	if (spi_nand_detect(spi) != 0)
 		return -1;
 
 	/* get dtb size and read */
 	spi_nand_read(spi, image->of_dest, CONFIG_SPINAND_DTB_ADDR, (uint32_t)sizeof(boot_param_header_t));
+
 	if (of_get_magic_number(image->of_dest) != OF_DT_MAGIC) {
 		error("SPI-NAND: DTB verification failed\r\n");
 		return -1;
@@ -160,11 +162,13 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 		  (uint32_t)image->of_dest, size);
 	start = time_us();
 	spi_nand_read(spi, image->of_dest, CONFIG_SPINAND_DTB_ADDR, (uint32_t)size);
+
 	time = time_us() - start;
 	info("SPI-NAND: read dt blob of size %u at %.2fMB/S\r\n", size, (f32)(size / time));
 
 	/* get kernel size and read */
 	spi_nand_read(spi, image->dest, CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)sizeof(linux_zimage_header_t));
+
 	hdr = (linux_zimage_header_t *)image->dest;
 	if (hdr->magic != LINUX_ZIMAGE_MAGIC) {
 		debug("SPI-NAND: zImage verification failed\r\n");
@@ -175,6 +179,7 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 		  (uint32_t)image->dest, size);
 	start = time_us();
 	spi_nand_read(spi, image->dest, CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)size);
+
 	time = time_us() - start;
 	info("SPI-NAND: read Image of size %u at %.2fMB/S\r\n", size, (f32)(size / time));
 
@@ -184,13 +189,23 @@ int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
 
 int main(void)
 {
+	uint32_t msize;
+
 	board_init();
 	sunxi_clk_init();
 
 	message("\r\n");
 	info("AWBoot r%" PRIu32 " starting...\r\n", (u32)BUILD_REVISION);
 
-	sunxi_dram_init();
+	msize = sunxi_dram_init() >> 20;
+	info("DRAM size: %luMB\r\n", msize);
+
+	//	arm32_mmu_enable(SDRAM_BASE, msize);
+
+#ifdef CONFIG_ENABLE_CONSOLE
+	console_init(&CONFIG_CONSOLE_USART);
+	console_handler(CONSOLE_NO_TIMEOUT);
+#endif
 
 	unsigned int entry_point = 0;
 	void (*kernel_entry)(int zero, int arch, unsigned int params);
@@ -244,6 +259,7 @@ _spi:
 #endif
 	dma_init();
 	dma_test();
+
 	debug("SPI: init\r\n");
 	if (sunxi_spi_init(&sunxi_spi0) != 0) {
 		fatal("SPI: init failed\r\n");
@@ -264,6 +280,11 @@ _boot:
 	if (boot_image_setup((unsigned char *)image.dest, &entry_point)) {
 		fatal("boot setup failed\r\n");
 	}
+
+#ifdef CONFIG_CMD_LINE_ARGS
+	info("setup bootargs: %s\r\n", CONFIG_CMD_LINE_ARGS);
+	fixup_chosen_node(image.of_dest, CONFIG_CMD_LINE_ARGS);
+#endif
 
 	info("booting linux...\r\n");
 

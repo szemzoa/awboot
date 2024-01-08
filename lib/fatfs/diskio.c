@@ -19,20 +19,28 @@ static DSTATUS Stat = STA_NOINIT; /* Disk status */
 
 #ifdef CONFIG_FATFS_CACHE_SIZE
 /* we can consume up to CONFIG_FATFS_CACHE_SIZE of SDRAM starting at SDRAM_BASE */
-#define FATFS_CACHE_CHUNK_SIZE		(32*1024)
-#define FATFS_CACHE_SECTORS		(CONFIG_FATFS_CACHE_SIZE / FF_MIN_SS)
-#define FATFS_CACHE_SECTORS_PER_BIT	(FATFS_CACHE_CHUNK_SIZE / FF_MIN_SS)
-#define FATFS_CACHE_CHUNKS		(FATFS_CACHE_SECTORS / FATFS_CACHE_SECTORS_PER_BIT)
+#define FATFS_CACHE_CHUNK_SIZE		(32 * 1024)
+#define FATFS_CACHE_SECTORS			(CONFIG_FATFS_CACHE_SIZE / FF_MIN_SS)
+#define FATFS_CACHE_SECTORS_PER_BIT (FATFS_CACHE_CHUNK_SIZE / FF_MIN_SS)
+#define FATFS_CACHE_CHUNKS			(FATFS_CACHE_SECTORS / FATFS_CACHE_SECTORS_PER_BIT)
 
 static u8 *const cache_data = (u8 *)SDRAM_BASE; /* in SDRAM */
-static u8 cache_bitmap[FATFS_CACHE_CHUNKS/8]; /* in SRAM */
-static BYTE cache_pdrv = -1;
+static u8		 cache_bitmap[FATFS_CACHE_CHUNKS / 8]; /* in SRAM */
+static BYTE		 cache_pdrv = -1;
 
-#define CACHE_SECTOR_TO_OFFSET(ss)	(((ss)/FATFS_CACHE_SECTORS_PER_BIT) / 8)
-#define CACHE_SECTOR_TO_BIT(ss)		(((ss)/FATFS_CACHE_SECTORS_PER_BIT) % 8)
+#define CACHE_SECTOR_TO_OFFSET(ss) (((ss) / FATFS_CACHE_SECTORS_PER_BIT) / 8)
+#define CACHE_SECTOR_TO_BIT(ss)	   (((ss) / FATFS_CACHE_SECTORS_PER_BIT) % 8)
 
-#define CACHE_IS_VALID(ss)	({ __typeof(ss) _ss = (ss); cache_bitmap[CACHE_SECTOR_TO_OFFSET(_ss)] & (1 << CACHE_SECTOR_TO_BIT(_ss)); })
-#define CACHE_SET_VALID(ss)	do { __typeof(ss) _ss = (ss); cache_bitmap[CACHE_SECTOR_TO_OFFSET(_ss)] |= (1 << CACHE_SECTOR_TO_BIT(_ss)); } while(0)
+#define CACHE_IS_VALID(ss)                                                           \
+	({                                                                               \
+		__typeof(ss) _ss = (ss);                                                     \
+		cache_bitmap[CACHE_SECTOR_TO_OFFSET(_ss)] & (1 << CACHE_SECTOR_TO_BIT(_ss)); \
+	})
+#define CACHE_SET_VALID(ss)                                                           \
+	do {                                                                              \
+		__typeof(ss) _ss = (ss);                                                      \
+		cache_bitmap[CACHE_SECTOR_TO_OFFSET(_ss)] |= (1 << CACHE_SECTOR_TO_BIT(_ss)); \
+	} while (0)
 #endif
 
 /*-----------------------------------------------------------------------*/
@@ -100,18 +108,18 @@ DRESULT disk_read(BYTE	pdrv, /* Physical drive nmuber to identify the drive */
 		}
 
 		if (!CACHE_IS_VALID(sector)) {
-			LBA_t chunk = sector & ~(FATFS_CACHE_SECTORS_PER_BIT-1);
+			LBA_t chunk = sector & ~(FATFS_CACHE_SECTORS_PER_BIT - 1);
 			trace("FATFS: cache miss %llu, loading %llu count %u\r\n", sector, chunk, FATFS_CACHE_SECTORS_PER_BIT);
-			if (sdmmc_blk_read(&card0, &cache_data[chunk*FF_MIN_SS], chunk, FATFS_CACHE_SECTORS_PER_BIT) != FATFS_CACHE_SECTORS_PER_BIT) {
+			if (sdmmc_blk_read(&card0, &cache_data[chunk * FF_MIN_SS], chunk, FATFS_CACHE_SECTORS_PER_BIT) !=
+				FATFS_CACHE_SECTORS_PER_BIT) {
 				warning("FATFS: read failed %llu count %u\r\n", sector, FATFS_CACHE_SECTORS_PER_BIT);
 				return RES_ERROR;
 			}
 			CACHE_SET_VALID(sector);
-		}
-		else {
+		} else {
 			trace("FATFS: cache hit %llu\r\n", sector);
 		}
-		memcpy(buff, &cache_data[sector*FF_MIN_SS], FF_MIN_SS);
+		memcpy(buff, &cache_data[sector * FF_MIN_SS], FF_MIN_SS);
 
 		sector++;
 		buff += FF_MIN_SS;

@@ -248,8 +248,8 @@ static void set_read_timeout(sdhci_t *sdhci, u32 timeout)
 	rval |= (rdto_clk << 8);
 	sdhci->reg->timeout = rval;
 
-	trace("rdtoclk:%" PRIu32 ", reg-tmout:%" PRIu32 ", gctl:%" PRIx32 ", clock:%u, nstr:%" PRIx32 "\n", rdto_clk, sdhci->reg->timeout, sdhci->reg->gctrl,
-		  sdhci->clock, sdhci->reg->ntsr);
+	trace("rdtoclk:%" PRIu32 ", reg-tmout:%" PRIu32 ", gctl:%" PRIx32 ", clock:%u, nstr:%" PRIx32 "\n", rdto_clk,
+		  sdhci->reg->timeout, sdhci->reg->gctrl, sdhci->clock, sdhci->reg->ntsr);
 }
 
 static int prepare_dma(sdhci_t *sdhci, sdhci_data_t *data)
@@ -340,8 +340,8 @@ static int wait_done(sdhci_t *sdhci, sdhci_data_t *dat, u32 timeout_msecs, u32 f
 	do {
 		status = sdhci->reg->rint;
 		if ((time_ms() > (start + timeout_msecs))) {
-			warning("SMHC: wait timeout %" PRIx32 " status %" PRIx32 " flag %" PRIx32 "\r\n", status & SMHC_RINT_INTERRUPT_ERROR_BIT, status,
-					flag);
+			warning("SMHC: wait timeout %" PRIx32 " status %" PRIx32 " flag %" PRIx32 "\r\n",
+					status & SMHC_RINT_INTERRUPT_ERROR_BIT, status, flag);
 			return -1;
 		} else if ((status & SMHC_RINT_INTERRUPT_ERROR_BIT)) {
 			warning("SMHC: error 0x%" PRIx32 " status 0x%" PRIx32 "\r\n", status & SMHC_RINT_INTERRUPT_ERROR_BIT,
@@ -373,7 +373,8 @@ static bool read_bytes(sdhci_t *sdhci, sdhci_data_t *dat)
 	status = sdhci->reg->status;
 	err	   = sdhci->reg->rint & SMHC_RINT_INTERRUPT_ERROR_BIT;
 	if (err)
-		warning("SMHC: interrupt error 0x%" PRIx32 " status 0x%" PRIx32 "\r\n", err & SMHC_RINT_INTERRUPT_ERROR_BIT, status);
+		warning("SMHC: interrupt error 0x%" PRIx32 " status 0x%" PRIx32 "\r\n", err & SMHC_RINT_INTERRUPT_ERROR_BIT,
+				status);
 
 	while ((!err) && (count >= sizeof(sdhci->reg->fifo))) {
 		while (sdhci->reg->status & SMHC_STATUS_FIFO_EMPTY) {
@@ -404,7 +405,8 @@ static bool read_bytes(sdhci_t *sdhci, sdhci_data_t *dat)
 	} while (!done && !err);
 
 	if (err & SMHC_RINT_INTERRUPT_ERROR_BIT) {
-		warning("SMHC: interrupt error 0x%" PRIx32 " status 0x%" PRIx32 "\r\n", err & SMHC_RINT_INTERRUPT_ERROR_BIT, status);
+		warning("SMHC: interrupt error 0x%" PRIx32 " status 0x%" PRIx32 "\r\n", err & SMHC_RINT_INTERRUPT_ERROR_BIT,
+				status);
 		return FALSE;
 	}
 
@@ -467,7 +469,8 @@ bool sdhci_transfer(sdhci_t *sdhci, sdhci_cmd_t *cmd, sdhci_data_t *dat)
 	u32	 timeout;
 	bool dma = false;
 
-	trace("SMHC: CMD%" PRIu32 " 0x%" PRIx32 " dlen:%" PRIu32 "\r\n", cmd->idx, cmd->arg, dat ? dat->blkcnt * dat->blksz : 0);
+	trace("SMHC: CMD%" PRIu32 " 0x%" PRIx32 " dlen:%" PRIu32 "\r\n", cmd->idx, cmd->arg,
+		  dat ? dat->blkcnt * dat->blksz : 0);
 
 	if (cmd->idx == MMC_STOP_TRANSMISSION) {
 		timeout = time_ms();
@@ -631,19 +634,18 @@ static int config_delay(sdhci_t *sdhci)
 
 	trace("SMHC: odly: %d   sldy: %d\r\n", odly, sdly);
 
-//	ccu->smhc0_clk_cfg &= (~CCU_MMC_CTRL_ENABLE);
-	val  = read32(CCU_BASE + CCU_SMHC0_CLK_REG);
+	//	ccu->smhc0_clk_cfg &= (~CCU_MMC_CTRL_ENABLE);
+	val = read32(CCU_BASE + CCU_SMHC0_CLK_REG);
 	val &= (~CCU_MMC_CTRL_ENABLE);
 	write32(CCU_BASE + CCU_SMHC0_CLK_REG, val);
 
 	sdhci->reg->drv_dl &= (~(0x3 << 16));
 	sdhci->reg->drv_dl |= (((odly & 0x1) << 16) | ((odly & 0x1) << 17));
 
-//	ccu->smhc0_clk_cfg |= CCU_MMC_CTRL_ENABLE;
-	val  = read32(CCU_BASE + CCU_SMHC0_CLK_REG);
+	//	ccu->smhc0_clk_cfg |= CCU_MMC_CTRL_ENABLE;
+	val = read32(CCU_BASE + CCU_SMHC0_CLK_REG);
 	val |= CCU_MMC_CTRL_ENABLE;
 	write32(CCU_BASE + CCU_SMHC0_CLK_REG, val);
-
 
 	rval = sdhci->reg->ntsr;
 	rval &= (~(0x3 << 8));
@@ -742,13 +744,13 @@ bool sdhci_set_clock(sdhci_t *sdhci, smhc_clk_t clock)
 		return false;
 
 	sdhci->reg->ntsr |= SUNXI_MMC_NTSR_MODE_SEL_NEW;
-/*
-	ccu->smhc_gate_reset |= CCU_MMC_BGR_SMHC0_RST;
-	ccu->smhc0_clk_cfg &= (~CCU_MMC_CTRL_ENABLE);
-	ccu->smhc0_clk_cfg = pll | CCU_MMC_CTRL_N(n) | CCU_MMC_CTRL_M(div);
-	ccu->smhc0_clk_cfg |= CCU_MMC_CTRL_ENABLE;
-	ccu->smhc_gate_reset |= CCU_MMC_BGR_SMHC0_GATE;
-*/
+	/*
+		ccu->smhc_gate_reset |= CCU_MMC_BGR_SMHC0_RST;
+		ccu->smhc0_clk_cfg &= (~CCU_MMC_CTRL_ENABLE);
+		ccu->smhc0_clk_cfg = pll | CCU_MMC_CTRL_N(n) | CCU_MMC_CTRL_M(div);
+		ccu->smhc0_clk_cfg |= CCU_MMC_CTRL_ENABLE;
+		ccu->smhc_gate_reset |= CCU_MMC_BGR_SMHC0_GATE;
+	*/
 	val = read32(CCU_BASE + CCU_SMHC_BGR_REG);
 	val |= CCU_MMC_BGR_SMHC0_RST;
 	write32(CCU_BASE + CCU_SMHC_BGR_REG, val);

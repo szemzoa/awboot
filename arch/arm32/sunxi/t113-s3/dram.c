@@ -20,25 +20,25 @@
 #include "main.h"
 #include "board.h"
 
-#define readl(addr) read32(addr)
-#define writel(val, addr) write32((addr), (val))
-#define udelay(c) sdelay(c)
-#define printf debug
+#define readl(addr)		   read32(addr)
+#define writel(val, addr)  write32((addr), (val))
+#define udelay(c)		   sdelay(c)
+#define printf			   debug
 #define DIV_ROUND_UP(a, b) (((a) + (b)-1) / (b))
 
 #define clrsetbits_le32(addr, clear, set) write32((addr), (read32(addr) & ~(clear)) | (set))
-#define setbits_le32(addr, set) write32((addr), read32(addr) | (set))
-#define clrbits_le32(addr, clear) write32((addr), read32(addr) & ~(clear))
+#define setbits_le32(addr, set)			  write32((addr), read32(addr) | (set))
+#define clrbits_le32(addr, clear)		  write32((addr), read32(addr) & ~(clear))
 
 #define CONFIG_SYS_SDRAM_BASE SDRAM_BASE
 
-#define CONFIG_DRAM_CLK 792
-#define CONFIG_SUNXI_DRAM_TYPE 3
-#define CONFIG_DRAM_ZQ 0x7b7bfb
+#define CONFIG_DRAM_CLK			 792
+#define CONFIG_SUNXI_DRAM_TYPE	 3
+#define CONFIG_DRAM_ZQ			 0x7b7bfb
 #define CONFIG_DRAM_SUNXI_ODT_EN 0x00
-#define CONFIG_DRAM_SUNXI_TPR11 0x00340000
-#define CONFIG_DRAM_SUNXI_TPR12 0x00000046
-#define CONFIG_DRAM_SUNXI_TPR13 0x34000100
+#define CONFIG_DRAM_SUNXI_TPR11	 0x00340000
+#define CONFIG_DRAM_SUNXI_TPR12	 0x00000046
+#define CONFIG_DRAM_SUNXI_TPR13	 0x34000100
 
 #ifndef SUNXI_SID_BASE
 #define SUNXI_SID_BASE 0x3006200
@@ -233,40 +233,40 @@ static void mctl_set_timing_params(dram_para_t *para)
 			tfaw = ns_to_t(para, 50);
 			trrd = ns_to_t(para, 10);
 			trcd = ns_to_t(para, 20);
-			trc = ns_to_t(para, 65);
+			trc	 = ns_to_t(para, 65);
 
 			/* DRAM_TPR1 */
-			txp = 2;
+			txp	 = 2;
 			twtr = ns_to_t(para, 8);
-			twr = ns_to_t(para, 15);
-			trp = ns_to_t(para, 15);
+			twr	 = ns_to_t(para, 15);
+			trp	 = ns_to_t(para, 15);
 			tras = ns_to_t(para, 45);
 
 			/* DRAM_TRP2 */
-			trfc = ns_to_t(para, 328);
+			trfc  = ns_to_t(para, 328);
 			trefi = ns_to_t(para, 7800) / 32;
 
 			trasmax = para->dram_clk / 30;
 			if (para->dram_clk < 409) {
 				t_rdata_en = 1;
-				tcl = 3;
-				mr0 = 0x06a3;
+				tcl		   = 3;
+				mr0		   = 0x06a3;
 			} else {
 				t_rdata_en = 2;
-				tcl = 4;
-				mr0 = 0x0e73;
+				tcl		   = 4;
+				mr0		   = 0x0e73;
 			}
-			tmrd = 2;
-			twtp = twr + 5;
-			tcksrx = 5;
-			tckesr = 4;
-			trd2wr = 4;
-			tcke = 3;
-			tmod = 12;
+			tmrd	   = 2;
+			twtp	   = twr + 5;
+			tcksrx	   = 5;
+			tckesr	   = 4;
+			trd2wr	   = 4;
+			tcke	   = 3;
+			tmod	   = 12;
 			wr_latency = 1;
-			tmrw = 0;
-			twr2rd = twtr + 5;
-			tcwl = 0;
+			tmrw	   = 0;
+			twr2rd	   = twtr + 5;
+			tcwl	   = 0;
 
 			mr1 = para->dram_mr1;
 			mr2 = 0;
@@ -279,45 +279,45 @@ static void mctl_set_timing_params(dram_para_t *para)
 
 			break;
 		case SUNXI_DRAM_TYPE_DDR3:
-			trfc = ns_to_t(para, 350);
+			trfc  = ns_to_t(para, 350);
 			trefi = ns_to_t(para, 7800) / 32 + 1; // XXX
 
 			twtr = ns_to_t(para, 8) + 2; // + 2 ? XXX
 			/* Only used by trd2wr calculation, which gets discard below */
 			//		twr		= max(ns_to_t(para, 15), 2);
 			trrd = max(ns_to_t(para, 10), 2);
-			txp = max(ns_to_t(para, 10), 2);
+			txp	 = max(ns_to_t(para, 10), 2);
 
 			if (para->dram_clk <= 800) {
 				tfaw = ns_to_t(para, 50);
 				trcd = ns_to_t(para, 15);
-				trp = ns_to_t(para, 15);
-				trc = ns_to_t(para, 53);
+				trp	 = ns_to_t(para, 15);
+				trc	 = ns_to_t(para, 53);
 				tras = ns_to_t(para, 38);
 
-				mr0 = 0x1c70;
-				mr2 = 0x18;
-				tcl = 6;
+				mr0		   = 0x1c70;
+				mr2		   = 0x18;
+				tcl		   = 6;
 				wr_latency = 2;
-				tcwl = 4;
+				tcwl	   = 4;
 				t_rdata_en = 4;
 			} else {
 				tfaw = ns_to_t(para, 35);
 				trcd = ns_to_t(para, 14);
-				trp = ns_to_t(para, 14);
-				trc = ns_to_t(para, 48);
+				trp	 = ns_to_t(para, 14);
+				trc	 = ns_to_t(para, 48);
 				tras = ns_to_t(para, 34);
 
-				mr0 = 0x1e14;
-				mr2 = 0x20;
-				tcl = 7;
+				mr0		   = 0x1e14;
+				mr2		   = 0x20;
+				tcl		   = 7;
 				wr_latency = 3;
-				tcwl = 5;
+				tcwl	   = 5;
 				t_rdata_en = 5;
 			}
 
 			trasmax = para->dram_clk / 30;
-			twtp = tcwl + 2 + twtr; // WL+BL/2+tWTR
+			twtp	= tcwl + 2 + twtr; // WL+BL/2+tWTR
 			/* Gets overwritten below */
 			//		trd2wr		= tcwl + 2 + twr;		// WL+BL/2+tWR
 			twr2rd = tcwl + twtr; // WL+tWTR
@@ -327,9 +327,9 @@ static void mctl_set_timing_params(dram_para_t *para)
 			tdinit2 = 200 * para->dram_clk + 1; // 200 us
 			tdinit3 = 1 * para->dram_clk + 1; //   1 us
 
-			mr1 = para->dram_mr1;
-			mr3 = 0;
-			tcke = 3;
+			mr1	   = para->dram_mr1;
+			mr3	   = 0;
+			tcke   = 3;
 			tcksrx = 5;
 			tckesr = 4;
 			if (((para->dram_tpr13 & 0xc) == 0x04) || para->dram_clk < 912)
@@ -346,33 +346,33 @@ static void mctl_set_timing_params(dram_para_t *para)
 			tfaw = max(ns_to_t(para, 50), 4);
 			trrd = max(ns_to_t(para, 10), 1);
 			trcd = max(ns_to_t(para, 24), 2);
-			trc = ns_to_t(para, 70);
-			txp = ns_to_t(para, 8);
+			trc	 = ns_to_t(para, 70);
+			txp	 = ns_to_t(para, 8);
 			if (txp < 2) {
 				txp++;
 				twtr = 2;
 			} else {
 				twtr = txp;
 			}
-			twr = max(ns_to_t(para, 15), 2);
-			trp = ns_to_t(para, 17);
-			tras = ns_to_t(para, 42);
+			twr	  = max(ns_to_t(para, 15), 2);
+			trp	  = ns_to_t(para, 17);
+			tras  = ns_to_t(para, 42);
 			trefi = ns_to_t(para, 3900) / 32;
-			trfc = ns_to_t(para, 210);
+			trfc  = ns_to_t(para, 210);
 
-			trasmax = para->dram_clk / 60;
-			mr3 = para->dram_mr3;
-			twtp = twr + 5;
-			mr2 = 6;
-			mr1 = 5;
-			tcksrx = 5;
-			tckesr = 5;
-			trd2wr = 10;
-			tcke = 2;
-			tmod = 5;
-			tmrd = 5;
-			tmrw = 3;
-			tcl = 4;
+			trasmax	   = para->dram_clk / 60;
+			mr3		   = para->dram_mr3;
+			twtp	   = twr + 5;
+			mr2		   = 6;
+			mr1		   = 5;
+			tcksrx	   = 5;
+			tckesr	   = 5;
+			trd2wr	   = 10;
+			tcke	   = 2;
+			tmod	   = 5;
+			tmrd	   = 5;
+			tmrw	   = 3;
+			tcl		   = 4;
 			wr_latency = 1;
 			t_rdata_en = 1;
 
@@ -380,92 +380,92 @@ static void mctl_set_timing_params(dram_para_t *para)
 			tdinit1 = 100 * para->dram_clk / 1000 + 1;
 			tdinit2 = 11 * para->dram_clk + 1;
 			tdinit3 = 1 * para->dram_clk + 1;
-			twr2rd = twtr + 5;
-			tcwl = 2;
-			mr1 = 195;
-			mr0 = 0;
+			twr2rd	= twtr + 5;
+			tcwl	= 2;
+			mr1		= 195;
+			mr0		= 0;
 
 			break;
 		case SUNXI_DRAM_TYPE_LPDDR3:
-			tfaw = max(ns_to_t(para, 50), 4);
-			trrd = max(ns_to_t(para, 10), 1);
-			trcd = max(ns_to_t(para, 24), 2);
-			trc = ns_to_t(para, 70);
-			twtr = max(ns_to_t(para, 8), 2);
-			twr = max(ns_to_t(para, 15), 2);
-			trp = ns_to_t(para, 17);
-			tras = ns_to_t(para, 42);
+			tfaw  = max(ns_to_t(para, 50), 4);
+			trrd  = max(ns_to_t(para, 10), 1);
+			trcd  = max(ns_to_t(para, 24), 2);
+			trc	  = ns_to_t(para, 70);
+			twtr  = max(ns_to_t(para, 8), 2);
+			twr	  = max(ns_to_t(para, 15), 2);
+			trp	  = ns_to_t(para, 17);
+			tras  = ns_to_t(para, 42);
 			trefi = ns_to_t(para, 3900) / 32;
-			trfc = ns_to_t(para, 210);
-			txp = twtr;
+			trfc  = ns_to_t(para, 210);
+			txp	  = twtr;
 
 			trasmax = para->dram_clk / 60;
 			if (para->dram_clk < 800) {
-				tcwl = 4;
+				tcwl	   = 4;
 				wr_latency = 3;
 				t_rdata_en = 6;
-				mr2 = 12;
+				mr2		   = 12;
 			} else {
-				tcwl = 3;
-				tcke = 6;
+				tcwl	   = 3;
+				tcke	   = 6;
 				wr_latency = 2;
 				t_rdata_en = 5;
-				mr2 = 10;
+				mr2		   = 10;
 			}
-			twtp = tcwl + 5;
-			tcl = 7;
-			mr3 = para->dram_mr3;
-			tcksrx = 5;
-			tckesr = 5;
-			trd2wr = 13;
-			tcke = 3;
-			tmod = 12;
+			twtp	= tcwl + 5;
+			tcl		= 7;
+			mr3		= para->dram_mr3;
+			tcksrx	= 5;
+			tckesr	= 5;
+			trd2wr	= 13;
+			tcke	= 3;
+			tmod	= 12;
 			tdinit0 = 400 * para->dram_clk + 1;
 			tdinit1 = 500 * para->dram_clk / 1000 + 1;
 			tdinit2 = 11 * para->dram_clk + 1;
 			tdinit3 = 1 * para->dram_clk + 1;
-			tmrd = 5;
-			tmrw = 5;
-			twr2rd = tcwl + twtr + 5;
-			mr1 = 195;
-			mr0 = 0;
+			tmrd	= 5;
+			tmrw	= 5;
+			twr2rd	= tcwl + twtr + 5;
+			mr1		= 195;
+			mr0		= 0;
 
 			break;
 		default:
-			trfc = 128;
-			trp = 6;
+			trfc  = 128;
+			trp	  = 6;
 			trefi = 98;
-			txp = 10;
-			twr = 8;
-			twtr = 3;
-			tras = 14;
-			tfaw = 16;
-			trc = 20;
-			trcd = 6;
-			trrd = 3;
+			txp	  = 10;
+			twr	  = 8;
+			twtr  = 3;
+			tras  = 14;
+			tfaw  = 16;
+			trc	  = 20;
+			trcd  = 6;
+			trrd  = 3;
 
-			twr2rd = 8; // 48(sp)
-			tcksrx = 4; // t1
-			tckesr = 3; // t4
-			trd2wr = 4; // t6
-			trasmax = 27; // t3
-			twtp = 12; // s6
-			tcke = 2; // s8
-			tmod = 6; // t0
-			tmrd = 2; // t5
-			tmrw = 0; // a1
-			tcwl = 3; // a5
-			tcl = 3; // a0
+			twr2rd	   = 8; // 48(sp)
+			tcksrx	   = 4; // t1
+			tckesr	   = 3; // t4
+			trd2wr	   = 4; // t6
+			trasmax	   = 27; // t3
+			twtp	   = 12; // s6
+			tcke	   = 2; // s8
+			tmod	   = 6; // t0
+			tmrd	   = 2; // t5
+			tmrw	   = 0; // a1
+			tcwl	   = 3; // a5
+			tcl		   = 3; // a0
 			wr_latency = 1; // a7
 			t_rdata_en = 1; // a4
-			mr3 = 0; // s0
-			mr2 = 0; // t2
-			mr1 = 0; // s1
-			mr0 = 0; // a3
-			tdinit3 = 0; // 40(sp)
-			tdinit2 = 0; // 32(sp)
-			tdinit1 = 0; // 24(sp)
-			tdinit0 = 0; // 16(sp)
+			mr3		   = 0; // s0
+			mr2		   = 0; // t2
+			mr1		   = 0; // s1
+			mr0		   = 0; // a3
+			tdinit3	   = 0; // 40(sp)
+			tdinit2	   = 0; // 32(sp)
+			tdinit1	   = 0; // 24(sp)
+			tdinit0	   = 0; // 16(sp)
 
 			break;
 	}
@@ -587,9 +587,9 @@ static void mctl_sys_init(dram_para_t *para)
 //
 static void mctl_com_init(dram_para_t *para)
 {
-	uint32_t val, width;
+	uint32_t	  val, width;
 	unsigned long ptr;
-	int i;
+	int			  i;
 
 	// Setting controller wait time
 	clrsetbits_le32((MCTL_COM_BASE + MCTL_COM_DBGCR), 0x3f00, 0x2000);
@@ -659,27 +659,27 @@ static void mctl_com_init(dram_para_t *para)
 }
 
 static const uint8_t ac_remapping_tables[][22] = {
-	[0] = {0},
-	/* FPGA Verify DDR REMAP */
-	[1] = {0x1, 0x9, 0x3, 0x7, 0x8, 0x12, 0x4,  0xD,  0x5,  0x6, 0xA,
-		   0x2, 0xE, 0xC, 0x0, 0x0, 0x15, 0x11, 0x14, 0x13, 0xB, 0x16}, // Generic DDR3 Type1
-	[2] = {0x4, 0x9, 0x3, 0x7, 0x8, 0x12, 0x1,  0xD,  0x2,  0x6, 0xA,
-		   0x5, 0xE, 0xC, 0x0, 0x0, 0x15, 0x11, 0x14, 0x13, 0xB, 0x16}, // Generic DDR3 Type C
-	[3] = {0x1, 0x7, 0x8, 0xC, 0xA, 0x12, 0x4,  0xD,  0x5,  0x6, 0x3,
-		   0x2, 0x9, 0x0, 0x0, 0x0, 0x15, 0x11, 0x14, 0x13, 0xB, 0x16}, // Generic DDR3 Type 8
-	[4] = {0x4, 0xC, 0xA, 0x7, 0x8, 0x12, 0x1,  0xD,  0x2,  0x6, 0x3,
-		   0x5, 0x9, 0x0, 0x0, 0x0, 0x15, 0x11, 0x14, 0x13, 0xB, 0x16}, // Generic DDR3 Type 9
-	[5] = {0xD, 0x2, 0x7, 0x9, 0xC, 0x13, 0x5,  0x1,  0x6,  0x3, 0x4,
-		   0x8, 0xA, 0x0, 0x0, 0x0, 0x15, 0x16, 0x12, 0x11, 0xB, 0x14}, // Generic DDR3 Type bf
+	[0] = {  0	},
+ /* FPGA Verify DDR REMAP */
+	[1] = { 0x1,	0x9, 0x3, 0x7, 0x8, 0x12,	  0x4, 0xD,  0x5, 0x6,	 0xA,
+		   0x2, 0xE,	 0xC, 0x0,  0x0, 0x15, 0x11, 0x14, 0x13,	0xB, 0x16}, // Generic DDR3 Type1
+	[2] = { 0x4,	0x9, 0x3, 0x7, 0x8, 0x12,	  0x1, 0xD,  0x2, 0x6,	 0xA,
+		   0x5, 0xE,	 0xC, 0x0,  0x0, 0x15, 0x11, 0x14, 0x13,	0xB, 0x16}, // Generic DDR3 Type C
+	[3] = { 0x1,	0x7, 0x8, 0xC, 0xA, 0x12,	  0x4, 0xD,  0x5, 0x6,	 0x3,
+		   0x2, 0x9,	 0x0, 0x0,  0x0, 0x15, 0x11, 0x14, 0x13,	0xB, 0x16}, // Generic DDR3 Type 8
+	[4] = { 0x4,	0xC, 0xA, 0x7, 0x8, 0x12,	  0x1, 0xD,  0x2, 0x6,	 0x3,
+		   0x5, 0x9,	 0x0, 0x0,  0x0, 0x15, 0x11, 0x14, 0x13,	0xB, 0x16}, // Generic DDR3 Type 9
+	[5] = { 0xD,	0x2, 0x7, 0x9, 0xC, 0x13,	  0x5, 0x1,  0x6, 0x3,	 0x4,
+		   0x8, 0xA,	 0x0, 0x0,  0x0, 0x15, 0x16, 0x12, 0x11,	0xB, 0x14}, // Generic DDR3 Type bf
 	/* ASIC Chip */
-	[6] = {0x3, 0xA, 0x7, 0xD, 0x9, 0xB,  0x1,  0x2, 0x4,  0x6,  0x8,
-		   0x5, 0xC, 0x0, 0x0, 0x0, 0x14, 0x12, 0x0, 0x15, 0x16, 0x11}, // DDR2
-	[7] = {0x3, 0x2, 0x4, 0x7, 0x9, 0x1,  0x11, 0xC,  0x12, 0xE,  0xD,
-		   0x8, 0xF, 0x6, 0xA, 0x5, 0x13, 0x16, 0x10, 0x15, 0x14, 0xB}, // DDR3 D1-H
-	[8] = {0x2, 0x13, 0x8, 0x6, 0xE, 0x5,  0x14, 0xA,  0x3, 0x12, 0xD,
-		   0xB, 0x7,  0xF, 0x9, 0x1, 0x16, 0x15, 0x11, 0xC, 0x4,  0x10}, // DDR3 H133
-	[9] = {0x1,  0x2, 0xD, 0x8, 0xF,  0xC,  0x13, 0xA, 0x3, 0x15, 0x6,
-		   0x11, 0x9, 0xE, 0x5, 0x10, 0x14, 0x16, 0xB, 0x7, 0x4,  0x12}, // DDR2 H133
+	[6] = { 0x3,	0xA, 0x7, 0xD, 0x9,	0xB,  0x1, 0x2,	 0x4, 0x6, 0x8,
+		   0x5, 0xC,	 0x0, 0x0,  0x0, 0x14, 0x12,	0x0, 0x15, 0x16, 0x11}, // DDR2
+	[7] = { 0x3, 0x2, 0x4, 0x7, 0x9,	0x1, 0x11,	0xC, 0x12,	0xE, 0xD,
+		   0x8, 0xF,	 0x6, 0xA,  0x5, 0x13, 0x16, 0x10, 0x15, 0x14, 0xB}, // DDR3 D1-H
+	[8] = { 0x2,	0x13, 0x8, 0x6, 0xE,	 0x5, 0x14,	 0xA,  0x3, 0x12,  0xD,
+		   0xB, 0x7, 0xF, 0x9,	0x1, 0x16, 0x15, 0x11,  0xC,	0x4,  0x10}, // DDR3 H133
+	[9] = { 0x1,	 0x2, 0xD, 0x8, 0xF, 0xC, 0x13,  0xA,   0x3, 0x15,  0x6,
+		   0x11, 0x9,  0xE, 0x5, 0x10, 0x14, 0x16,  0xB,  0x7,	0x4,  0x12}, // DDR2 H133
 };
 
 /*
@@ -690,7 +690,7 @@ static const uint8_t ac_remapping_tables[][22] = {
 static void mctl_phy_ac_remapping(dram_para_t *para)
 {
 	const uint8_t *cfg;
-	uint32_t fuse, val, chipid;
+	uint32_t	   fuse, val, chipid;
 
 	/*
 	 * It is unclear whether the LPDDRx types don't need any remapping,
@@ -699,7 +699,7 @@ static void mctl_phy_ac_remapping(dram_para_t *para)
 	if (para->dram_type != SUNXI_DRAM_TYPE_DDR2 && para->dram_type != SUNXI_DRAM_TYPE_DDR3)
 		return;
 
-	fuse = (readl(SUNXI_SID_BASE + 0x28) & 0xf00) >> 8;
+	fuse   = (readl(SUNXI_SID_BASE + 0x28) & 0xf00) >> 8;
 	chipid = (readl(SUNXI_SID_BASE) & 0xffff);
 
 	debug("DDR efuse: 0x%" PRIx32 "\r\n", fuse);
@@ -723,11 +723,11 @@ static void mctl_phy_ac_remapping(dram_para_t *para)
 					cfg = ac_remapping_tables[3];
 					break;
 				case 10:
-				if(chipid == 0x6800){ // 0x6800 is T113-S4 no remap
-					cfg = ac_remapping_tables[0];
-				} else {
-					cfg = ac_remapping_tables[5];
-				}
+					if (chipid == 0x6800) { // 0x6800 is T113-S4 no remap
+						cfg = ac_remapping_tables[0];
+					} else {
+						cfg = ac_remapping_tables[5];
+					}
 					break;
 				case 11:
 					cfg = ac_remapping_tables[4];
@@ -941,10 +941,10 @@ static unsigned int calculate_rank_size(uint32_t regval)
  */
 static unsigned int DRAMC_get_dram_size(void)
 {
-	uint32_t val;
+	uint32_t	 val;
 	unsigned int size;
 
-	val = readl((MCTL_COM_BASE + MCTL_COM_WORK_MODE0)); /* MCTL_COM_WORK_MODE0 */
+	val	 = readl((MCTL_COM_BASE + MCTL_COM_WORK_MODE0)); /* MCTL_COM_WORK_MODE0 */
 	size = calculate_rank_size(val);
 
 	if ((val & 0x3) == 0) /* single rank? */
@@ -1008,9 +1008,9 @@ static int dqs_gate_detect(dram_para_t *para)
 
 static int dramc_simple_wr_test(unsigned int mem_mb, int len)
 {
-	unsigned int offs = (mem_mb / 2) << 18; // half of memory size
-	unsigned int patt1 = 0x01234567;
-	unsigned int patt2 = 0xfedcba98;
+	unsigned int  offs	= (mem_mb / 2) << 18; // half of memory size
+	unsigned int  patt1 = 0x01234567;
+	unsigned int  patt2 = 0xfedcba98;
 	unsigned int *addr, v1, v2, i;
 
 	addr = (unsigned int *)CONFIG_SYS_SDRAM_BASE;
@@ -1414,30 +1414,30 @@ int init_DRAM(int type, dram_para_t *para)
 unsigned long sunxi_dram_init(void)
 {
 	dram_para_t para = {
-		.dram_clk = CONFIG_DRAM_CLK,
-		.dram_type = CONFIG_SUNXI_DRAM_TYPE,
-		.dram_zq = CONFIG_DRAM_ZQ,
+		.dram_clk	 = CONFIG_DRAM_CLK,
+		.dram_type	 = CONFIG_SUNXI_DRAM_TYPE,
+		.dram_zq	 = CONFIG_DRAM_ZQ,
 		.dram_odt_en = CONFIG_DRAM_SUNXI_ODT_EN,
-		.dram_para1 = 0x000010d2,
-		.dram_para2 = 0,
-		.dram_mr0 = 0x1c70,
-		.dram_mr1 = 0x42,
-		.dram_mr2 = 0x18,
-		.dram_mr3 = 0,
-		.dram_tpr0 = 0x004a2195,
-		.dram_tpr1 = 0x02423190,
-		.dram_tpr2 = 0x0008b061,
-		.dram_tpr3 = 0xb4787896, // unused
-		.dram_tpr4 = 0,
-		.dram_tpr5 = 0x48484848,
-		.dram_tpr6 = 0x00000048,
-		.dram_tpr7 = 0x1620121e, // unused
-		.dram_tpr8 = 0,
-		.dram_tpr9 = 0, // clock?
-		.dram_tpr10 = 0,
-		.dram_tpr11 = CONFIG_DRAM_SUNXI_TPR11,
-		.dram_tpr12 = CONFIG_DRAM_SUNXI_TPR12,
-		.dram_tpr13 = CONFIG_DRAM_SUNXI_TPR13,
+		.dram_para1	 = 0x000010d2,
+		.dram_para2	 = 0,
+		.dram_mr0	 = 0x1c70,
+		.dram_mr1	 = 0x42,
+		.dram_mr2	 = 0x18,
+		.dram_mr3	 = 0,
+		.dram_tpr0	 = 0x004a2195,
+		.dram_tpr1	 = 0x02423190,
+		.dram_tpr2	 = 0x0008b061,
+		.dram_tpr3	 = 0xb4787896, // unused
+		.dram_tpr4	 = 0,
+		.dram_tpr5	 = 0x48484848,
+		.dram_tpr6	 = 0x00000048,
+		.dram_tpr7	 = 0x1620121e, // unused
+		.dram_tpr8	 = 0,
+		.dram_tpr9	 = 0, // clock?
+		.dram_tpr10	 = 0,
+		.dram_tpr11	 = CONFIG_DRAM_SUNXI_TPR11,
+		.dram_tpr12	 = CONFIG_DRAM_SUNXI_TPR12,
+		.dram_tpr13	 = CONFIG_DRAM_SUNXI_TPR13,
 	};
 
 	return init_DRAM(0, &para) * 1024UL * 1024;

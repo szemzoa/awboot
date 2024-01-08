@@ -13,6 +13,9 @@ SRCS    +=  $(FS_FAT)/ffunicode.c
 #endif
 
 SRCS	+=  $(LIB)/debug.c
+SRCS	+=  $(LIB)/console.c
 SRCS	+=  $(LIB)/fdt.c
+SRCS	+=  $(LIB)/ringbuffer.c
 SRCS	+=  $(LIB)/string.c
+SRCS	+=  $(LIB)/strtok.c
 SRCS	+=  $(LIB)/xformat.c

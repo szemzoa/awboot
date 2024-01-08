@@ -5,34 +5,33 @@
 #include "sunxi_ccu.h"
 #include "debug.h"
 
-
 void sunxi_clk_init(void)
 {
 	uint32_t val;
 
 	/* cpu_clk = CPU_PLL/P, AXI_DIV = 2 */
 	write32(CCU_BASE + CCU_CPU_CLK_REG, (0x3 << 8) | 0x01);
-        sdelay(1);
+	sdelay(1);
 
 	/* cpu_clk divider = 1 */
 	val = read32(CCU_BASE + CCU_CPU_CLK_REG);
-        val &= ~((1 << 16) | (1 << 17));
-//        val |= (1 << 16);
-        write32(CCU_BASE + CCU_CPU_CLK_REG, val);
-        sdelay(5);
+	val &= ~((1 << 16) | (1 << 17));
+	//        val |= (1 << 16);
+	write32(CCU_BASE + CCU_CPU_CLK_REG, val);
+	sdelay(5);
 
 	/* CPU_PLL: enable LOCK, enable LDO, N = 38 * 24 = 912MHz */
-        val = read32(CCU_BASE + CCU_PLL_CPU_CTRL_REG);
-        val &= ~((1 << 27) | (0x3FF << 8) | 0x3);			/* CPU_PLL: Output disable, PLL_N = 0, M = 0 */
-        val |= (1 << 30 | (1 << 29));
+	val = read32(CCU_BASE + CCU_PLL_CPU_CTRL_REG);
+	val &= ~((1 << 27) | (0x3FF << 8) | 0x3); /* CPU_PLL: Output disable, PLL_N = 0, M = 0 */
+	val |= (1 << 30 | (1 << 29));
 #ifdef CONFIG_CPU_FREQ
 	val |= (((CONFIG_CPU_FREQ / 24000000) - 1) << 8);
 #else
 	val |= (37 << 8);
 #endif
 
-        write32(CCU_BASE + CCU_PLL_CPU_CTRL_REG, val);
-        sdelay(5);
+	write32(CCU_BASE + CCU_PLL_CPU_CTRL_REG, val);
+	sdelay(5);
 
 	/* wait for PLL lock */
 	while (!(read32(CCU_BASE + CCU_PLL_CPU_CTRL_REG) & (0x1 << 28)))
@@ -42,14 +41,14 @@ void sunxi_clk_init(void)
 
 	/* PLL lock disable, output enable */
 	val = read32(CCU_BASE + CCU_PLL_CPU_CTRL_REG);
-        val &= ~(1 << 29);
-        val |= (1 << 27);
+	val &= ~(1 << 29);
+	val |= (1 << 27);
 	write32(CCU_BASE + CCU_PLL_CPU_CTRL_REG, val);
 
 	/* cpu clock = CPU_PLL / P, APB DIV = 4, AXI_DIV = 2 */
 	val = read32(CCU_BASE + CCU_CPU_CLK_REG);
-        val &= ~((0x7 << 24) | (0x3 << 8) | 0x3);
-        val |= ((0x3 << 24) | (0x3 << 8) | 0x1);
+	val &= ~((0x7 << 24) | (0x3 << 8) | 0x3);
+	val |= ((0x3 << 24) | (0x3 << 8) | 0x1);
 	write32(CCU_BASE + CCU_CPU_CLK_REG, val);
 	sdelay(1);
 
@@ -109,32 +108,31 @@ uint32_t sunxi_clk_get_peri1x_rate()
 
 int spi_clk_init(sunxi_spi_t *spi)
 {
-        uint32_t rval;
+	uint32_t rval;
 
-        /* we use PERIPH_200M clock source */
-        if (spi->mod_clk == 20000000000 ) {
-            rval         = (1U << 31) | (0x2 << 24) | (0 << 8) | 0;     /* gate enable | use PERIPH_200M */
-        } else {
-            /* we use PERIPH_300M clock source */
-            rval         = (1U << 31) | (0x1 << 24) | (0 << 8) | 0;     /* gate enable | use PERIPH_300M */
-        }
-        trace("SPI: parent_clk=%ldMHz\r\n", spi->mod_clk);
+	/* we use PERIPH_200M clock source */
+	if (spi->mod_clk == 20000000000) {
+		rval = (1U << 31) | (0x2 << 24) | (0 << 8) | 0; /* gate enable | use PERIPH_200M */
+	} else {
+		/* we use PERIPH_300M clock source */
+		rval = (1U << 31) | (0x1 << 24) | (0 << 8) | 0; /* gate enable | use PERIPH_300M */
+	}
+	trace("SPI: parent_clk=%ldMHz\r\n", spi->mod_clk);
 
-        write32(CCU_BASE + CCU_SPI0_CLK_REG, rval);
+	write32(CCU_BASE + CCU_SPI0_CLK_REG, rval);
 
-        return 0;
+	return 0;
 }
 
 #ifdef CONFIG_ENABLE_CPU_FREQ_DUMP
 void sunxi_clk_dump()
 {
-	uint32_t	reg32;
-	uint32_t	cpu_clk_src;
-	uint32_t UNUSED_DEBUG plln, pllm;
-	uint8_t		p0;
-	uint8_t  UNUSED_DEBUG p1;
+	uint32_t				 reg32;
+	uint32_t				 cpu_clk_src;
+	uint32_t UNUSED_DEBUG	 plln, pllm;
+	uint8_t					 p0;
+	uint8_t UNUSED_DEBUG	 p1;
 	const char UNUSED_DEBUG *clock_str;
-
 
 	/* PLL CPU */
 	reg32		= read32(CCU_BASE + CCU_CPU_CLK_REG);
@@ -170,7 +168,7 @@ void sunxi_clk_dump()
 			clock_str = "ERROR";
 	}
 
-	p0	  = (reg32 >> 16) & 0x03;
+	p0 = (reg32 >> 16) & 0x03;
 	if (p0 == 0) {
 		p1 = 1;
 	} else if (p0 == 1) {
@@ -181,7 +179,8 @@ void sunxi_clk_dump()
 		p1 = 1;
 	}
 
-	debug("CLK: CPU PLL=%s FREQ=%luMHz\r\n", clock_str, ((((read32(CCU_BASE + CCU_PLL_CPU_CTRL_REG) >> 8) & 0xff) + 1) * 24 / p1));
+	debug("CLK: CPU PLL=%s FREQ=%luMHz\r\n", clock_str,
+		  ((((read32(CCU_BASE + CCU_PLL_CPU_CTRL_REG) >> 8) & 0xff) + 1) * 24 / p1));
 
 	/* PLL PERI */
 	reg32 = read32(CCU_BASE + CCU_PLL_PERI_CTRL_REG);

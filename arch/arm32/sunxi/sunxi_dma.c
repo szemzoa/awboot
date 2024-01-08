@@ -39,7 +39,7 @@ static dma_desc_t	dma_channel_desc[SUNXI_DMA_MAX] __attribute__((aligned(64)));
 
 void dma_init(void)
 {
-    u32 reg;
+	u32 reg;
 
 	debug("DMA: init\r\n");
 	int				 i;
@@ -49,19 +49,18 @@ void dma_init(void)
 		return;
 
 	/* dma : mbus clock gating */
-	reg  = read32(CCU_BASE + CCU_MBUS_MAT_CLK_GATING_REG);
-	reg  |= (1 << 0);
+	reg = read32(CCU_BASE + CCU_MBUS_MAT_CLK_GATING_REG);
+	reg |= (1 << 0);
 	write32(CCU_BASE + CCU_MBUS_MAT_CLK_GATING_REG, reg);
 
-
 	/* dma reset */
-	reg  = read32(CCU_BASE + CCU_DMA_BGR_REG);
-	reg  |= (1 << DMA_RST_OFS);
+	reg = read32(CCU_BASE + CCU_DMA_BGR_REG);
+	reg |= (1 << DMA_RST_OFS);
 	write32(CCU_BASE + CCU_DMA_BGR_REG, reg);
 
 	/* dma gating */
-	reg  = read32(CCU_BASE + CCU_DMA_BGR_REG);
-	reg  |= (1 << DMA_GATING_OFS);
+	reg = read32(CCU_BASE + CCU_DMA_BGR_REG);
+	reg |= (1 << DMA_GATING_OFS);
 	write32(CCU_BASE + CCU_DMA_BGR_REG, reg);
 
 	dma_reg->irq_en0 = 0;
@@ -109,11 +108,11 @@ void dma_exit(void)
 	/* close dma clock when dma exit */
 	dma_reg->auto_gate &= ~(1 << DMA_GATING_OFS | 1 << DMA_RST_OFS);
 #endif
-        dma_reg->irq_en0 = 0;
-        dma_reg->irq_en1 = 0;
+	dma_reg->irq_en0 = 0;
+	dma_reg->irq_en1 = 0;
 
-        dma_reg->irq_pending0 = 0xffffffff;
-        dma_reg->irq_pending1 = 0xffffffff;
+	dma_reg->irq_pending0 = 0xffffffff;
+	dma_reg->irq_pending1 = 0xffffffff;
 
 	dma_init_ok--;
 }
@@ -244,7 +243,8 @@ int dma_test()
 	u32		  i, valid;
 
 	len = ALIGN(len, 4);
-	trace("DMA: test 0x%08" PRIx32 " ====> 0x%08" PRIx32 ", len %" PRIu32 "KB \r\n", (u32)src_addr, (u32)dst_addr, (len / 1024));
+	trace("DMA: test 0x%08" PRIx32 " ====> 0x%08" PRIx32 ", len %" PRIu32 "KB \r\n", (u32)src_addr, (u32)dst_addr,
+		  (len / 1024));
 
 	/* dma */
 	dma_set.loop_mode		= 0;

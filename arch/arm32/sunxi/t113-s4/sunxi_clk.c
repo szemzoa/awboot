@@ -5,7 +5,7 @@
 #include "sunxi_ccu.h"
 #include "debug.h"
 
-//volatile ccu_reg_t *const ccu = (ccu_reg_t *)T113_CCU_BASE;
+// volatile ccu_reg_t *const ccu = (ccu_reg_t *)T113_CCU_BASE;
 
 void set_pll_cpux_axi(void)
 {
@@ -199,52 +199,53 @@ uint32_t sunxi_clk_get_peri1x_rate()
 
 int spi_clk_init(sunxi_spi_t *spi)
 {
-        uint32_t rval;
-        uint32_t source_clk = 0;
-        uint32_t m, n, divi, factor_m;
+	uint32_t rval;
+	uint32_t source_clk = 0;
+	uint32_t m, n, divi, factor_m;
 
-        /* SCLK = src/M/N */
-        /* N: 00:1 01:2 10:4 11:8 */
-        /* M: factor_m + 1 */
-        source_clk = sunxi_clk_get_peri1x_rate();
+	/* SCLK = src/M/N */
+	/* N: 00:1 01:2 10:4 11:8 */
+	/* M: factor_m + 1 */
+	source_clk = sunxi_clk_get_peri1x_rate();
 
-        divi = (source_clk + spi->mod_clk - 1) / spi->mod_clk;
-        divi = divi == 0 ? 1 : divi;
-        if (divi > 128) {
-                m = 1;
-                n = 0;
-                return -1;
-        } else if (divi > 64) {
-                n = 3;
-                m = divi >> 3;
-        } else if (divi > 32) {
-                n = 2;
-                m = divi >> 2;
-        } else if (divi > 16) {
-                n = 1;
-                m = divi >> 1;
-        } else {
-                n = 0;
-                m = divi;
-        }
+	divi = (source_clk + spi->mod_clk - 1) / spi->mod_clk;
+	divi = divi == 0 ? 1 : divi;
+	if (divi > 128) {
+		m = 1;
+		n = 0;
+		return -1;
+	} else if (divi > 64) {
+		n = 3;
+		m = divi >> 3;
+	} else if (divi > 32) {
+		n = 2;
+		m = divi >> 2;
+	} else if (divi > 16) {
+		n = 1;
+		m = divi >> 1;
+	} else {
+		n = 0;
+		m = divi;
+	}
 
-        factor_m = m - 1;
-        rval     = (1U << 31) | (0x1 << 24) | (n << 8) | factor_m;
-        trace("SPI: parent_clk=%" PRIu32 "MHz, div=%" PRIu32 ", n=%" PRIu32 ", m=%" PRIu32 "\r\n", source_clk / 1000 / 1000, divi, n + 1, m);
-        write32(CCU_BASE + CCU_SPI0_CLK_REG, rval);
+	factor_m = m - 1;
+	rval	 = (1U << 31) | (0x1 << 24) | (n << 8) | factor_m;
+	trace("SPI: parent_clk=%" PRIu32 "MHz, div=%" PRIu32 ", n=%" PRIu32 ", m=%" PRIu32 "\r\n", source_clk / 1000 / 1000,
+		  divi, n + 1, m);
+	write32(CCU_BASE + CCU_SPI0_CLK_REG, rval);
 
-        return 0;
+	return 0;
 }
 
 #ifdef CONFIG_ENABLE_CPU_FREQ_DUMP
 void sunxi_clk_dump()
 {
-	uint32_t	reg32;
-	uint32_t	cpu_clk_src;
-	uint32_t UNUSED_DEBUG	plln, pllm;
-	uint8_t		p0;
-	uint8_t	UNUSED_DEBUG	p1;
-	const char * UNUSED_DEBUG clock_str;
+	uint32_t				 reg32;
+	uint32_t				 cpu_clk_src;
+	uint32_t UNUSED_DEBUG	 plln, pllm;
+	uint8_t					 p0;
+	uint8_t UNUSED_DEBUG	 p1;
+	const char *UNUSED_DEBUG clock_str;
 
 	/* PLL CPU */
 	reg32		= read32(CCU_BASE + CCU_CPU_AXI_CFG_REG);
@@ -305,8 +306,8 @@ void sunxi_clk_dump()
 		p0	 = ((reg32 >> 16) & 0x03) + 1;
 		p1	 = ((reg32 >> 20) & 0x03) + 1;
 
-		debug("CLK: PLL_peri (2X)=%" PRIu32 "MHz, (1X)=%" PRIu32 "MHz, (800M)=%" PRIu32 "MHz\r\n", (24 * plln) / (pllm * p0),
-			  (24 * plln) / (pllm * p0) >> 1, (24 * plln) / (pllm * p1));
+		debug("CLK: PLL_peri (2X)=%" PRIu32 "MHz, (1X)=%" PRIu32 "MHz, (800M)=%" PRIu32 "MHz\r\n",
+			  (24 * plln) / (pllm * p0), (24 * plln) / (pllm * p0) >> 1, (24 * plln) / (pllm * p1));
 	} else {
 		debug("CLK: PLL_peri disabled\r\n");
 	}

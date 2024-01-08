@@ -37,7 +37,7 @@ typedef signed short   s16;
 typedef unsigned short u16;
 
 /* dont mix stdint and basic types, uint32_t and u32 are intermixed throughout code */
-typedef int32_t s32;
+typedef int32_t	 s32;
 typedef uint32_t u32;
 
 typedef signed long long   s64;

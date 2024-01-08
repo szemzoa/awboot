@@ -4,12 +4,14 @@
 #include "sunxi_sdhci.h"
 #include "sunxi_usart.h"
 #include "sunxi_spi.h"
+#include "sunxi_irq.h"
+#include "irq.h"
 #include "sdmmc.h"
-
 
 sunxi_usart_t usart_dbg = {
 	.base	 = 0x02500800,
 	.id		 = 2,
+	.irqn	 = IRQn_UART2,
 	.gpio_tx = {GPIO_PIN(PORTE, 12), GPIO_PERIPH_MUX6},
 	.gpio_rx = {GPIO_PIN(PORTE, 13), GPIO_PERIPH_MUX6},
 };
@@ -17,8 +19,8 @@ sunxi_usart_t usart_dbg = {
 sunxi_spi_t sunxi_spi0 = {
 	.base	   = 0x04025000,
 	.id		   = 0,
-	.mod_clk   = 300 * 1000 * 1000,
-	.clk_rate  = 75 * 1000 * 1000,
+	.mod_clk   = 300000000,
+	.clk_rate  = 75000000,
 	.gpio_cs   = {GPIO_PIN(PORTC, 1), GPIO_PERIPH_MUX4},
 	.gpio_sck  = {GPIO_PIN(PORTC, 0), GPIO_PERIPH_MUX4},
 	.gpio_mosi = {GPIO_PIN(PORTC, 2), GPIO_PERIPH_MUX4},
@@ -60,5 +62,8 @@ int board_sdhci_init()
 void board_init()
 {
 	board_init_led(led_blue);
+#ifdef CONFIG_ENABLE_CONSOLE
+	gic400_init();
+#endif
 	sunxi_usart_init(&usart_dbg);
 }
