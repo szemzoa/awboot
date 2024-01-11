@@ -993,3 +993,18 @@ diff -urN linux-6.7-rc4/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c linux-6.7-rc4
 +	},
 +};
 +builtin_platform_driver(sun8i_v853_pinctrl_driver);
+diff -urN linux-6.7-rc4/drivers/pinctrl/sunxi/Kconfig linux-6.7-rc4-saam/drivers/pinctrl/sunxi/Kconfig
+--- linux-6.7-rc4/drivers/pinctrl/sunxi/Kconfig	2023-12-03 10:52:56.000000000 +0100
++++ linux-6.7-rc4-saam/drivers/pinctrl/sunxi/Kconfig	2023-12-08 12:15:45.332986633 +0100
+@@ -81,6 +81,11 @@
+ 	default MACH_SUN9I
+ 	select PINCTRL_SUNXI
+ 
++config PINCTRL_SUN8I_V853
++	bool "Support for the Allwinner V853/V851S/V851SE PIO"
++	default MACH_SUN8I
++	select PINCTRL_SUNXI
++
+ config PINCTRL_SUN20I_D1
+ 	bool "Support for the Allwinner D1 PIO"
+ 	default MACH_SUN8I || (RISCV && ARCH_SUNXI)
