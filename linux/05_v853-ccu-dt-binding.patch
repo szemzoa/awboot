@@ -1,0 +1,235 @@
+diff -urN linux-6.7/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.7-saam/include/dt-bindings/clock/sun8i-v853-ccu.h
+--- linux-6.7/include/dt-bindings/clock/sun8i-v853-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.7-saam/include/dt-bindings/clock/sun8i-v853-ccu.h	2024-02-13 08:30:49.775523138 +0100
+@@ -0,0 +1,129 @@
++/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
++/*
++ * Copyright (C) 2020 huangzhenwei@allwinnertech.com
++ * Copyright (C) 2023 Andras Szemzo <szemzo.andras@gmail.com.com>
++ */
++
++#ifndef _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_
++#define _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_
++
++#define CLK_PLL_CPU		0
++#define CLK_PLL_DDR		1
++#define CLK_PLL_PERIPH_4X	2
++#define CLK_PLL_PERIPH_2X	3
++#define CLK_PLL_PERIPH_800M	4
++#define CLK_PLL_PERIPH_480M	5
++#define CLK_PLL_PERIPH_600M	6
++#define CLK_PLL_PERIPH_400M	7
++#define CLK_PLL_PERIPH_300M	8
++#define CLK_PLL_PERIPH_200M	9
++#define CLK_PLL_PERIPH_160M	10
++#define CLK_PLL_PERIPH_150M	11
++#define CLK_PLL_PERIPH		12
++#define CLK_PLL_VIDEO_4X	13
++#define CLK_PLL_VIDEO_2X	14
++#define CLK_PLL_VIDEO_1X	15
++#define CLK_PLL_CSI_4X		16
++#define CLK_PLL_AUDIO		17
++#define CLK_PLL_AUDIO_DIV2	18
++#define CLK_PLL_AUDIO_DIV5	19
++#define CLK_PLL_AUDIO_4X	20
++#define CLK_PLL_AUDIO_1X	21
++#define CLK_PLL_NPU_4X		22
++#define CLK_CPU			23
++#define CLK_CPU_AXI		24
++#define CLK_CPU_APB		25
++#define CLK_AHB			26
++#define CLK_APB0		27
++#define CLK_APB1		28
++#define CLK_MBUS		29
++#define CLK_DE			30
++#define CLK_BUS_DE		31
++#define CLK_G2D			32
++#define CLK_BUS_G2D		33
++#define CLK_CE			34
++#define CLK_BUS_CE		35
++#define CLK_VE			36
++#define CLK_BUS_VE		37
++#define CLK_NPU			38
++#define CLK_BUS_NPU		39
++#define CLK_BUS_DMA		40
++#define CLK_BUS_MSGBOX0		41
++#define CLK_BUS_MSGBOX1		42
++#define CLK_BUS_SPINLOCK	43
++#define CLK_BUS_HSTIMER		44
++#define CLK_AVS			45
++#define CLK_BUS_DBG		46
++#define CLK_BUS_PWM		47
++#define CLK_BUS_IOMMU		48
++#define CLK_DRAM		49
++#define CLK_MBUS_DMA		50
++#define CLK_MBUS_VE		51
++#define CLK_MBUS_CE		52
++#define CLK_MBUS_CSI		53
++#define CLK_MBUS_ISP		54
++#define CLK_MBUS_G2D		55
++#define CLK_BUS_DRAM		56
++#define CLK_MMC0		57
++#define CLK_MMC1		58
++#define CLK_MMC2		59
++#define CLK_BUS_MMC0		60
++#define CLK_BUS_MMC1		61
++#define CLK_BUS_MMC2		62
++#define CLK_BUS_UART0		63
++#define CLK_BUS_UART1		64
++#define CLK_BUS_UART2		65
++#define CLK_BUS_UART3		66
++#define CLK_BUS_I2C0		67
++#define CLK_BUS_I2C1		68
++#define CLK_BUS_I2C2		69
++#define CLK_BUS_I2C3		70
++#define CLK_BUS_I2C4		71
++#define CLK_SPI0		72
++#define CLK_SPI1		73
++#define CLK_SPI2		74
++#define CLK_SPI3		75
++#define CLK_BUS_SPI0		76
++#define CLK_BUS_SPI1		77
++#define CLK_BUS_SPI2		78
++#define CLK_BUS_SPI3		79
++#define CLK_EMAC_25M		80
++#define CLK_BUS_EMAC		81
++#define CLK_BUS_GPADC		82
++#define CLK_BUS_THS		83
++#define CLK_I2S			84
++#define CLK_BUS_I2S		85
++#define CLK_DMIC		86
++#define CLK_BUS_DMIC		87
++#define CLK_AUDIO_DAC		88
++#define CLK_AUDIO_ADC		89
++#define CLK_BUS_AUDIO		90
++#define CLK_USB_OHCI		91
++#define CLK_BUS_OHCI		92
++#define CLK_BUS_EHCI		93
++#define CLK_BUS_OTG		94
++#define CLK_BUS_DPSS_TOP	95
++#define CLK_MIPI_DSI		96
++#define CLK_BUS_MIPI_DSI	97
++#define CLK_TCON_LCD		98
++#define CLK_BUS_TCON_LCD	99
++#define CLK_CSI_TOP		100
++#define CLK_CSI_MCLK0		101
++#define CLK_CSI_MCLK1		102
++#define CLK_CSI_MCLK2		103
++#define CLK_BUS_CSI		104
++#define CLK_BUS_WIEGAND		105
++#define CLK_RISCV		106
++#define CLK_RISCV_AXI		107
++#define CLK_RISCV_CFG		108
++#define CLK_FANOUT_24M		109
++#define CLK_FANOUT_12M		110
++#define CLK_FANOUT_16M		111
++#define CLK_FANOUT_25M		112
++#define CLK_FANOUT_27M		113
++#define CLK_FANOUT_PCLK		114
++#define CLK_FANOUT0		115
++#define CLK_FANOUT1		116
++#define CLK_FANOUT2		117
++
++#endif /* _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_ */
+diff -urN linux-6.7/include/dt-bindings/clock/sun8i-v853-r-ccu.h linux-6.7-saam/include/dt-bindings/clock/sun8i-v853-r-ccu.h
+--- linux-6.7/include/dt-bindings/clock/sun8i-v853-r-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.7-saam/include/dt-bindings/clock/sun8i-v853-r-ccu.h	2024-02-13 09:07:06.366280246 +0100
+@@ -0,0 +1,16 @@
++/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
++/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
++ *
++ * Copyright (C) 2023 rengaomin@allwinnertech.com
++ */
++#ifndef _DT_BINDINGS_CLK_SUN8I_V85X_R_CCU_H_
++#define _DT_BINDINGS_CLK_SUN8I_V85X_R_CCU_H_
++
++#define CLK_R_TWD		0
++#define CLK_R_PPU		1
++#define CLK_R_RTC		2
++#define CLK_R_CPUCFG		3
++
++#define CLK_R_MAX_NO		(CLK_R_CPUCFG + 1)
++
++#endif
+diff -urN linux-6.7/include/dt-bindings/reset/sun8i-v853-ccu.h linux-6.7-saam/include/dt-bindings/reset/sun8i-v853-ccu.h
+--- linux-6.7/include/dt-bindings/reset/sun8i-v853-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.7-saam/include/dt-bindings/reset/sun8i-v853-ccu.h	2024-01-11 09:12:08.904246611 +0100
+@@ -0,0 +1,60 @@
++/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
++/*
++ * Copyright (c) 2020 huangzhenwei@allwinnertech.com
++ * Copyright (C) 2023 Andras Szemzo <szemzo.andras@gmail.com>
++ */
++
++#ifndef _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_
++#define _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_
++
++#define RST_MBUS		0
++#define RST_BUS_DE		1
++#define RST_BUS_G2D		2
++#define RST_BUS_CE		3
++#define RST_BUS_VE		4
++#define RST_BUS_NPU		5
++#define RST_BUS_DMA		6
++#define RST_BUS_MSGBOX0		7
++#define RST_BUS_MSGBOX1		8
++#define RST_BUS_SPINLOCK	9
++#define RST_BUS_HSTIMER		10
++#define RST_BUS_DBG		11
++#define RST_BUS_PWM		12
++#define RST_BUS_DRAM		13
++#define RST_BUS_MMC0		14
++#define RST_BUS_MMC1		15
++#define RST_BUS_MMC2		16
++#define RST_BUS_UART0		17
++#define RST_BUS_UART1		18
++#define RST_BUS_UART2		19
++#define RST_BUS_UART3		20
++#define RST_BUS_I2C0		21
++#define RST_BUS_I2C1		22
++#define RST_BUS_I2C2		23
++#define RST_BUS_I2C3		24
++#define RST_BUS_I2C4		25
++#define RST_BUS_SPI0		26
++#define RST_BUS_SPI1		27
++#define RST_BUS_SPI2		28
++#define RST_BUS_SPI3		29
++#define RST_BUS_EMAC		30
++#define RST_BUS_GPADC		31
++#define RST_BUS_THS		32
++#define RST_BUS_I2S		33
++#define RST_BUS_DMIC		34
++#define RST_BUS_AUDIO		35
++#define RST_USB_PHY		36
++#define RST_BUS_OHCI		37
++#define RST_BUS_EHCI		38
++#define RST_BUS_OTG		39
++#define RST_BUS_DPSS_TOP	40
++#define RST_BUS_MIPI_DSI	41
++#define RST_BUS_TCON_LCD	42
++#define RST_BUS_CSI		43
++#define RST_BUS_WIEGAND		44
++#define RST_RISCV_DBG_BUS	45
++#define RST_RISCV_SOFT		46
++#define RST_RISCV_CLK		47
++#define RST_RISCV_CFG		48
++
++#endif /* _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_ */
+diff -urN linux-6.7/include/dt-bindings/reset/sun8i-v853-r-ccu.h linux-6.7-saam/include/dt-bindings/reset/sun8i-v853-r-ccu.h
+--- linux-6.7/include/dt-bindings/reset/sun8i-v853-r-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.7-saam/include/dt-bindings/reset/sun8i-v853-r-ccu.h	2024-01-11 09:12:08.908246488 +0100
+@@ -0,0 +1,14 @@
++/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
++/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
++ *
++ * Copyright (c) 2023 rengaomin@allwinnertech.com
++ */
++
++#ifndef _DT_BINDINGS_RESET_SUN8IW21_R_CCU_H_
++#define _DT_BINDINGS_RESET_SUN8IW21_R_CCU_H_
++
++#define RST_BUS_R_PPU		0
++#define RST_BUS_R_RTC		1
++#define RST_BUS_R_CPUCFG	2
++
++#endif /* _DT_BINDINGS_RESET_SUN8IW21_R_CCU_H_ */

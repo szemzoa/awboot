@@ -1,0 +1,84 @@
+diff -urN linux-6.7/drivers/gpu/drm/etnaviv/etnaviv_drv.h linux-6.7-saam/drivers/gpu/drm/etnaviv/etnaviv_drv.h
+--- linux-6.7/drivers/gpu/drm/etnaviv/etnaviv_drv.h	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/gpu/drm/etnaviv/etnaviv_drv.h	2024-01-11 09:12:08.896246994 +0100
+@@ -13,6 +13,7 @@
+ #include <linux/time64.h>
+ #include <linux/types.h>
+ #include <linux/xarray.h>
++#include <linux/reset.h>
+ 
+ #include <drm/drm_drv.h>
+ #include <drm/drm_gem.h>
+diff -urN linux-6.7/drivers/gpu/drm/etnaviv/etnaviv_gpu.c linux-6.7-saam/drivers/gpu/drm/etnaviv/etnaviv_gpu.c
+--- linux-6.7/drivers/gpu/drm/etnaviv/etnaviv_gpu.c	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/gpu/drm/etnaviv/etnaviv_gpu.c	2024-01-11 09:12:08.896246994 +0100
+@@ -1883,9 +1883,16 @@
+ 		return PTR_ERR(gpu->clk_shader);
+ 	gpu->base_rate_shader = clk_get_rate(gpu->clk_shader);
+ 
++	gpu->reset = devm_reset_control_get_optional(&pdev->dev, NULL);
++	if (IS_ERR(gpu->reset))
++		return PTR_ERR(gpu->reset);
++
+ 	/* TODO: figure out max mapped size */
+ 	dev_set_drvdata(dev, gpu);
+ 
++	if (gpu->reset)
++		reset_control_deassert(gpu->reset);
++
+ 	/*
+ 	 * We treat the device as initially suspended.  The runtime PM
+ 	 * autosuspend delay is rather arbitary: no measurements have
+diff -urN linux-6.7/drivers/gpu/drm/etnaviv/etnaviv_gpu.h linux-6.7-saam/drivers/gpu/drm/etnaviv/etnaviv_gpu.h
+--- linux-6.7/drivers/gpu/drm/etnaviv/etnaviv_gpu.h	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/gpu/drm/etnaviv/etnaviv_gpu.h	2024-01-11 09:12:08.896246994 +0100
+@@ -156,6 +156,7 @@
+ 	struct clk *clk_reg;
+ 	struct clk *clk_core;
+ 	struct clk *clk_shader;
++	struct reset_control *reset;
+ 
+ 	unsigned int freq_scale;
+ 	unsigned int fe_waitcycles;
+diff -urN linux-6.7/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c linux-6.7-saam/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c
+--- linux-6.7/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c	2024-01-11 09:12:08.896246994 +0100
+@@ -260,6 +260,38 @@
+ 		.minor_features10 = 0x108048c0,
+ 		.minor_features11 = 0x00000010,
+ 	},
++	{	/* v85x - vip9000Pico */
++		.model = 0x9000,
++		.revision = 0x8303,
++		.product_id = 0x809000c,
++		.customer_id = 0xee,
++		.eco_id = 50331648,
++		.stream_count = 8,
++		.register_max = 32,
++		.thread_count = 256,
++		.shader_core_count = 1,
++		.nn_core_count = 3,
++		.vertex_cache_size = 16,
++		.vertex_output_buffer_size = 1024,
++		.pixel_pipes = 1,
++		.instruction_count = 512,
++		.num_constants = 160,
++		.buffer_size = 0,
++		.varyings_count = 16,
++		.features = 0xe0287cac,
++		.minor_features0 = 0xc1799eff,
++		.minor_features1 = 0xfefbfadb,
++		.minor_features2 = 0xeb9d6fbf,
++		.minor_features3 = 0xedfffced,
++		.minor_features4 = 0xd30dafc7,
++		.minor_features5 = 0x7b5ac333,
++		.minor_features6 = 0xfc8ee200,
++		.minor_features7 = 0x03fffa6f,
++		.minor_features8 = 0x00fe0ef0,
++		.minor_features9 = 0x0088003c,
++		.minor_features10 = 0x108048c0,
++		.minor_features11 = 0x00000010,
++	},
+ };
+ 
+ bool etnaviv_fill_identity_from_hwdb(struct etnaviv_gpu *gpu)

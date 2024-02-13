@@ -1,6 +1,6 @@
-diff -urN linux-6.7-rc4/drivers/remoteproc/Kconfig linux-6.7-rc4-saam/drivers/remoteproc/Kconfig
---- linux-6.7-rc4/drivers/remoteproc/Kconfig	2023-12-03 10:52:56.000000000 +0100
-+++ linux-6.7-rc4-saam/drivers/remoteproc/Kconfig	2023-12-08 12:34:39.681147642 +0100
+diff -urN linux-6.7/drivers/remoteproc/Kconfig linux-6.7-saam/drivers/remoteproc/Kconfig
+--- linux-6.7/drivers/remoteproc/Kconfig	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/remoteproc/Kconfig	2024-01-11 09:12:08.904246611 +0100
 @@ -326,6 +326,13 @@
  
  	  This can be either built-in or a loadable module.
@@ -15,9 +15,9 @@ diff -urN linux-6.7-rc4/drivers/remoteproc/Kconfig linux-6.7-rc4-saam/drivers/re
  config TI_K3_DSP_REMOTEPROC
  	tristate "TI K3 DSP remoteproc support"
  	depends on ARCH_K3
-diff -urN linux-6.7-rc4/drivers/remoteproc/Makefile linux-6.7-rc4-saam/drivers/remoteproc/Makefile
---- linux-6.7-rc4/drivers/remoteproc/Makefile	2023-12-03 10:52:56.000000000 +0100
-+++ linux-6.7-rc4-saam/drivers/remoteproc/Makefile	2023-12-08 12:34:12.085833254 +0100
+diff -urN linux-6.7/drivers/remoteproc/Makefile linux-6.7-saam/drivers/remoteproc/Makefile
+--- linux-6.7/drivers/remoteproc/Makefile	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/remoteproc/Makefile	2024-01-11 09:12:08.904246611 +0100
 @@ -36,6 +36,7 @@
  obj-$(CONFIG_ST_REMOTEPROC)		+= st_remoteproc.o
  obj-$(CONFIG_ST_SLIM_REMOTEPROC)	+= st_slim_rproc.o
@@ -26,13 +26,13 @@ diff -urN linux-6.7-rc4/drivers/remoteproc/Makefile linux-6.7-rc4-saam/drivers/r
  obj-$(CONFIG_TI_K3_DSP_REMOTEPROC)	+= ti_k3_dsp_remoteproc.o
  obj-$(CONFIG_TI_K3_R5_REMOTEPROC)	+= ti_k3_r5_remoteproc.o
  obj-$(CONFIG_XLNX_R5_REMOTEPROC)	+= xlnx_r5_remoteproc.o
-diff -urN linux-6.7-rc4/drivers/remoteproc/sun8i_v853_remoteproc.c linux-6.7-rc4-saam/drivers/remoteproc/sun8i_v853_remoteproc.c
---- linux-6.7-rc4/drivers/remoteproc/sun8i_v853_remoteproc.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.7-rc4-saam/drivers/remoteproc/sun8i_v853_remoteproc.c	2023-12-08 12:36:48.129110226 +0100
-@@ -0,0 +1,399 @@
+diff -urN linux-6.7/drivers/remoteproc/sun8i_v853_remoteproc.c linux-6.7-saam/drivers/remoteproc/sun8i_v853_remoteproc.c
+--- linux-6.7/drivers/remoteproc/sun8i_v853_remoteproc.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.7-saam/drivers/remoteproc/sun8i_v853_remoteproc.c	2024-02-13 11:03:03.810531016 +0100
+@@ -0,0 +1,332 @@
 +// SPDX-License-Identifier: GPL-2.0
 +//
-+// Copyright (c) 2023 Andras Szemzo szemzo.andras@gmail.com>
++// Copyright (c) 2023 Andras Szemzo <szemzo.andras@gmail.com>
 +
 +#include <linux/clk.h>
 +#include <linux/io.h>
@@ -93,7 +93,6 @@ diff -urN linux-6.7-rc4/drivers/remoteproc/sun8i_v853_remoteproc.c linux-6.7-rc4
 +		goto err_riscv_clk_cfg;
 +
 +	/* Reset e907 msgbox */
-+//	sunxi_e907_msgbox_assert(info, 1);
 +
 +	ret = reset_control_deassert(riscv->riscv_cfg);
 +	if (ret)
@@ -103,8 +102,6 @@ diff -urN linux-6.7-rc4/drivers/remoteproc/sun8i_v853_remoteproc.c linux-6.7-rc4
 +
 +	/* turn on clk */
 +	reset_control_deassert(riscv->riscv_clk_gate);
-+
-+//	sunxi_e907_msgbox_deassert(info, 0);
 +
 +	return 0;
 +
@@ -179,57 +176,8 @@ diff -urN linux-6.7-rc4/drivers/remoteproc/sun8i_v853_remoteproc.c linux-6.7-rc4
 +	return 0;
 +}
 +
-+#if 0
-+static int sun8i_v853_rproc_prepare(struct rproc *rproc)
-+{
-+	struct device *dev = rproc->dev.parent;
-+	struct device_node *np = dev->of_node;
-+	struct of_phandle_iterator it;
-+	struct rproc_mem_entry *mem;
-+	struct reserved_mem *rmem;
-+	u32 da;
 +
-+	/* Register associated reserved memory regions */
-+	of_phandle_iterator_init(&it, np, "memory-region", NULL, 0);
-+	while (of_phandle_iterator_next(&it) == 0) {
-+
-+		rmem = of_reserved_mem_lookup(it.node);
-+		if (!rmem) {
-+			of_node_put(it.node);
-+			dev_err(&rproc->dev,
-+				"unable to acquire memory-region\n");
-+			return -EINVAL;
-+		}
-+
-+		if (rmem->base > U32_MAX) {
-+			of_node_put(it.node);
-+			return -EINVAL;
-+		}
-+
-+		/* No need to translate pa to da, R-Car use same map */
-+		da = rmem->base;
-+		mem = rproc_mem_entry_init(dev, NULL,
-+					   rmem->base,
-+					   rmem->size, da,
-+					   sun8i_v853_rproc_mem_alloc,
-+					   sun8i_v853_rproc_mem_release,
-+					   it.node->name);
-+
-+		if (!mem) {
-+			of_node_put(it.node);
-+			return -ENOMEM;
-+		}
-+
-+		rproc_add_carveout(rproc, mem);
-+	}
-+
-+	return 0;
-+}
-+#endif
-+
-+#if 1
 +static int sun8i_v853_rproc_parse_fw(struct rproc *rproc, const struct firmware *fw)
-+//static int sun8i_v853_rproc_prepare(struct rproc *rproc)
 +{
 +	struct device *dev = rproc->dev.parent;
 +	struct device_node *np = dev->of_node;
@@ -276,31 +224,16 @@ diff -urN linux-6.7-rc4/drivers/remoteproc/sun8i_v853_remoteproc.c linux-6.7-rc4
 +	return rproc_elf_load_rsc_table(rproc, fw);
 +//	return 0;
 +}
-+#endif
-+
-+#if 0
-+static int sun8i_v853_rproc_parse_fw(struct rproc *rproc, const struct firmware *fw)
-+{
-+	int ret;
-+
-+	ret = rproc_elf_load_rsc_table(rproc, fw);
-+	if (ret)
-+		dev_info(&rproc->dev, "No resource table in elf\n");
-+
-+	return 0;
-+}
-+#endif
 +
 +static const struct rproc_ops sun8i_v853_rproc_ops = {
 +	.start			= sun8i_v853_rproc_start,
 +	.stop			= sun8i_v853_rproc_stop,
 +	.kick			= sun8i_v853_rproc_kick,
-+	.load 			= rproc_elf_load_segments,
-+	.parse_fw 		= sun8i_v853_rproc_parse_fw,
-+//	.prepare 		= sun8i_v853_rproc_prepare,
-+	.find_loaded_rsc_table 	= rproc_elf_find_loaded_rsc_table,
-+	.sanity_check 		= rproc_elf_sanity_check,
-+	.get_boot_addr 		= rproc_elf_get_boot_addr,
++	.load			= rproc_elf_load_segments,
++	.parse_fw		= sun8i_v853_rproc_parse_fw,
++	.find_loaded_rsc_table	= rproc_elf_find_loaded_rsc_table,
++	.sanity_check		= rproc_elf_sanity_check,
++	.get_boot_addr		= rproc_elf_get_boot_addr,
 +};
 +
 +static void sun8i_v853_rproc_mbox_rx_callback(struct mbox_client *client, void *msg)
@@ -347,7 +280,7 @@ diff -urN linux-6.7-rc4/drivers/remoteproc/sun8i_v853_remoteproc.c linux-6.7-rc4
 +
 +	riscv->cfg_base = devm_platform_ioremap_resource(pdev, 0);
 +	if (IS_ERR(riscv->cfg_base))
-+	    return -EINVAL;
++		return -EINVAL;
 +
 +	riscv->riscv_clk = devm_clk_get(dev, "riscv");
 +	if (IS_ERR(riscv->riscv_clk))

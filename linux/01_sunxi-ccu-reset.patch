@@ -1,0 +1,47 @@
+diff -urN linux-6.7/drivers/clk/sunxi-ng/ccu_reset.c linux-6.7-saam/drivers/clk/sunxi-ng/ccu_reset.c
+--- linux-6.7/drivers/clk/sunxi-ng/ccu_reset.c	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/clk/sunxi-ng/ccu_reset.c	2024-01-11 09:12:08.892247173 +0100
+@@ -9,6 +9,9 @@
+ #include <linux/reset-controller.h>
+ 
+ #include "ccu_reset.h"
++#include "ccu_common.h"
++
++#define CCU_RST_KEY_VALUE		0x16aa0000
+ 
+ static int ccu_reset_assert(struct reset_controller_dev *rcdev,
+ 			    unsigned long id)
+@@ -21,6 +24,9 @@
+ 	spin_lock_irqsave(ccu->lock, flags);
+ 
+ 	reg = readl(ccu->base + map->reg);
++	if (map->features & CCU_FEATURE_KEY_FIELD)
++		reg |= CCU_RST_KEY_VALUE;
++
+ 	writel(reg & ~map->bit, ccu->base + map->reg);
+ 
+ 	spin_unlock_irqrestore(ccu->lock, flags);
+@@ -39,6 +45,9 @@
+ 	spin_lock_irqsave(ccu->lock, flags);
+ 
+ 	reg = readl(ccu->base + map->reg);
++	if (map->features & CCU_FEATURE_KEY_FIELD)
++		reg |= CCU_RST_KEY_VALUE;
++
+ 	writel(reg | map->bit, ccu->base + map->reg);
+ 
+ 	spin_unlock_irqrestore(ccu->lock, flags);
+diff -urN linux-6.7/drivers/clk/sunxi-ng/ccu_reset.h linux-6.7-saam/drivers/clk/sunxi-ng/ccu_reset.h
+--- linux-6.7/drivers/clk/sunxi-ng/ccu_reset.h	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/clk/sunxi-ng/ccu_reset.h	2024-01-11 09:12:08.892247173 +0100
+@@ -12,9 +12,9 @@
+ struct ccu_reset_map {
+ 	u16	reg;
+ 	u32	bit;
++	u32	features;
+ };
+ 
+-
+ struct ccu_reset {
+ 	void __iomem			*base;
+ 	struct ccu_reset_map		*reset_map;

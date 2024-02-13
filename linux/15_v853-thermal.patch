@@ -1,6 +1,6 @@
-diff -urN linux-6.7-rc4/drivers/thermal/sun8i_thermal.c linux-6.7-rc4-saam/drivers/thermal/sun8i_thermal.c
---- linux-6.7-rc4/drivers/thermal/sun8i_thermal.c	2023-12-03 10:52:56.000000000 +0100
-+++ linux-6.7-rc4-saam/drivers/thermal/sun8i_thermal.c	2023-12-08 12:33:02.807531166 +0100
+diff -urN linux-6.7/drivers/thermal/sun8i_thermal.c linux-6.7-saam/drivers/thermal/sun8i_thermal.c
+--- linux-6.7/drivers/thermal/sun8i_thermal.c	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/thermal/sun8i_thermal.c	2024-02-13 11:00:20.342518266 +0100
 @@ -133,6 +133,15 @@
  	return 0;
  }
@@ -17,7 +17,7 @@ diff -urN linux-6.7-rc4/drivers/thermal/sun8i_thermal.c linux-6.7-rc4-saam/drive
  static const struct thermal_zone_device_ops ths_ops = {
  	.get_temp = sun8i_ths_get_temp,
  };
-@@ -319,6 +328,80 @@
+@@ -319,6 +328,79 @@
  	return ret;
  }
  
@@ -91,14 +91,13 @@ diff -urN linux-6.7-rc4/drivers/thermal/sun8i_thermal.c linux-6.7-rc4-saam/drive
 +				   cdata << offset);
 +	}
 +
-+//	tmdev->has_calibration = true;
 +	return 0;
 +}
 +
  static void sun8i_ths_reset_control_assert(void *data)
  {
  	reset_control_assert(data);
-@@ -606,6 +689,19 @@
+@@ -606,6 +688,19 @@
  	.calc_temp = sun8i_ths_calc_temp,
  };
  
@@ -118,7 +117,7 @@ diff -urN linux-6.7-rc4/drivers/thermal/sun8i_thermal.c linux-6.7-rc4-saam/drive
  static const struct of_device_id of_ths_match[] = {
  	{ .compatible = "allwinner,sun8i-a83t-ths", .data = &sun8i_a83t_ths },
  	{ .compatible = "allwinner,sun8i-h3-ths", .data = &sun8i_h3_ths },
-@@ -614,6 +710,7 @@
+@@ -614,6 +709,7 @@
  	{ .compatible = "allwinner,sun50i-a100-ths", .data = &sun50i_a100_ths },
  	{ .compatible = "allwinner,sun50i-h5-ths", .data = &sun50i_h5_ths },
  	{ .compatible = "allwinner,sun50i-h6-ths", .data = &sun50i_h6_ths },

@@ -1,6 +1,6 @@
-diff -urN linux-6.7-rc4/drivers/gpu/drm/sun4i/sun4i_drv.c linux-6.7-rc4-saam/drivers/gpu/drm/sun4i/sun4i_drv.c
---- linux-6.7-rc4/drivers/gpu/drm/sun4i/sun4i_drv.c	2023-12-03 10:52:56.000000000 +0100
-+++ linux-6.7-rc4-saam/drivers/gpu/drm/sun4i/sun4i_drv.c	2023-12-08 12:30:41.254996518 +0100
+diff -urN linux-6.7/drivers/gpu/drm/sun4i/sun4i_drv.c linux-6.7-saam/drivers/gpu/drm/sun4i/sun4i_drv.c
+--- linux-6.7/drivers/gpu/drm/sun4i/sun4i_drv.c	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/gpu/drm/sun4i/sun4i_drv.c	2024-01-11 09:12:08.896246994 +0100
 @@ -431,6 +431,7 @@
  	{ .compatible = "allwinner,sun8i-h3-display-engine" },
  	{ .compatible = "allwinner,sun8i-r40-display-engine" },
@@ -9,9 +9,9 @@ diff -urN linux-6.7-rc4/drivers/gpu/drm/sun4i/sun4i_drv.c linux-6.7-rc4-saam/dri
  	{ .compatible = "allwinner,sun9i-a80-display-engine" },
  	{ .compatible = "allwinner,sun20i-d1-display-engine" },
  	{ .compatible = "allwinner,sun50i-a64-display-engine" },
-diff -urN linux-6.7-rc4/drivers/gpu/drm/sun4i/sun8i_mixer.c linux-6.7-rc4-saam/drivers/gpu/drm/sun4i/sun8i_mixer.c
---- linux-6.7-rc4/drivers/gpu/drm/sun4i/sun8i_mixer.c	2023-12-03 10:52:56.000000000 +0100
-+++ linux-6.7-rc4-saam/drivers/gpu/drm/sun4i/sun8i_mixer.c	2023-12-08 12:30:10.927739256 +0100
+diff -urN linux-6.7/drivers/gpu/drm/sun4i/sun8i_mixer.c linux-6.7-saam/drivers/gpu/drm/sun4i/sun8i_mixer.c
+--- linux-6.7/drivers/gpu/drm/sun4i/sun8i_mixer.c	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/gpu/drm/sun4i/sun8i_mixer.c	2024-01-11 09:12:08.896246994 +0100
 @@ -641,6 +641,15 @@
  	.vi_num		= 1,
  };

@@ -1,6 +1,6 @@
-diff -urN linux-6.7-rc4/drivers/pmdomain/sunxi/sun20i-ppu.c linux-6.7-rc4-saam/drivers/pmdomain/sunxi/sun20i-ppu.c
---- linux-6.7-rc4/drivers/pmdomain/sunxi/sun20i-ppu.c	2023-12-03 10:52:56.000000000 +0100
-+++ linux-6.7-rc4-saam/drivers/pmdomain/sunxi/sun20i-ppu.c	2023-12-08 12:28:14.034603072 +0100
+diff -urN linux-6.7/drivers/pmdomain/sunxi/sun20i-ppu.c linux-6.7-saam/drivers/pmdomain/sunxi/sun20i-ppu.c
+--- linux-6.7/drivers/pmdomain/sunxi/sun20i-ppu.c	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/pmdomain/sunxi/sun20i-ppu.c	2024-01-11 09:12:08.900246815 +0100
 @@ -182,11 +182,26 @@
  	.num_domains	= ARRAY_SIZE(sun20i_d1_ppu_pd_names),
  };
@@ -28,9 +28,9 @@ diff -urN linux-6.7-rc4/drivers/pmdomain/sunxi/sun20i-ppu.c linux-6.7-rc4-saam/d
  	{ }
  };
  MODULE_DEVICE_TABLE(of, sun20i_ppu_of_match);
-diff -urN linux-6.7-rc4/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h linux-6.7-rc4-saam/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h
---- linux-6.7-rc4/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.7-rc4-saam/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h	2023-12-08 12:27:34.939561240 +0100
+diff -urN linux-6.7/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h linux-6.7-saam/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h
+--- linux-6.7/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.7-saam/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h	2024-01-11 09:12:08.904246611 +0100
 @@ -0,0 +1,10 @@
 +/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
 +
@@ -41,4 +41,4 @@ diff -urN linux-6.7-rc4/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h lin
 +#define PD_NPU			1
 +#define PD_VE			2
 +
-+#endif 
++#endif

@@ -1,0 +1,30 @@
+diff -urN linux-6.7/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml linux-6.7-saam/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml
+--- linux-6.7/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml	2024-02-13 09:55:49.462126958 +0100
+@@ -44,6 +44,7 @@
+       - allwinner,sun8i-r40-pinctrl
+       - allwinner,sun8i-v3-pinctrl
+       - allwinner,sun8i-v3s-pinctrl
++      - allwinner,sun8i-v853-pinctrl
+       - allwinner,sun9i-a80-pinctrl
+       - allwinner,sun9i-a80-r-pinctrl
+       - allwinner,sun20i-d1-pinctrl
+@@ -193,6 +194,18 @@
+ 
+   - if:
+       properties:
++        compatible:
++          enum:
++            - allwinner,sun8i-v853-pinctrl
++
++    then:
++      properties:
++        interrupts:
++          minItems: 8
++          maxItems: 8
++
++  - if:
++      properties:
+         compatible:
+           enum:
+             - allwinner,sun9i-a80-pinctrl

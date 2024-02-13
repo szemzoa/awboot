@@ -1,0 +1,11 @@
+diff -urN linux-6.7/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml linux-6.7-saam/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml
+--- linux-6.7/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml	2024-02-13 10:44:13.702562884 +0100
+@@ -17,6 +17,7 @@
+   compatible:
+     enum:
+       - allwinner,sun20i-d1-ppu
++      - allwinner,sun8i-v853-ppu
+ 
+   reg:
+     maxItems: 1

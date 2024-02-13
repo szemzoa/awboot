@@ -1,6 +1,6 @@
-diff -urN linux-6.7-rc4/drivers/phy/allwinner/phy-sun4i-usb.c linux-6.7-rc4-saam/drivers/phy/allwinner/phy-sun4i-usb.c
---- linux-6.7-rc4/drivers/phy/allwinner/phy-sun4i-usb.c	2023-12-03 10:52:56.000000000 +0100
-+++ linux-6.7-rc4-saam/drivers/phy/allwinner/phy-sun4i-usb.c	2023-12-08 12:39:54.363605478 +0100
+diff -urN linux-6.7/drivers/phy/allwinner/phy-sun4i-usb.c linux-6.7-saam/drivers/phy/allwinner/phy-sun4i-usb.c
+--- linux-6.7/drivers/phy/allwinner/phy-sun4i-usb.c	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/phy/allwinner/phy-sun4i-usb.c	2024-01-11 09:12:08.900246815 +0100
 @@ -1006,6 +1006,15 @@
  	.phy0_dual_route = true,
  };

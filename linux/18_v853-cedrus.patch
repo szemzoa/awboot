@@ -1,0 +1,28 @@
+diff -urN linux-6.7/drivers/staging/media/sunxi/cedrus/cedrus.c linux-6.7-saam/drivers/staging/media/sunxi/cedrus/cedrus.c
+--- linux-6.7/drivers/staging/media/sunxi/cedrus/cedrus.c	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/staging/media/sunxi/cedrus/cedrus.c	2024-01-17 15:45:41.108184040 +0100
+@@ -621,6 +621,13 @@
+ 	.mod_rate	= 432000000,
+ };
+ 
++static const struct cedrus_variant sun8i_v853_cedrus_variant = {
++	.capabilities	= CEDRUS_CAPABILITY_UNTILED |
++			  CEDRUS_CAPABILITY_H264_DEC |
++			  CEDRUS_CAPABILITY_H265_DEC,
++	.mod_rate	= 297000000,
++};
++
+ static const struct cedrus_variant sun50i_a64_cedrus_variant = {
+ 	.capabilities	= CEDRUS_CAPABILITY_UNTILED |
+ 			  CEDRUS_CAPABILITY_MPEG2_DEC |
+@@ -694,6 +701,10 @@
+ 		.compatible = "allwinner,sun50i-h6-video-engine",
+ 		.data = &sun50i_h6_cedrus_variant,
+ 	},
++	{
++		.compatible = "allwinner,sun8i-v853-video-engine",
++		.data = &sun8i_v853_cedrus_variant,
++	},
+ 	{ /* sentinel */ }
+ };
+ MODULE_DEVICE_TABLE(of, cedrus_dt_match);

@@ -1,0 +1,276 @@
+diff -urN linux-6.7/arch/arm/boot/dts/allwinner/Makefile linux-6.7-saam/arch/arm/boot/dts/allwinner/Makefile
+--- linux-6.7/arch/arm/boot/dts/allwinner/Makefile	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/arch/arm/boot/dts/allwinner/Makefile	2024-01-11 09:12:08.888247240 +0100
+@@ -317,6 +317,7 @@
+ 	sun8i-s3-lichee-zero-plus.dtb \
+ 	sun8i-s3-pinecube.dtb \
+ 	sun8i-t113s-mangopi-mq-r-t113.dtb \
++	sun8i-v851s-lizard.dtb \
+ 	sun8i-t3-cqa3t-bv3.dtb \
+ 	sun8i-v3-sl631-imx179.dtb \
+ 	sun8i-v3s-licheepi-zero.dtb \
+diff -urN linux-6.7/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts linux-6.7-saam/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts
+--- linux-6.7/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.7-saam/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	2024-02-13 10:02:51.407625457 +0100
+@@ -0,0 +1,261 @@
++// SPDX-License-Identifier: (GPL-2.0+ or MIT)
++// Copyright (C) 2024 Andras Szemzo.andras@gmail.com>
++
++/dts-v1/;
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/leds/common.h>
++#include "sun8i-v851s.dtsi"
++
++/ {
++	model = "Yuzuki-lizard";
++	compatible = "allwinner,sun8i-v853", "allwinner,sun8i";
++
++	aliases {
++		serial0 = &uart0;
++		serial2 = &uart2;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	reg_vcc: vcc {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++	};
++
++	reg_vcc_1v8: vcc-1v8 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-1v8";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++	};
++
++	reg_usbvbus: usbvbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usbvbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++	reg_vcc_3v3: vcc-3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-3v3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++	reg_vdd_cpu: vdd-cpu {
++		compatible = "regulator-fixed";
++		regulator-name = "vdd-cpu";
++		regulator-min-microvolt = <900000>;
++		regulator-max-microvolt = <900000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		status_led {
++			linux,default-trigger = "heartbeat";
++			label = "led:red";
++			gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;
++		};
++	};
++
++	wifi_pwrseq: wifi-pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		reset-gpios = <&pio 4 6 GPIO_ACTIVE_LOW>; /* PE6 */
++	};
++};
++
++&cpu0 {
++	cpu-supply = <&reg_vdd_cpu>;
++};
++
++&pio {
++
++	vcc-pa-supply = <&reg_vcc_3v3>;
++	vcc-pc-supply = <&reg_vcc_3v3>;
++	vcc-pd-supply = <&reg_vcc_3v3>;
++	vcc-pe-supply = <&reg_vcc_3v3>;
++	vcc-pf-supply = <&reg_vcc_3v3>;
++	vcc-ph-supply = <&reg_vcc_3v3>;
++};
++
++&uart0 {
++	pinctrl-0 = <&uart0_ph9_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&uart2 {
++	pinctrl-0 = <&uart2_pe12_pins>;
++	rs485-rts-delay = <0 0>;
++	rts-gpios = <&pio 4 10 GPIO_ACTIVE_LOW>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&wdt {
++	status = "okay";
++};
++
++&spi0 {
++	pinctrl-0 = <&spi0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	flash@0 {
++		compatible = "spi-nand";
++		reg = <0>;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "awboot";
++				reg = <0x00000000 0x00020000>;	/* 128K */
++			};
++
++			partition@20000 {
++				label = "dtb";
++				reg = <0x00020000 0x00020000>;  /* 128k */
++			};
++
++			partition@40000 {
++				label = "kernel";
++				reg = <0x00040000 0x00800000>;  /* 8MB */
++			};
++
++			partition@840000 {
++				label = "rootfs";
++				reg = <0x00840000 0x077c0000>;
++			};
++		};
++	};
++
++};
++
++&i2c2 {
++	pinctrl-0 = <&i2c2_ph11_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&pwm {
++	pinctrl-0 = <&pwm_ph0_pin>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&mmc0 {
++	bus-width = <4>;
++	disable-wp;
++	vmmc-supply = <&reg_vcc_3v3>;
++	vqmmc-supply = <&reg_vcc_3v3>;
++	pinctrl-0 = <&mmc0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&mmc1 {
++	bus-width = <4>;
++	mmc-pwrseq = <&wifi_pwrseq>;
++	non-removable;
++	vmmc-supply = <&reg_vcc_3v3>;
++	vqmmc-supply = <&reg_vcc_3v3>;
++	pinctrl-0 = <&mmc1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	xr829: wifi@1 {
++		reg = <1>;
++		interrupt-parent = <&pio>;
++		interrupts = <4 7 IRQ_TYPE_LEVEL_HIGH>; /* PE7 */
++		interrupt-names = "host-wake";
++	};
++};
++
++&usb_otg {
++	dr_mode = "peripheral";
++/*	dr_mode = "otg"; */
++	status = "okay";
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&usbphy {
++	usb0_vbus-supply = <&reg_usbvbus>;
++	status = "okay";
++};
++
++&gpadc {
++	status = "okay";
++
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	channel@0 {
++	    reg = <0>;
++	};
++};
++
++&de {
++	status = "disabled";
++};
++
++&dphy {
++	status = "disabled";
++};
++
++&tcon_lcd0 {
++	status = "disabled";
++};
++
++&dsi {
++	status = "disabled";
++
++	pinctrl-0 = <&dsi_2lane_pins>;
++	pinctrl-names = "default";
++
++	ports {
++	    #address-cells = <1>;
++	    #size-cells = <0>;
++
++	    dsi_out: port@0 {
++		reg = <0>;
++
++		dsi_out_panel: endpoint {
++		    remote-endpoint = <&panel_out_dsi>;
++		};
++	    };
++	};
++
++	panel@0 {
++	    compatible = "lg,lh500wx1-sd03";
++	    reg = <0>;
++	    port {
++		panel_out_dsi: endpoint {
++		    remote-endpoint = <&dsi_out_panel>;
++		};
++	    };
++	};
++};
++
++&npu {
++	status = "okay";
++};

@@ -1,6 +1,6 @@
-diff -urN linux-6.7-rc4/drivers/rtc/rtc-sun6i.c linux-6.7-rc4-saam/drivers/rtc/rtc-sun6i.c
---- linux-6.7-rc4/drivers/rtc/rtc-sun6i.c	2023-12-03 10:52:56.000000000 +0100
-+++ linux-6.7-rc4-saam/drivers/rtc/rtc-sun6i.c	2023-11-29 15:23:52.342481605 +0100
+diff -urN linux-6.7/drivers/rtc/rtc-sun6i.c linux-6.7-saam/drivers/rtc/rtc-sun6i.c
+--- linux-6.7/drivers/rtc/rtc-sun6i.c	2024-01-07 21:18:38.000000000 +0100
++++ linux-6.7-saam/drivers/rtc/rtc-sun6i.c	2024-01-11 09:12:08.904246611 +0100
 @@ -867,6 +867,8 @@
  		.data = (void *)RTC_LINEAR_DAY },
  	{ .compatible = "allwinner,sun50i-r329-rtc",
