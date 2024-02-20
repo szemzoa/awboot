@@ -654,44 +654,18 @@ static void mctl_com_init(dram_para_t *para)
 }
 
 static const uint8_t ac_remapping_tables[][22] = {
-	[0] = {0x05, 0x13, 0x04, 0x0F, 0x0C, 0x03, 0x0D, 0x0E, 0x01, 0x0A, 0x16,
-		   0x14, 0x11, 0x10, 0x06, 0x08, 0x07, 0x09, 0x15, 0x02, 0x0B, 0x12},
+	/* No Remap */
+	[0] = {   0,	  0,	 0,	0,   0,	  0,	 0,	0,   0,	  0,	 0,0,	   0,	  0,	 0,	0,	   0,	  0,	 0,	0,	   0,	  0		   },
 
-	[1] = {0x13, 0x04, 0x12, 0x02, 0x06, 0x03, 0x05, 0x07, 0x0C, 0x08, 0x0D,
-		   0x0A, 0x09, 0x00, 0x00, 0x00, 0x16, 0x01, 0x0B, 0x11, 0x15, 0x14},
+ /* V853 DDR3 */
+	//        [1] = {0x5, 0x13, 0x4, 0xF, 0xC, 0x3, 0xD, 0xE, 0x1, 0xA, 0x16,
+	//               0x14, 0x11, 0x10, 0x6, 0x8, 0x7, 0x9, 0x15, 0x2, 0xB, 0x12},
+
+	/* V853s SIP Winbond 128M DDR3 */
+	[1] = {0x13, 0x4, 0x12, 0x2, 0x6, 0x3, 0x5, 0x7, 0xC, 0x8, 0xD,
+		   0xA, 0x9, 0x0, 0x0, 0x0, 0x16, 0x1, 0xB, 0x11, 0x15, 0x14},
 };
 
-/*
- * This routine chooses one of several remapping tables for 22 lines.
- * It is unclear which lines are being remapped.
- */
-static void mctl_phy_ac_remapping(dram_para_t *para)
-{
-	const uint8_t *cfg;
-	uint32_t	   val;
-
-	if (-1 < *(int *)(para->dram_tpr13) << 0xd)
-		cfg = ac_remapping_tables[0];
-
-	if (*(int *)(para->dram_tpr13) << 0xd < 0)
-		cfg = ac_remapping_tables[1];
-
-	if (para->dram_type == SUNXI_DRAM_TYPE_DDR3) {
-		val = cfg[1] << 10 | cfg[0] << 5 | 1 | cfg[2] << 15 | cfg[3] << 20 | cfg[4] << 25;
-		writel(val, (MCTL_COM_BASE + MCTL_COM_REMAP0));
-
-		val = cfg[7] << 10 | cfg[6] << 5 | cfg[5] | cfg[8] << 15 | cfg[9] << 0x14 | cfg[10] << 25;
-		writel(val, (MCTL_COM_BASE + MCTL_COM_REMAP1));
-
-		val = cfg[13] << 10 | cfg[12] << 5 | cfg[11] | cfg[14] << 15 | cfg[15] << 20;
-		writel(val, (MCTL_COM_BASE + MCTL_COM_REMAP2));
-
-		val = cfg[18] << 10 | cfg[17] << 5 | cfg[16] | cfg[19] << 15 | cfg[20] << 20 | cfg[21] << 25;
-		writel(val, (MCTL_COM_BASE + MCTL_COM_REMAP3));
-	}
-}
-
-#if 0
 /*
  * This routine chooses one of several remapping tables for 22 lines.
  * It is unclear which lines are being remapped. It seems to pick
@@ -700,71 +674,42 @@ static void mctl_phy_ac_remapping(dram_para_t *para)
 static void mctl_phy_ac_remapping(dram_para_t *para)
 {
 	const uint8_t *cfg;
-	uint32_t	   fuse, val;
-
-#if 1
-	if (-1 < (int)read32(0x070901f8) << 0xf) {
-		write32(0x070901f4, 0x21);
-		sdelay(10);
-	}
-#endif
+	//    uint32_t fuse, val;
+	uint32_t val;
 
 	/*
-	 * It is unclear whether the LPDDRx types don't need any remapping,
-	 * or whether the original code just didn't provide tables.
+	 * Only DDR2 and DDR3 Support Remap
 	 */
 	if (para->dram_type != SUNXI_DRAM_TYPE_DDR2 && para->dram_type != SUNXI_DRAM_TYPE_DDR3)
 		return;
 
-	fuse = (readl(SUNXI_SID_BASE + 0x28) & 0xf00) >> 8;
-	debug("DDR efuse: 0x%" PRIx32 "\r\n", fuse);
+	//	fuse = (readl(SYS_SID_BASE + SYS_EFUSE_REG) & 0xf00) >> 8;
+	//	message("DDR efuse: 0x%lx\r\n", fuse);
 
 	if (para->dram_type == SUNXI_DRAM_TYPE_DDR2) {
-		if (fuse == 15)
-			return;
-		cfg = ac_remapping_tables[6];
+		return;
 	} else {
-		if (para->dram_tpr13 & 0xc0000) {
-			cfg = ac_remapping_tables[7];
-		} else {
-			switch (fuse) {
-				case 8:
-					cfg = ac_remapping_tables[2];
-					break;
-				case 9:
-					cfg = ac_remapping_tables[3];
-					break;
-				case 10:
-					cfg = ac_remapping_tables[5];
-					break;
-				case 11:
-					cfg = ac_remapping_tables[4];
-					break;
-				default:
-				case 12:
-					cfg = ac_remapping_tables[1];
-					break;
-				case 13:
-				case 14:
-					cfg = ac_remapping_tables[0];
-					break;
-			}
-		}
+		cfg = ac_remapping_tables[1];
 	}
 
-	val = (cfg[4] << 25) | (cfg[3] << 20) | (cfg[2] << 15) | (cfg[1] << 10) | (cfg[0] << 5);
+	val = (cfg[1] << 10) | (32 * cfg[0]) | 1 | (cfg[2] << 15) | (cfg[3] << 20) | (cfg[4] << 25);
 	writel(val, (MCTL_COM_BASE + MCTL_COM_REMAP0));
 
-	val = (cfg[10] << 25) | (cfg[9] << 20) | (cfg[8] << 15) | (cfg[7] << 10) | (cfg[6] << 5) | cfg[5];
+	val = (cfg[7] << 10) | (32 * cfg[6]) | cfg[5] | (cfg[8] << 15) | (cfg[9] << 20) | (cfg[10] << 25);
 	writel(val, (MCTL_COM_BASE + MCTL_COM_REMAP1));
 
-	val = (cfg[15] << 20) | (cfg[14] << 15) | (cfg[13] << 10) | (cfg[12] << 5) | cfg[11];
+	val = (cfg[13] << 10) | (32 * cfg[12]) | cfg[11] | (cfg[14] << 15) | (cfg[15] << 20);
 	writel(val, (MCTL_COM_BASE + MCTL_COM_REMAP2));
 
-	val = (cfg[21] << 25) | (cfg[20] << 20) | (cfg[19] << 15) | (cfg[18] << 10) | (cfg[17] << 5) | cfg[16];
+	val = (cfg[18] << 10) | (32 * cfg[17]) | cfg[16] | (cfg[19] << 15) | (cfg[20] << 20) | (cfg[21] << 25);
 	writel(val, (MCTL_COM_BASE + MCTL_COM_REMAP3));
+	/*
+		printf("MCTL_COM_REMAP0 = 0x%x\n", readl((MCTL_COM_BASE + MCTL_COM_REMAP0)));
+		printf("MCTL_COM_REMAP1 = 0x%x\n", readl((MCTL_COM_BASE + MCTL_COM_REMAP1)));
+		printf("MCTL_COM_REMAP2 = 0x%x\n", readl((MCTL_COM_BASE + MCTL_COM_REMAP2)));
+		printf("MCTL_COM_REMAP3 = 0x%x\n", readl((MCTL_COM_BASE + MCTL_COM_REMAP3)));
+	*/
 }
-#endif
 
 // Init the controller channel. The key part is placing commands in the main
 // command register (PIR, 0x3103000) and checking command status (PGSR0, 0x3103010).
@@ -1074,7 +1019,7 @@ static int mctl_core_init(dram_para_t *para)
 
 	mctl_com_init(para);
 
-	//	mctl_phy_ac_remapping(para);
+	mctl_phy_ac_remapping(para);
 
 	mctl_set_timing_params(para);
 

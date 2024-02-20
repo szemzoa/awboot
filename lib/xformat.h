@@ -37,7 +37,7 @@
  * Define to 0 to support long long type (prefix ll)
  */
 #ifndef XCFG_FORMAT_LONGLONG
-#define XCFG_FORMAT_LONGLONG 0
+#define XCFG_FORMAT_LONGLONG 1
 #endif
 
 unsigned xvformat(void (*outchar)(void *arg, char), void *arg, const char *fmt, va_list args);

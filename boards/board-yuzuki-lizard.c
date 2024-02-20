@@ -62,6 +62,7 @@ int board_sdhci_init()
 void board_init()
 {
 	board_init_led(led_blue);
+
 #ifdef CONFIG_ENABLE_CONSOLE
 	gic400_init();
 #endif

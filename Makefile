@@ -3,7 +3,7 @@ TARGET := awboot
 CROSS_COMPILE ?= arm-none-eabi
 
 # Log level defaults to info
-LOG_LEVEL ?= 30
+LOG_LEVEL ?= 40
 
 SRCS := main.c boards/board-$(BOARD).c
 
@@ -15,7 +15,8 @@ include	arch/arm32/arm32.mk
 include	lib/lib.mk
 
 CFLAGS += -mcpu=cortex-a7 -mthumb-interwork -mthumb -mno-unaligned-access -mfpu=neon-vfpv4 -mfloat-abi=hard
-CFLAGS += -ffast-math -ffunction-sections -fdata-sections -Os -std=gnu99 -Wall -Werror -Wno-unused-function -g -MMD $(INCLUDES) $(DEFINES)
+CFLAGS += -ffast-math -ffunction-sections -fdata-sections -Os -std=gnu99 -Wall -Wno-unused-function -g -MMD $(INCLUDES) $(DEFINES)
+#-Werror
 
 ASFLAGS += $(CFLAGS)
 LDFLAGS += $(CFLAGS) $(LIBS) -Wl,--gc-sections

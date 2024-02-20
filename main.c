@@ -12,6 +12,11 @@
 #include "board.h"
 #include "console.h"
 #include "barrier.h"
+#include "nutheap.h"
+#include "bio.h"
+#include "ext2_fs.h"
+#include "ext2_priv.h"
+#include "partition.h"
 
 extern void			 board_init(void);
 extern unsigned long sunxi_dram_init(void);
@@ -43,7 +48,6 @@ static int boot_image_setup(unsigned char *addr, unsigned int *entry)
 
 #if defined(CONFIG_BOOT_SDCARD) || defined(CONFIG_BOOT_MMC)
 #define CHUNK_SIZE 0x20000
-
 static int fatfs_loadimage(char *filename, BYTE *dest)
 {
 	FIL					  file;
@@ -88,6 +92,75 @@ open_fail:
 	return ret;
 }
 
+#ifdef CONFIG_ENABLE_EXT2FS
+struct bdev block_device;
+
+ssize_t sunxi_read_block(struct bdev *bdev, void *buf, bnum_t block, uint count)
+{
+	if (sdmmc_blk_read(&card0, buf, (uint64_t)(block + bdev->lba_start), (uint64_t)count) != count) {
+		message("%s read error\r\n", __FUNCTION__);
+		return -1;
+	}
+
+	return 0;
+}
+
+static int load_sdcard(image_info_t *image)
+{
+	int				 ret;
+	u32 UNUSED_DEBUG start;
+	fscookie		 *fsc;
+	filecookie	   *fic;
+	struct file_stat fstat;
+
+#if defined(CONFIG_SDMMC_SPEED_TEST_SIZE) && LOG_LEVEL >= LOG_DEBUG
+	u32 test_time;
+	start = time_ms();
+	sdmmc_blk_read(&card0, (u8 *)(SDRAM_BASE), 0, CONFIG_SDMMC_SPEED_TEST_SIZE);
+	test_time = time_ms() - start;
+	debug("SDMMC: speedtest %uKB in %" PRIu32 "ms at %" PRIu32 "KB/S\r\n", (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / 1024,
+		  test_time, (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / test_time);
+#endif // SDMMC_SPEED_TEST
+
+	bio_initialize_bdev(&block_device, 512, card0.card.capacity);
+	block_device.read_block = sunxi_read_block;
+
+	start = time_ms();
+	/* mount fs */
+	if (partition_publish(&block_device, (uint64_t)0) != 0) {
+		error("EXT2FS: no partition found\r\n");
+		return 1;
+	}
+
+	if (ext2_mount(&block_device, &fsc) != 0) {
+		error("EXT2FS: mount error\r\n");
+		return -1;
+	} else {
+		debug("EXT2FS: mount OK\r\n");
+	}
+
+	info("EXT2FS: read %s addr=%x\r\n", image->of_filename, (unsigned int)image->of_dest);
+	ext2_open_file(fsc, image->of_filename, &fic);
+	ext2_stat_file(fic, &fstat);
+	ext2_read_file(fic, (void *)image->of_dest, 0, fstat.size);
+	ext2_close_file(fic);
+
+	info("EXT2FS: read %s addr=%x\r\n", image->filename, (unsigned int)image->dest);
+	ext2_open_file(fsc, image->filename, &fic);
+	ext2_stat_file(fic, &fstat);
+	ext2_read_file(fic, (void *)image->dest, 0, fstat.size);
+	ext2_close_file(fic);
+
+	/* umount fs */
+	ext2_unmount(fsc);
+	debug("EXT2FS: unmount OK\r\n");
+	debug("EXT2FS: done in %" PRIu32 "ms\r\n", time_ms() - start);
+
+	return 0;
+}
+
+#else
+
 static int load_sdcard(image_info_t *image)
 {
 	FATFS			 fs;
@@ -96,7 +169,7 @@ static int load_sdcard(image_info_t *image)
 	u32 UNUSED_DEBUG start;
 
 #if defined(CONFIG_SDMMC_SPEED_TEST_SIZE) && LOG_LEVEL >= LOG_DEBUG
-	u32 test_time;
+	u32				 test_time;
 	start = time_ms();
 	sdmmc_blk_read(&card0, (u8 *)(SDRAM_BASE), 0, CONFIG_SDMMC_SPEED_TEST_SIZE);
 	test_time = time_ms() - start;
@@ -136,7 +209,7 @@ static int load_sdcard(image_info_t *image)
 
 	return 0;
 }
-
+#endif
 #endif
 
 #ifdef CONFIG_BOOT_SPINAND
@@ -201,6 +274,9 @@ int main(void)
 	info("DRAM size: %luMB\r\n", msize);
 
 	//	arm32_mmu_enable(SDRAM_BASE, msize);
+
+	/* Initialize our heap memory. */
+	NutHeapAdd((void *)CONFIG_NUTHEAP_BASE, CONFIG_NUTHEAP_SIZE & ~3);
 
 #ifdef CONFIG_ENABLE_CONSOLE
 	console_init(&USART_DBG);

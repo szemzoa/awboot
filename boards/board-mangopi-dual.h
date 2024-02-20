@@ -12,7 +12,12 @@
 #define CONFIG_BOOT_SDCARD
 #define CONFIG_BOOT_MMC
 
+/* HEAP memory */
+#define CONFIG_NUTHEAP_BASE (SDRAM_BASE + (2 * 1024 * 1024))
+#define CONFIG_NUTHEAP_SIZE (8 * 1024 * 1024)
+
 //#define CONFIG_ENABLE_CONSOLE
+#define CONFIG_ENABLE_EXT2FS
 
 #define CONFIG_FATFS_CACHE_SIZE		 (CONFIG_DTB_LOAD_ADDR - SDRAM_BASE) // in bytes
 #define CONFIG_SDMMC_SPEED_TEST_SIZE 1024 // (unit: 512B sectors)
@@ -21,8 +26,13 @@
 
 #define CONFIG_ENABLE_CPU_FREQ_DUMP
 
+#ifdef CONFIG_ENABLE_EXT2FS
+#define CONFIG_KERNEL_FILENAME "/boot/zImage"
+#define CONFIG_DTB_FILENAME	   "/boot/sun8i-t113-mangopi-dual.dtb"
+#else
 #define CONFIG_KERNEL_FILENAME "zImage"
 #define CONFIG_DTB_FILENAME	   "sun8i-t113-mangopi-dual.dtb"
+#endif
 
 #define CONFIG_CMD_LINE_ARGS                                                                                     \
 	"mem=64M cma=8M root=/dev/mmcblk0p2 init=/sbin/init console=ttyS5,115200 earlyprintk=sunxi-uart,0x02501400 " \
