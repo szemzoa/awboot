@@ -1,0 +1,344 @@
+[I] AWBoot r6773 starting...
+[I] DRAM size: 64MB
+[I] SPI-NAND: FS35SQA001G detected
+[I] SPI-NAND: read dt blob of size 22267 at 17.00MB/S
+[I] SPI-NAND: read Image of size 6401296 at 17.00MB/S
+[I] setup bootargs: mem=64M cma=4M init=/sbin/init console=ttyS2,115200 rootfstype=ubifs ubi.mtd=3 root=ubi0:rootfs rw rootwait earlyprintk=sunxi-uart,0x02500800
+[I] booting linux...
+[    0.000000] Booting Linux on physical CPU 0x0
+[    0.000000] Linux version 6.11.5 (root@devel) (arm-linux-gnueabihf-gcc (Linaro GCC 6.4-2017.11) 6.4.1 20171012, GNU ld (Linaro_Binutils-2017.11) 2.27.0.20161229) #77 SMP PREEMPT Tue Oct 29 10:12:17 CET 2024
+[    0.000000] CPU: ARMv7 Processor [410fc075] revision 5 (ARMv7), cr=50c5387d
+[    0.000000] CPU: div instructions available: patching division code
+[    0.000000] CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
+[    0.000000] OF: fdt: Machine model: Yuzuki-lizard
+[    0.000000] printk: legacy bootconsole [earlycon0] enabled
+[    0.000000] Memory policy: Data cache writealloc
+[    0.000000] Reserved memory: created DMA memory pool at 0x43c00000, size 1 MiB
+[    0.000000] OF: reserved mem: initialized node riscv_dram, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x43c00000..0x43d7ffff (1536 KiB) nomap non-reusable riscv_dram
+[    0.000000] Reserved memory: created DMA memory pool at 0x43d80000, size 0 MiB
+[    0.000000] OF: reserved mem: initialized node vdev0buffer@43d80000, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x43d80000..0x43dbffff (256 KiB) nomap non-reusable vdev0buffer@43d80000
+[    0.000000] Reserved memory: created DMA memory pool at 0x43dc0000, size 0 MiB
+[    0.000000] OF: reserved mem: initialized node vdev0vring0@43dc0000, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x43dc0000..0x43ddffff (128 KiB) nomap non-reusable vdev0vring0@43dc0000
+[    0.000000] Reserved memory: created DMA memory pool at 0x43de0000, size 0 MiB
+[    0.000000] OF: reserved mem: initialized node vdev0vring1@43de0000, compatible id shared-dma-pool
+[    0.000000] OF: reserved mem: 0x43de0000..0x43dfffff (128 KiB) nomap non-reusable vdev0vring1@43de0000
+[    0.000000] cma: Reserved 4 MiB at 0x43800000 on node -1
+[    0.000000] Zone ranges:
+[    0.000000]   Normal   [mem 0x0000000040000000-0x0000000043ffffff]
+[    0.000000]   HighMem  empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000040000000-0x0000000043bfffff]
+[    0.000000]   node   0: [mem 0x0000000043c00000-0x0000000043dfffff]
+[    0.000000]   node   0: [mem 0x0000000043e00000-0x0000000043ffffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000040000000-0x0000000043ffffff]
+[    0.000000] percpu: Embedded 13 pages/cpu s21132 r8192 d23924 u53248
+[    0.000000] Kernel command line: mem=64M cma=4M init=/sbin/init console=ttyS2,115200 rootfstype=ubifs ubi.mtd=3 root=ubi0:rootfs rw rootwait earlyprintk=sunxi-uart,0x02500800
+[    0.000000] Dentry cache hash table entries: 8192 (order: 3, 32768 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 4096 (order: 2, 16384 bytes, linear)
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 16384
+[    0.000000] mem auto-init: stack:off, heap alloc:off, heap free:off
+[    0.000000] SLUB: HWalign=64, Order=0-1, MinObjects=0, CPUs=1, Nodes=1
+[    0.000000] rcu: Preemptible hierarchical RCU implementation.
+[    0.000000] rcu:     RCU event tracing is enabled.
+[    0.000000] rcu:     RCU restricting CPUs from NR_CPUS=4 to nr_cpu_ids=1.
+[    0.000000]  Trampoline variant of Tasks RCU enabled.
+[    0.000000]  Tracing variant of Tasks RCU enabled.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 10 jiffies.
+[    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=1
+[    0.000000] RCU Tasks: Setting shift to 0 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=1.
+[    0.000000] RCU Tasks Trace: Setting shift to 0 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=1.
+[    0.000000] NR_IRQS: 16, nr_irqs: 16, preallocated irqs: 16
+[    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention.
+[    0.000000] arch_timer: cp15 timer(s) running at 24.00MHz (virt).
+[    0.000000] clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0x588fe9dc0, max_idle_ns: 440795202592 ns
+[    0.000001] sched_clock: 56 bits at 24MHz, resolution 41ns, wraps every 4398046511097ns
+[    0.008014] Switching to timer-based delay loop, resolution 41ns
+[    0.014326] clocksource: timer: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 79635851949 ns
+[    0.024038] Console: colour dummy device 80x30
+[    0.028576] Calibrating delay loop (skipped), value calculated using timer frequency.. 48.00 BogoMIPS (lpj=240000)
+[    0.038954] CPU: Testing write buffer coherency: ok
+[    0.043906] pid_max: default: 32768 minimum: 301
+[    0.048702] Mount-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.056071] Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.065080] CPU0: update cpu_capacity 1024
+[    0.069305] CPU0: thread -1, cpu 0, socket 0, mpidr 80000000
+[    0.077046] Setting up static identity map for 0x40100000 - 0x40100054
+[    0.083972] rcu: Hierarchical SRCU implementation.
+[    0.088793] rcu:     Max phase no-delay instances is 1000.
+[    0.095298] smp: Bringing up secondary CPUs ...
+[    0.099873] smp: Brought up 1 node, 1 CPU
+[    0.103912] SMP: Total of 1 processors activated (48.00 BogoMIPS).
+[    0.110222] CPU: All CPU(s) started in SVC mode.
+[    0.114994] Memory: 43656K/65536K available (7168K kernel code, 831K rwdata, 3936K rodata, 1024K init, 212K bss, 17232K reserved, 4096K cma-reserved, 0K highmem)
+[    0.130292] devtmpfs: initialized
+[    0.141828] VFP support v0.3: implementor 41 architecture 2 part 30 variant 7 rev 5
+[    0.149933] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+[    0.159822] futex hash table entries: 256 (order: 2, 16384 bytes, linear)
+[    0.167046] pinctrl core: initialized pinctrl subsystem
+[    0.175087] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.182182] DMA: preallocated 256 KiB pool for atomic coherent allocations
+[    0.190087] audit: initializing netlink subsys (disabled)
+[    0.195916] audit: type=2000 audit(0.130:1): state=initialized audit_enabled=0 res=1
+[    0.204399] thermal_sys: Registered thermal governor 'step_wise'
+[    0.204418] thermal_sys: Registered thermal governor 'user_space'
+[    0.210967] No ATAGs?
+[    0.219519] hw-breakpoint: found 5 (+1 reserved) breakpoint and 4 watchpoint registers.
+[    0.227554] hw-breakpoint: maximum watchpoint size is 8 bytes.
+[    0.238313] platform soc: Fixed dependency cycle(s) with /soc/interrupt-controller@3021000
+[    0.255680] platform 5100000.mixer: Fixed dependency cycle(s) with /soc/tcon-top@5460000
+[    0.264197] platform 5450000.dsi: Fixed dependency cycle(s) with /soc/dsi@5450000/panel@0
+[    0.272413] platform 5450000.dsi: Fixed dependency cycle(s) with /soc/lcd-controller@5461000
+[    0.281611] platform 5100000.mixer: Fixed dependency cycle(s) with /soc/tcon-top@5460000
+[    0.289844] platform 5460000.tcon-top: Fixed dependency cycle(s) with /soc/lcd-controller@5461000
+[    0.298797] platform 5460000.tcon-top: Fixed dependency cycle(s) with /soc/mixer@5100000
+[    0.307356] platform 5460000.tcon-top: Fixed dependency cycle(s) with /soc/lcd-controller@5461000
+[    0.316431] platform 5450000.dsi: Fixed dependency cycle(s) with /soc/lcd-controller@5461000
+[    0.325012] platform 5461000.lcd-controller: Fixed dependency cycle(s) with /soc/dsi@5450000
+[    0.333622] platform 5461000.lcd-controller: Fixed dependency cycle(s) with /soc/tcon-top@5460000
+[    0.352517] SCSI subsystem initialized
+[    0.356757] usbcore: registered new interface driver usbfs
+[    0.362309] usbcore: registered new interface driver hub
+[    0.367792] usbcore: registered new device driver usb
+[    0.373357] mc: Linux media interface: v0.10
+[    0.377771] videodev: Linux video capture interface: v2.00
+[    0.383315] pps_core: LinuxPPS API ver. 1 registered
+[    0.388324] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.397496] PTP clock support registered
+[    0.402346] FPGA manager framework
+[    0.405917] Advanced Linux Sound Architecture Driver Initialized.
+[    0.414469] clocksource: Switched to clocksource arch_sys_counter
+[    0.436501] NET: Registered PF_INET protocol family
+[    0.441738] IP idents hash table entries: 2048 (order: 2, 16384 bytes, linear)
+[    0.450534] tcp_listen_portaddr_hash hash table entries: 512 (order: 0, 4096 bytes, linear)
+[    0.459008] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.466777] TCP established hash table entries: 1024 (order: 0, 4096 bytes, linear)
+[    0.474471] TCP bind hash table entries: 1024 (order: 2, 16384 bytes, linear)
+[    0.481658] TCP: Hash tables configured (established 1024 bind 1024)
+[    0.488163] UDP hash table entries: 256 (order: 1, 8192 bytes, linear)
+[    0.494771] UDP-Lite hash table entries: 256 (order: 1, 8192 bytes, linear)
+[    0.501957] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    0.511901] Initialise system trusted keyrings
+[    0.516847] workingset: timestamp_bits=14 max_order=14 bucket_order=0
+[    0.770148] Key type asymmetric registered
+[    0.774303] Asymmetric key parser 'x509' registered
+[    0.779359] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 244)
+[    0.786822] io scheduler mq-deadline registered
+[    0.900348] Serial: 8250/16550 driver, 8 ports, IRQ sharing disabled
+[    0.927146] Broadcom 43xx-legacy driver loaded [ Features: ID ]
+[    0.933662] usbcore: registered new interface driver usb8xxx
+[    0.939536] usbcore: registered new interface driver mt7601u
+[    0.945333] usbcore: registered new interface driver mt76x0u
+[    0.951076] usbcore: registered new interface driver mt76x2u
+[    0.956818] usbcore: registered new interface driver mt7663u
+[    0.962555] usbcore: registered new interface driver mt7921u
+[    0.968290] usbcore: registered new interface driver mt7925u
+[    0.973995] usbcore: registered new interface driver rt2500usb
+[    0.979916] usbcore: registered new interface driver rt73usb
+[    0.985671] usbcore: registered new interface driver rt2800usb
+[    0.991565] usbcore: registered new interface driver rtl8187
+[    0.997322] usbcore: registered new interface driver rtl8192cu
+[    1.003198] usbcore: registered new interface driver rtl8xxxu
+[    1.009050] usbcore: registered new interface driver rtw_8822bu
+[    1.015052] usbcore: registered new interface driver rtw_8822cu
+[    1.021045] usbcore: registered new interface driver rtw_8723du
+[    1.027045] usbcore: registered new interface driver rtw_8821cu
+[    1.033042] usbcore: registered new interface driver asix
+[    1.038525] usbcore: registered new interface driver ax88179_178a
+[    1.044681] usbcore: registered new interface driver cdc_ether
+[    1.050572] usbcore: registered new interface driver net1080
+[    1.056303] usbcore: registered new interface driver cdc_subset
+[    1.062291] usbcore: registered new interface driver zaurus
+[    1.067935] usbcore: registered new interface driver cdc_ncm
+[    1.073654] usbcore: registered new interface driver r8153_ecm
+[    1.080668] usbcore: registered new interface driver uas
+[    1.086213] usbcore: registered new interface driver usb-storage
+[    1.092371] usbcore: registered new interface driver usbserial_generic
+[    1.099030] usbserial: USB Serial support registered for generic
+[    1.105142] usbcore: registered new interface driver cp210x
+[    1.110772] usbserial: USB Serial support registered for cp210x
+[    1.116801] usbcore: registered new interface driver ftdi_sio
+[    1.122584] usbserial: USB Serial support registered for FTDI USB Serial Device
+[    1.133180] sun6i-rtc 7090000.rtc: registered as rtc0
+[    1.138504] sun6i-rtc 7090000.rtc: setting system clock to 1970-01-02T00:57:41 UTC (89861)
+[    1.147843] i2c_dev: i2c /dev entries driver
+[    1.152593] Driver for 1-wire Dallas network protocol.
+[    1.160251] sunxi-wdt 20500a0.watchdog: Watchdog enabled (timeout=16 sec, nowayout=1)
+[    1.172319] usbcore: registered new interface driver usbhid
+[    1.178158] usbhid: USB HID core driver
+[    1.184619] hw perfevents: enabled with armv7_cortex_a7 PMU driver, 5 counters available
+[    1.198124] NET: Registered PF_INET6 protocol family
+[    1.205261] Segment Routing with IPv6
+[    1.209079] In-situ OAM (IOAM) with IPv6
+[    1.213172] mip6: Mobile IPv6
+[    1.217369] sit: IPv6, IPv4 and MPLS over IPv4 tunneling driver
+[    1.225386] NET: Registered PF_PACKET protocol family
+[    1.230485] lib80211: common routines for IEEE802.11 drivers
+[    1.238216] NET: Registered PF_IEEE802154 protocol family
+[    1.243789] Key type dns_resolver registered
+[    1.248568] Registering SWP/SWPB emulation handler
+[    1.266204] Loading compiled-in X.509 certificates
+[    1.303951] etnaviv etnaviv: bound 3050000.npu (ops 0x4086e9b4)
+[    1.310188] etnaviv-gpu 3050000.npu: model: GC9000, revision: 8303
+[    1.316461] etnaviv-gpu 3050000.npu: etnaviv has been instantiated on a NPU, for which the UAPI is still experimental
+[    1.328312] [drm] Initialized etnaviv 1.4.0 for etnaviv on minor 0
+[    1.347409] clocksource: hstimer: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 9556302233 ns
+[    1.365388] cedrus 1c0e000.video-codec: Device registered as /dev/video0
+[    1.386084] gpio gpiochip0: Static allocation of GPIO base is deprecated, use dynamic allocation.
+[    1.412719] sun8i-v853-pinctrl 2000000.pinctrl: initialized sunXi PIO driver
+[    1.445254] 2500000.serial: ttyS0 at MMIO 0x2500000 (irq = 306, base_baud = 1500000) is a 16550A
+[    1.477601] 2500800.serial: ttyS2 at MMIO 0x2500800 (irq = 307, base_baud = 1500000) is a 16550A
+[    1.486562] printk: legacy console [ttyS2] enabled
+[    1.486562] printk: legacy console [ttyS2] enabled
+[    1.496230] printk: legacy bootconsole [earlycon0] disabled
+[    1.496230] printk: legacy bootconsole [earlycon0] disabled
+[    1.526990] sun6i-mipi-dsi 5450000.dsi: supply vcc-dsi not found, using dummy regulator
+[    1.535898] sun6i-mipi-dsi 5450000.dsi: Fixed dependency cycle(s) with /soc/dsi@5450000/panel@0
+[    1.544914] mipi-dsi 5450000.dsi.0: Fixed dependency cycle(s) with /soc/dsi@5450000
+[    1.552806] panel-simple-dsi 5450000.dsi.0: supply power not found, using dummy regulator
+[    1.567547] sun4i-drm display-engine: bound 5100000.mixer (ops 0x4085c460)
+[    1.575204] sun4i-drm display-engine: bound 5460000.tcon-top (ops 0x40860a28)
+[    1.583139] sun4i-drm display-engine: No panel or bridge found... RGB output disabled
+[    1.591274] sun4i-drm display-engine: bound 5461000.lcd-controller (ops 0x40859810)
+[    1.599086] sun4i-drm display-engine: bound 5450000.dsi (ops 0x4085bfd0)
+[    1.606930] [drm] Initialized sun4i-drm 1.0.0 for display-engine on minor 1
+[    1.618048] spi-nand spi0.0: FORESEE SPI NAND was found.
+[    1.623395] spi-nand spi0.0: 128 MiB, block size: 128 KiB, page size: 2048, OOB size: 64
+[    1.632522] 4 fixed-partitions partitions found on MTD device spi0.0
+[    1.639368] Creating 4 MTD partitions on "spi0.0":
+[    1.644184] 0x000000000000-0x000000020000 : "awboot"
+[    1.650516] 0x000000020000-0x000000040000 : "dtb"
+[    1.656563] 0x000000040000-0x000000840000 : "kernel"
+[    1.676221] 0x000000840000-0x000008000000 : "rootfs"
+[    1.908501] gpio-224 (onewire_device_ph0): enforced open drain please flag it properly in DT/ACPI DSDT/board file
+[    1.930143] remoteproc remoteproc0: rproc is available
+[    1.936189] sunxi-mmc 4021000.mmc: allocated mmc-pwrseq
+[    1.943394] panel-simple-dsi 5450000.dsi.0: supply power not found, using dummy regulator
+[    1.951828] sunxi-mmc 4020000.mmc: initialized, max. request size: 2048 KB, uses new timings mode
+[    1.961473] panel-simple-dsi 5450000.dsi.0: Unbalanced pm_runtime_enable!
+[    1.968675] sun6i-mipi-dsi 5450000.dsi: Attached device lh500wx1-sd03
+[    1.977682] phy phy-4100400.phy.1: Changing dr_mode to 1
+[    1.983154] sunxi-mmc 4021000.mmc: initialized, max. request size: 2048 KB, uses new timings mode
+[    1.994792] usb_phy_generic usb_phy_generic.1.auto: dummy supplies not allowed for exclusive requests (id=vbus)
+[    2.005428] ehci-platform 4101000.usb: EHCI Host Controller
+[    2.013085] ehci-platform 4101000.usb: new USB bus registered, assigned bus number 1
+[    2.022673] ehci-platform 4101000.usb: irq 312, io mem 0x04101000
+[    2.047019] mmc1: new high speed SDIO card at address 0001
+[    2.054545] ehci-platform 4101000.usb: USB 2.0 started, EHCI 1.00
+[    2.062465] hub 1-0:1.0: USB hub found
+[    2.066481] hub 1-0:1.0: 1 port detected
+[    2.224580] ohci-platform 4101400.usb: Generic Platform OHCI controller
+[    2.231309] ohci-platform 4101400.usb: new USB bus registered, assigned bus number 2
+[    2.239769] musb-hdrc musb-hdrc.2.auto: MUSB HDRC host driver
+[    2.246426] musb-hdrc musb-hdrc.2.auto: new USB bus registered, assigned bus number 3
+[    2.255896] ohci-platform 4101400.usb: irq 313, io mem 0x04101400
+[    2.262719] hub 3-0:1.0: USB hub found
+[    2.266741] hub 3-0:1.0: 1 port detected
+[    2.295506] ubi0: default fastmap pool size: 45
+[    2.300077] ubi0: default fastmap WL pool size: 22
+[    2.305005] ubi0: attaching mtd3
+[    2.333004] hub 2-0:1.0: USB hub found
+[    2.337519] hub 2-0:1.0: 1 port detected
+[    2.514531] usb 1-1: new high-speed USB device number 2 using ehci-platform
+[    2.725495] usb 1-1: config 1 interface 0 altsetting 0 has 7 endpoint descriptors, different from the interface descriptor's value: 5
+[    2.794567] random: crng init done
+[    2.914566] usb 1-1: reset high-speed USB device number 2 using ehci-platform
+[    3.126057] ieee80211 phy0: rt2x00_set_rt: Info - RT chipset 5390, rev 0502 detected
+[    3.166841] ieee80211 phy0: rt2x00_set_rf: Info - RF chipset 5370 detected
+[    3.492547] ubi0: scanning is finished
+[    3.512883] ubi0: attached mtd3 (name "rootfs", size 119 MiB)
+[    3.518734] ubi0: PEB size: 131072 bytes (128 KiB), LEB size: 126976 bytes
+[    3.525667] ubi0: min./max. I/O unit sizes: 2048/2048, sub-page size 2048
+[    3.532462] ubi0: VID header offset: 2048 (aligned 2048), data offset: 4096
+[    3.539709] ubi0: good PEBs: 957, bad PEBs: 1, corrupted PEBs: 0
+[    3.545906] ubi0: user volume: 1, internal volumes: 1, max. volumes count: 128
+[    3.553244] ubi0: max/mean erase counter: 28/15, WL threshold: 4096, image sequence number: 1579043696
+[    3.562619] ubi0: available PEBs: 0, total reserved PEBs: 957, PEBs reserved for bad PEB handling: 19
+[    3.571992] ubi0: background thread "ubi_bgt0d" started, PID 57
+[    3.578624] cfg80211: Loading compiled-in X.509 certificates for regulatory database
+[    3.593341] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'
+[    3.601943] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'
+[    3.609484] platform regulatory.0: Direct firmware load for regulatory.db failed with error -2
+[    3.618241] cfg80211: failed to load regulatory.db
+[    3.623126] clk: Disabling unused clocks
+[    3.627370] PM: genpd: Disabling unused power domains
+[    3.632493] ALSA device list:
+[    3.635524]   #0: V853 Audio Codec
+[    3.641620] UBIFS (ubi0:0): Mounting in unauthenticated mode
+[    3.647949] UBIFS (ubi0:0): background thread "ubifs_bgt0_0" started, PID 61
+[    3.728683] UBIFS (ubi0:0): recovery needed
+[    3.938705] UBIFS (ubi0:0): recovery completed
+[    3.943335] UBIFS (ubi0:0): UBIFS: mounted UBI device 0, volume 0, name "rootfs"
+[    3.951231] UBIFS (ubi0:0): LEB size: 126976 bytes (124 KiB), min./max. I/O unit sizes: 2048 bytes/2048 bytes
+[    3.961631] UBIFS (ubi0:0): FS size: 116944896 bytes (111 MiB, 921 LEBs), max 2048 LEBs, journal size 9023488 bytes (8 MiB, 72 LEBs)
+[    3.973769] UBIFS (ubi0:0): reserved for root: 0 bytes (0 KiB)
+[    3.979769] UBIFS (ubi0:0): media format: w4/r0 (latest is w5/r0), UUID 0D466F7B-CAF5-407E-87BD-3914ED2AB219, small LPT model
+[    3.996438] VFS: Mounted root (ubifs filesystem) on device 0:16.
+[    4.005844] devtmpfs: mounted
+[    4.010735] Freeing unused kernel image (initmem) memory: 1024K
+[    4.017256] Run /sbin/init as init process
+
+   OpenRC 0.55.1 is starting up Linux 6.11.5 (armv7l)
+
+ * Mounting /proc ... [ ok ]
+ * Mounting /run ... [ ok ]
+ * /run/openrc: creating directory
+ * /run/lock: creating directory
+ * /run/lock: correcting owner
+Service 'hwdrivers' needs non existent service 'dev'
+Service 'machine-id' needs non existent service 'dev'
+ * Caching service dependencies ... [ ok ]
+ * Clock skew detected with `/etc/init.d/termencoding'
+ * Adjusting mtime of `/run/openrc/deptree' to Wed Oct  9 12:45:45 2024
+
+ * WARNING: clock skew detected!
+ * WARNING: clock skew detected!
+ * Remounting devtmpfs on /dev ... [ ok ]
+ * Mounting /dev/mqueue ... [ ok ]
+ * Mounting /dev/pts ... [ ok ]
+ * Mounting /dev/shm ... [ ok ]
+ * Checking local filesystems  ... [ ok ]
+ * Remounting filesystems ... [ ok ]
+ * Mounting local filesystems ... [ ok ]
+ * Setting hostname ... [ ok ]
+ * Starting networking ... *   lo ... [ ok ]
+ *   wlan0 ...[    8.332811] ieee80211 phy0: rt2x00lib_request_firmware: Info - Loading firmware file 'rt2870.bin'
+[    8.355335] ieee80211 phy0: rt2x00lib_request_firmware: Info - Firmware detected - version: 0.29
+udhcpc: started, v1.37.0
+udhcpc: broadcasting discover
+udhcpc: broadcasting discover
+udhcpc: broadcasting discover
+udhcpc: broadcasting discover
+udhcpc: broadcasting discover
+udhcpc failed to get a DHCP lease
+udhcpc: no lease, forking to background
+ [ ok ]
+ * Loading modules ... [ ok ]
+ * Seeding random number generator ... * Seeding 256 bits and crediting
+ * Saving 256 bits of creditable seed for next boot
+ [ ok ]
+ * WARNING: clock skew detected!
+ * Starting cron daemon ... [ ok ]
+ * /var/run/wpa_supplicant: creating directory
+ * Starting WPA Supplicant ... [ ok ]
+ * Starting sshd ... [ ok ]
+ * Starting lighttpd ... [ ok ]
+ * Starting NTP Server ... [ ok ]
+
+Welcome to Alpine Linux 3.20
+Kernel 6.11.5 on an armv7l (/dev/ttyS2)
+
+v851s login: [   29.676066] wlan0: authenticate with 74:4d:28:4b:f5:10 (local address=00:87:40:92:51:e4)
+[   29.684219] wlan0: send auth to 74:4d:28:4b:f5:10 (try 1/3)
+[   29.692681] wlan0: authenticated
+[   29.714740] wlan0: associate with 74:4d:28:4b:f5:10 (try 1/3)
+[   29.730177] wlan0: RX AssocResp from 74:4d:28:4b:f5:10 (capab=0x431 status=0 aid=3)
+[   29.756996] wlan0: associated
+
+Welcome to Alpine Linux 3.20
+Kernel 6.11.5 on an armv7l (/dev/ttyS2)
+
+v851s login:
