@@ -1,6 +1,6 @@
-diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/Makefile linux-6.10.11-wip/arch/arm/boot/dts/allwinner/Makefile
---- linux-6.10.11/arch/arm/boot/dts/allwinner/Makefile	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/arch/arm/boot/dts/allwinner/Makefile	2024-09-11 11:05:54.298079811 +0200
+diff -urN linux-6.11.5/arch/arm/boot/dts/allwinner/Makefile linux-6.11.5-wip/arch/arm/boot/dts/allwinner/Makefile
+--- linux-6.11.5/arch/arm/boot/dts/allwinner/Makefile	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/arch/arm/boot/dts/allwinner/Makefile	2024-10-11 14:19:17.000000000 +0200
 @@ -258,6 +258,7 @@
  	sun8i-t3-cqa3t-bv3.dtb \
  	sun8i-v3-sl631-imx179.dtb \
@@ -9,10 +9,359 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/Makefile linux-6.10.11-wip/a
  	sun8i-v3s-licheepi-zero.dtb \
  	sun8i-v3s-licheepi-zero-dock.dtb \
  	sun8i-v40-bananapi-m2-berry.dtb
-diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.11-wip/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi
---- linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi	2024-09-19 11:43:12.256764593 +0200
-@@ -0,0 +1,990 @@
+diff -urN linux-6.11.5/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts linux-6.11.5-wip/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts
+--- linux-6.11.5/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	2024-10-29 10:26:03.000000000 +0100
+@@ -0,0 +1,345 @@
++// SPDX-License-Identifier: (GPL-2.0+ or MIT)
++// Copyright (C) 2023 Andras Szemzo.andras@gmail.com>
++
++/dts-v1/;
++
++#include <dt-bindings/gpio/gpio.h>
++#include <dt-bindings/leds/common.h>
++#include "sun8i-v853.dtsi"
++
++/ {
++	model = "Yuzuki-lizard";
++	compatible = "allwinner,sun8i-v853", "allwinner,sun8i";
++
++	aliases {
++		serial0 = &uart0;
++		serial2 = &uart2;
++	};
++
++	chosen {
++		stdout-path = "serial0:115200n8";
++	};
++
++	osc24M: osc24M-clk {
++		compatible = "fixed-clock";
++		clock-frequency = <24000000>;
++		clock-output-names = "osc24M";
++		#clock-cells = <0>;
++	};
++
++	rc_16M: rc16m_clk {
++		#clock-cells = <0>;
++		compatible = "fixed-clock";
++		clock-frequency = <16000000>;
++		clock-accuracy = <300000000>;
++		clock-output-names = "rc-16M";
++	};
++
++	ext_32k: ext32k_clk {
++		#clock-cells = <0>;
++		compatible = "fixed-clock";
++		clock-frequency = <32768>;
++		clock-output-names = "ext-32k";
++	};
++
++	reserved-memory {
++		#address-cells = <1>;
++		#size-cells = <1>;
++		ranges;
++
++                riscv_reserved: riscv_dram {
++                        compatible = "shared-dma-pool";
++                        reg = <0x43c00000 0x00180000>;
++                        no-map;
++                };
++
++                vdev0buffer: vdev0buffer@43d80000 {
++                        /* 256k reserved for shared mem pool */
++                        compatible = "shared-dma-pool";
++                        reg = <0x43d80000 0x40000>;
++                        no-map;
++                };
++
++                vdev0vring0: vdev0vring0@43dc0000 {
++                        compatible = "shared-dma-pool";
++                        reg = <0x43dc0000 0x20000>;
++                        no-map;
++                };
++
++                vdev0vring1: vdev0vring1@43de0000 {
++                        compatible = "shared-dma-pool";
++                        reg = <0x43de0000 0x20000>;
++                        no-map;
++                };
++	};
++
++	reg_vcc: vcc {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++	};
++
++	reg_vcc_1v8: vcc-1v8 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-1v8";
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++	};
++
++	reg_usbvbus: usbvbus {
++		compatible = "regulator-fixed";
++		regulator-name = "usbvbus";
++		regulator-min-microvolt = <5000000>;
++		regulator-max-microvolt = <5000000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++	reg_vcc_3v3: vcc-3v3 {
++		compatible = "regulator-fixed";
++		regulator-name = "vcc-3v3";
++		regulator-min-microvolt = <3300000>;
++		regulator-max-microvolt = <3300000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++	reg_vdd_cpu: vdd-cpu {
++		compatible = "regulator-fixed";
++		regulator-name = "vdd-cpu";
++		regulator-min-microvolt = <900000>;
++		regulator-max-microvolt = <900000>;
++		vin-supply = <&reg_vcc>;
++	};
++
++	leds {
++		compatible = "gpio-leds";
++
++		status_led {
++			linux,default-trigger = "heartbeat";
++			label = "led:red";
++			gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;
++		};
++	};
++
++	wifi_pwrseq: wifi-pwrseq {
++		compatible = "mmc-pwrseq-simple";
++		reset-gpios = <&pio 4 6 GPIO_ACTIVE_LOW>; /* PE6 */
++	};
++};
++
++&cpu0 {
++	cpu-supply = <&reg_vdd_cpu>;
++};
++
++&pio {
++	vcc-pa-supply = <&reg_vcc_3v3>;
++	vcc-pc-supply = <&reg_vcc_3v3>;
++	vcc-pd-supply = <&reg_vcc_3v3>;
++	vcc-pe-supply = <&reg_vcc_3v3>;
++	vcc-pf-supply = <&reg_vcc_3v3>;
++	vcc-ph-supply = <&reg_vcc_3v3>;
++
++	/omit-if-no-ref/
++	pwm_ph11_pin: pwm-ph11-pin {
++		pins = "PH11";
++		function = "pwm4";
++	};
++};
++
++&uart0 {
++	pinctrl-0 = <&uart0_ph9_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&uart2 {
++	pinctrl-0 = <&uart2_pe12_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&wdt {
++	status = "okay";
++};
++
++&spi0 {
++	pinctrl-0 = <&spi0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	flash@0 {
++		compatible = "spi-nand";
++		spi-max-frequency = <75000000>;
++		reg = <0>;
++
++		partitions {
++			compatible = "fixed-partitions";
++			#address-cells = <1>;
++			#size-cells = <1>;
++
++			partition@0 {
++				label = "awboot";
++				reg = <0x00000000 0x00020000>;	/* 128K */
++			};
++
++			partition@20000 {
++				label = "dtb";
++				reg = <0x00020000 0x00020000>;  /* 128k */
++			};
++
++			partition@40000 {
++				label = "kernel";
++				reg = <0x00040000 0x00800000>;  /* 8MB */
++			};
++
++			partition@840000 {
++				label = "rootfs";
++				reg = <0x00840000 0x077c0000>;
++			};
++		};
++	};
++};
++
++&spi3 {
++	pinctrl-0 = <&spi3_pins>;
++	pinctrl-names = "default";
++	status = "disabled";
++
++        ice40: fpga@0 {
++            compatible = "lattice,ice40-fpga-mgr";
++    	    reg = <0>;
++            spi-max-frequency = <10000000>;
++	    cdone-gpios = <&pio 4 10 GPIO_ACTIVE_HIGH>; /* PE10 */
++	    reset-gpios = <&pio 4 11 GPIO_ACTIVE_LOW>;  /* PE11 */
++        };
++};
++
++&i2c2 {
++	pinctrl-0 = <&i2c2_ph11_pins>;
++	pinctrl-names = "default";
++	status = "disabled";
++};
++
++&pwm {
++	pinctrl-0 = <&pwm_ph11_pin>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&mmc0 {
++	bus-width = <4>;
++	broken-cd;
++	disable-wp;
++	vmmc-supply = <&reg_vcc_3v3>;
++	vqmmc-supply = <&reg_vcc_3v3>;
++	pinctrl-0 = <&mmc0_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++};
++
++&mmc1 {
++	bus-width = <4>;
++	mmc-pwrseq = <&wifi_pwrseq>;
++	non-removable;
++	vmmc-supply = <&reg_vcc_3v3>;
++	vqmmc-supply = <&reg_vcc_3v3>;
++	pinctrl-0 = <&mmc1_pins>;
++	pinctrl-names = "default";
++	status = "okay";
++
++	xr829: wifi@1 {
++		reg = <1>;
++		interrupt-parent = <&pio>;
++		interrupts = <4 7 IRQ_TYPE_LEVEL_HIGH>; /* PE7 */
++		interrupt-names = "host-wake";
++	};
++};
++
++&usb_otg {
++	dr_mode = "otg";
++	status = "okay";
++};
++
++&ehci0 {
++	status = "okay";
++};
++
++&ohci0 {
++	status = "okay";
++};
++
++&usbphy {
++	usb0_vbus-supply = <&reg_usbvbus>;
++	usb1_vbus-supply = <&reg_usbvbus>;
++	usb0_id_det-gpio = <&pio 4 9 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
++&gpadc {
++	status = "okay";
++
++	#address-cells = <1>;
++	#size-cells = <0>;
++
++	channel@0 {
++	    reg = <0>;
++	};
++};
++
++&de {
++	status = "okay";
++};
++
++&dphy {
++	status = "okay";
++};
++
++&tcon_lcd0 {
++	status = "okay";
++};
++
++&dsi {
++	status = "okay";
++
++	pinctrl-0 = <&dsi_2lane_pins>;
++	pinctrl-names = "default";
++
++	ports {
++	    #address-cells = <1>;
++	    #size-cells = <0>;
++
++	    dsi_out: port@0 {
++		reg = <0>;
++
++		dsi_out_panel: endpoint {
++		    remote-endpoint = <&panel_out_dsi>;
++		};
++	    };
++	};
++
++	panel@0 {
++	    compatible = "lg,lh500wx1-sd03";
++	    reg = <0>;
++
++	    port {
++		panel_out_dsi: endpoint {
++		    remote-endpoint = <&dsi_out_panel>;
++		};
++	    };
++	};
++};
++
++&npu {
++	status = "okay";
++};
++
++&audio_codec {
++	allwinner,audio-routing = "Line Out", "LINEOUT";
++	status = "okay";
++};
++
++&remoteproc {
++	clock-frequency = <600000000>;
++	firmware-name = "v851s-riscv-firmware.elf";
++	status = "okay";
++};
+diff -urN linux-6.11.5/arch/arm/boot/dts/allwinner/sun8i-v853.dtsi linux-6.11.5-wip/arch/arm/boot/dts/allwinner/sun8i-v853.dtsi
+--- linux-6.11.5/arch/arm/boot/dts/allwinner/sun8i-v853.dtsi	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/arch/arm/boot/dts/allwinner/sun8i-v853.dtsi	2024-10-29 10:25:26.000000000 +0100
+@@ -0,0 +1,1020 @@
 +// SPDX-License-Identifier: (GPL-2.0+ or MIT)
 +// Copyright (C) 2023 Andras Szemzo <szemzo.andras@gmail.com>
 +
@@ -42,13 +391,45 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +			reg = <0>;
 +			clocks = <&ccu CLK_CPU>;
 +			clock-names = "cpu";
-+			clock-frequency = <1200000000>;
++			clock-frequency = <912000000>;
 +			clock-latency = <2000000>;
 +			cooling-min-level = <5>;
 +			cooling-max-level = <0>;
 +			#cooling-cells = <2>; /* min followed by max */
 +			dynamic-power-coefficient = <142>;
++			operating-points-v2 = <&cpu_opp_table>;
 +		};
++	};
++
++	cpu_opp_table: opp-table-cpu {
++		compatible = "operating-points-v2";
++		opp_count = <4>;
++		opp-shared;
++
++		opp-408000000 {
++			opp-hz = /bits/ 64 <408000000>;
++			opp-microvolt = <900000>;
++			clock-latency-ns = <2000000>;
++		};
++
++		opp-600000000 {
++			opp-hz = /bits/ 64 <600000000>;
++			opp-microvolt = <900000>;
++			clock-latency-ns = <2000000>;
++		};
++
++		opp-720000000 {
++			opp-hz = /bits/ 64 <720000000>;
++			opp-microvolt = <900000>;
++			clock-latency-ns = <2000000>;
++		};
++
++		opp-912000000 {
++			opp-hz = /bits/ 64 <912000000>;
++			opp-microvolt = <900000>;
++			clock-latency-ns = <2000000>;
++		};
++
 +	};
 +
 +	memory {
@@ -225,12 +606,6 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +			};
 +
 +			/omit-if-no-ref/
-+			pwm_ph0_pin: pwm-ph0-pin {
-+				pins = "PH0";
-+				function = "pwm0";
-+			};
-+
-+			/omit-if-no-ref/
 +			rmii_pe_pins: rmii-pe-pins {
 +				pins = "PE0", "PE1", "PE2", "PE3", "PE4",
 +				       "PE5", "PE6", "PE7", "PE8", "PE9";
@@ -256,6 +631,90 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +			#reset-cells = <1>;
 +		};
 +
++		dmic: dmic@2031000 {
++			compatible = "allwinner,sun50i-h6-dmic";
++			reg = <0x2031000 0x400>;
++			interrupts = <GIC_SPI 24 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_DMIC>,
++				 <&ccu CLK_DMIC>;
++			clock-names = "bus", "mod";
++			resets = <&ccu RST_BUS_DMIC>;
++			dmas = <&dma 8>;
++			dma-names = "rx";
++			status = "disabled";
++			#sound-dai-cells = <0>;
++		};
++
++		i2c0: i2c@2502000 {
++			compatible = "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502000 0x400>;
++			interrupts = <GIC_SPI 9 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C0>;
++			resets = <&ccu RST_BUS_I2C0>;
++			dmas = <&dma 43>, <&dma 43>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		i2c1: i2c@2502400 {
++			compatible = "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502400 0x400>;
++			interrupts = <GIC_SPI 10 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C1>;
++			resets = <&ccu RST_BUS_I2C1>;
++			dmas = <&dma 44>, <&dma 44>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		i2c2: i2c@2502800 {
++			compatible = "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502800 0x400>;
++			interrupts = <GIC_SPI 11 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C2>;
++			resets = <&ccu RST_BUS_I2C2>;
++			dmas = <&dma 45>, <&dma 45>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		i2c3: i2c@2502c00 {
++			compatible = "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2502c00 0x400>;
++			interrupts = <GIC_SPI 12 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C3>;
++			resets = <&ccu RST_BUS_I2C3>;
++			dmas = <&dma 46>, <&dma 46>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
++		i2c4: i2c@2503000 {
++			compatible = "allwinner,sun8i-v536-i2c",
++				     "allwinner,sun6i-a31-i2c";
++			reg = <0x2503000 0x400>;
++			interrupts = <GIC_SPI 13 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_I2C4>;
++			resets = <&ccu RST_BUS_I2C4>;
++			dmas = <&dma 47>, <&dma 47>;
++			dma-names = "rx", "tx";
++			status = "disabled";
++			#address-cells = <1>;
++			#size-cells = <0>;
++		};
++
 +		r_ccu: clock-controller@7010000 {
 +			compatible = "allwinner,sun8i-v853-r-ccu";
 +			reg = <0x7010000 0x230>;
@@ -274,7 +733,7 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +		};
 +
 +		iommu: iommu@2010000 {
-+			compatible = "allwinner,sun50i-h6-iommu";
++			compatible = "allwinner,sun50i-h616-iommu";
 +			reg = <0x2010000 0x10000>;
 +			interrupts = <GIC_SPI 64 IRQ_TYPE_LEVEL_HIGH>;
 +			clocks = <&ccu CLK_BUS_IOMMU>;
@@ -296,7 +755,7 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +			interrupt-names = "npu";
 +			clocks = <&ccu CLK_BUS_NPU>, <&ccu CLK_NPU>, <&ccu CLK_PLL_NPU_4X>;
 +			clock-names = "bus", "core", "reg";
-+			clock-frequency = <348000000>;
++			clock-frequency = <504000000>;
 +			resets = <&ccu RST_BUS_NPU>;
 +			iommus = <&iommu 6>;
 +			power-domains = <&ppu PD_NPU>;
@@ -341,11 +800,11 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +			reg = <0x02000c00 0x400>;
 +			clocks = <&osc24M>,
 +				 <&ccu CLK_BUS_PWM>,
-+				 <&ccu CLK_CPU_APB>;
++				 <&ccu CLK_APB0>;
 +			clock-names = "hosc", "bus", "apb";
 +			resets = <&ccu RST_BUS_PWM>;
-+			allwinner,pwm-channels = <11>;
 +			status = "disabled";
++			allwinner,pwm-channels = <12>;
 +			#pwm-cells = <0x3>;
 +		};
 +
@@ -422,78 +881,6 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +			status = "disabled";
 +		};
 +
-+		i2c0: i2c@2502000 {
-+			compatible = "allwinner,sun8i-v536-i2c",
-+				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x2502000 0x400>;
-+			interrupts = <GIC_SPI 9 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&ccu CLK_BUS_I2C0>;
-+			resets = <&ccu RST_BUS_I2C0>;
-+			dmas = <&dma 43>, <&dma 43>;
-+			dma-names = "rx", "tx";
-+			status = "disabled";
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+		};
-+
-+		i2c1: i2c@2502400 {
-+			compatible = "allwinner,sun8i-v536-i2c",
-+				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x2502400 0x400>;
-+			interrupts = <GIC_SPI 10 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&ccu CLK_BUS_I2C1>;
-+			resets = <&ccu RST_BUS_I2C1>;
-+			dmas = <&dma 44>, <&dma 44>;
-+			dma-names = "rx", "tx";
-+			status = "disabled";
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+		};
-+
-+		i2c2: i2c@2502800 {
-+			compatible = "allwinner,sun8i-v536-i2c",
-+				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x2502800 0x400>;
-+			interrupts = <GIC_SPI 11 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&ccu CLK_BUS_I2C2>;
-+			resets = <&ccu RST_BUS_I2C2>;
-+			dmas = <&dma 45>, <&dma 45>;
-+			dma-names = "rx", "tx";
-+			status = "disabled";
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+		};
-+
-+		i2c3: i2c@2502c00 {
-+			compatible = "allwinner,sun8i-v536-i2c",
-+				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x2502c00 0x400>;
-+			interrupts = <GIC_SPI 12 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&ccu CLK_BUS_I2C3>;
-+			resets = <&ccu RST_BUS_I2C3>;
-+			dmas = <&dma 46>, <&dma 46>;
-+			dma-names = "rx", "tx";
-+			status = "disabled";
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+		};
-+
-+
-+		i2c4: i2c@2503000 {
-+			compatible = "allwinner,sun8i-v536-i2c",
-+				     "allwinner,sun6i-a31-i2c";
-+			reg = <0x2503000 0x400>;
-+			interrupts = <GIC_SPI 13 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&ccu CLK_BUS_I2C4>;
-+			resets = <&ccu RST_BUS_I2C4>;
-+			dmas = <&dma 47>, <&dma 47>;
-+			dma-names = "rx", "tx";
-+			status = "disabled";
-+			#address-cells = <1>;
-+			#size-cells = <0>;
-+		};
-+
-+
 +		syscon: syscon@3000000 {
 +			compatible = "allwinner,sun8i-h3-system-control";
 +			reg = <0x3000000 0x1000>;
@@ -503,7 +890,7 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +
 +			sram_c: sram@20000 {
 +				compatible = "mmio-sram";
-+				reg = <0x00020000 0x210000>;
++				reg = <0x00020000 0x21000>;
 +				#address-cells = <1>;
 +				#size-cells = <1>;
 +				ranges = <0 0x00020000 0x21000>;
@@ -611,12 +998,6 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +			ths_calib: ths-calib@14 {
 +				reg = <0x14 0x8>;
 +			};
-+/*
-+			bg_trim: bg-trim@28 {
-+				reg = <0x28 0x4>;
-+				bits = <16 8>;
-+			};
-+*/
 +		};
 +
 +		mbus: dram-controller@3102000 {
@@ -804,11 +1185,8 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +		remoteproc: rproc@6010000 {
 +			compatible = "allwinner,sun8i-rproc";
 +			reg = <0x06010000 0x1000>;
-+			reg-names = "config";
 +			memory-region = <&riscv_reserved>, <&vdev0buffer>, <&vdev0vring0>, 
 +			    <&vdev0vring1>;
-+			clock-frequency = <600000000>;
-+			firmware-name = "v851s-riscv-firmware.elf";
 +                        clocks = <&ccu CLK_RISCV_CFG>, <&ccu CLK_RISCV>;
 +                        clock-names = "cfg", "riscv";
 +			resets = <&ccu RST_RISCV_CFG>,
@@ -816,6 +1194,7 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +				 <&ccu RST_RISCV_SOFT>,
 +				 <&ccu RST_RISCV_CLK_GATING>;
 +			reset-names = "cfg", "sys_apb", "soft", "clk_gate";
++			status = "disabled";
 +			iommus = <&iommu 5>;
 +			power-domains = <&ppu PD_RISCV>;
 +			mbox-names = "rx", "tx";
@@ -973,20 +1352,6 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +			};
 +		};
 +
-+		dmic: dmic@2031000 {
-+			compatible = "allwinner,sun50i-h6-dmic";
-+			reg = <0x2031000 0x400>;
-+			interrupts = <GIC_SPI 24 IRQ_TYPE_LEVEL_HIGH>;
-+			clocks = <&ccu CLK_BUS_DMIC>,
-+				 <&ccu CLK_DMIC>;
-+			clock-names = "bus", "mod";
-+			resets = <&ccu RST_BUS_DMIC>;
-+			dmas = <&dma 8>;
-+			dma-names = "rx";
-+			status = "disabled";
-+			#sound-dai-cells = <0>;
-+		};
-+
 +		ve: video-codec@1c0e000 {
 +		    compatible = "allwinner,sun8i-v853-video-engine";
 +		    reg = <0x1c0e000 0x2000>;
@@ -1001,373 +1366,25 @@ diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.10.
 +		    power-domains = <&ppu PD_VE>;
 +		};
 +
-+	};
-+};
-diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts linux-6.10.11-wip/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts
---- linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	2024-09-19 11:40:23.356860940 +0200
-@@ -0,0 +1,339 @@
-+// SPDX-License-Identifier: (GPL-2.0+ or MIT)
-+// Copyright (C) 2024 Andras Szemzo.andras@gmail.com>
-+
-+/dts-v1/;
-+
-+#include <dt-bindings/gpio/gpio.h>
-+#include <dt-bindings/leds/common.h>
-+#include "sun8i-v851s.dtsi"
-+
-+/ {
-+	model = "Yuzuki-lizard";
-+	compatible = "allwinner,sun8i-v853", "allwinner,sun8i";
-+
-+	aliases {
-+		serial0 = &uart0;
-+		serial2 = &uart2;
-+	};
-+
-+	chosen {
-+		stdout-path = "serial0:115200n8";
-+	};
-+
-+	osc24M: osc24M-clk {
-+		compatible = "fixed-clock";
-+		clock-frequency = <24000000>;
-+		clock-output-names = "osc24M";
-+		#clock-cells = <0>;
-+	};
-+
-+	rc_16M: rc16m_clk {
-+		#clock-cells = <0>;
-+		compatible = "fixed-clock";
-+		clock-frequency = <16000000>;
-+		clock-accuracy = <300000000>;
-+		clock-output-names = "rc-16M";
-+	};
-+
-+	ext_32k: ext32k_clk {
-+		#clock-cells = <0>;
-+		compatible = "fixed-clock";
-+		clock-frequency = <32768>;
-+		clock-output-names = "ext-32k";
-+	};
-+
-+	reserved-memory {
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		ranges;
-+
-+                riscv_reserved: riscv_dram {
-+                        compatible = "shared-dma-pool";
-+                        reg = <0x43c00000 0x00180000>;
-+                        no-map;
-+                };
-+
-+                vdev0buffer: vdev0buffer@43d80000 {
-+                        /* 256k reserved for shared mem pool */
-+                        compatible = "shared-dma-pool";
-+                        reg = <0x43d80000 0x40000>;
-+                        no-map;
-+                };
-+
-+                vdev0vring0: vdev0vring0@43dc0000 {
-+                        compatible = "shared-dma-pool";
-+                        reg = <0x43dc0000 0x20000>;
-+                        no-map;
-+                };
-+
-+                vdev0vring1: vdev0vring1@43de0000 {
-+                        compatible = "shared-dma-pool";
-+                        reg = <0x43de0000 0x20000>;
-+                        no-map;
-+                };
-+	};
-+
-+	reg_vcc: vcc {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+	};
-+
-+	reg_vcc_1v8: vcc-1v8 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc-1v8";
-+		regulator-min-microvolt = <1800000>;
-+		regulator-max-microvolt = <1800000>;
-+	};
-+
-+	reg_usbvbus: usbvbus {
-+		compatible = "regulator-fixed";
-+		regulator-name = "usbvbus";
-+		regulator-min-microvolt = <5000000>;
-+		regulator-max-microvolt = <5000000>;
-+		vin-supply = <&reg_vcc>;
-+	};
-+
-+	reg_vcc_3v3: vcc-3v3 {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vcc-3v3";
-+		regulator-min-microvolt = <3300000>;
-+		regulator-max-microvolt = <3300000>;
-+		vin-supply = <&reg_vcc>;
-+	};
-+
-+	reg_vdd_cpu: vdd-cpu {
-+		compatible = "regulator-fixed";
-+		regulator-name = "vdd-cpu";
-+		regulator-min-microvolt = <900000>;
-+		regulator-max-microvolt = <900000>;
-+		vin-supply = <&reg_vcc>;
-+	};
-+
-+	leds {
-+		compatible = "gpio-leds";
-+
-+		status_led {
-+			linux,default-trigger = "heartbeat";
-+			label = "led:red";
-+			gpios = <&pio 5 6 GPIO_ACTIVE_HIGH>;
++		audio_codec: audio-codec@02030000 {
++			#sound-dai-cells = <0>;
++			compatible = "allwinner,sun8i-v853-codec";
++			reg = <0x2030000 0x34c>;
++			interrupts = <GIC_SPI 25 IRQ_TYPE_LEVEL_HIGH>;
++			clocks = <&ccu CLK_BUS_AUDIO_CODEC>,
++				 <&ccu CLK_AUDIO_CODEC_DAC>;
++			clock-names = "apb", "codec";
++			resets = <&ccu RST_BUS_AUDIO_CODEC>;
++			dmas = <&dma 7>, <&dma 7>;
++			dma-names = "tx", "rx";
++			status = "disabled";
 +		};
-+	};
 +
-+	wifi_pwrseq: wifi-pwrseq {
-+		compatible = "mmc-pwrseq-simple";
-+		reset-gpios = <&pio 4 6 GPIO_ACTIVE_LOW>; /* PE6 */
-+	};
-+
-+    	fpga_region0: base_fpga_region {
-+		compatible = "fpga-region";
-+		fpga-mgr = <&ice40>;
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		ranges;
 +	};
 +};
-+
-+&cpu0 {
-+	cpu-supply = <&reg_vdd_cpu>;
-+};
-+
-+&pio {
-+
-+	vcc-pa-supply = <&reg_vcc_3v3>;
-+	vcc-pc-supply = <&reg_vcc_3v3>;
-+	vcc-pd-supply = <&reg_vcc_3v3>;
-+	vcc-pe-supply = <&reg_vcc_3v3>;
-+	vcc-pf-supply = <&reg_vcc_3v3>;
-+	vcc-ph-supply = <&reg_vcc_3v3>;
-+};
-+
-+&uart0 {
-+	pinctrl-0 = <&uart0_ph9_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+};
-+
-+&uart2 {
-+	pinctrl-0 = <&uart2_pe12_pins>;
-+/* 	rs485-rts-delay = <0 0>; */
-+/*	linux,rs485-enabled-at-boot-time; */
-+/*	rts-gpios = <&pio 4 10 GPIO_ACTIVE_LOW>; */
-+	pinctrl-names = "default";
-+	status = "okay";
-+};
-+
-+&wdt {
-+	status = "okay";
-+};
-+
-+&spi0 {
-+	pinctrl-0 = <&spi0_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+
-+	flash@0 {
-+		compatible = "spi-nand";
-+		spi-max-frequency = <75000000>;
-+		reg = <0>;
-+
-+		partitions {
-+			compatible = "fixed-partitions";
-+			#address-cells = <1>;
-+			#size-cells = <1>;
-+
-+			partition@0 {
-+				label = "awboot";
-+				reg = <0x00000000 0x00020000>;	/* 128K */
-+			};
-+
-+			partition@20000 {
-+				label = "dtb";
-+				reg = <0x00020000 0x00020000>;  /* 128k */
-+			};
-+
-+			partition@40000 {
-+				label = "kernel";
-+				reg = <0x00040000 0x00800000>;  /* 8MB */
-+			};
-+
-+			partition@840000 {
-+				label = "rootfs";
-+				reg = <0x00840000 0x077c0000>;
-+			};
-+		};
-+	};
-+};
-+
-+&spi3 {
-+	pinctrl-0 = <&spi3_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+
-+        ice40: fpga@0 {
-+            compatible = "lattice,ice40-fpga-mgr";
-+    	    reg = <0>;
-+            spi-max-frequency = <10000000>;
-+	    cdone-gpios = <&pio 4 10 GPIO_ACTIVE_HIGH>; /* PE10 */
-+	    reset-gpios = <&pio 4 11 GPIO_ACTIVE_LOW>;  /* PE11 */
-+        };
-+};
-+
-+&i2c2 {
-+	pinctrl-0 = <&i2c2_ph11_pins>;
-+	pinctrl-names = "default";
-+	status = "disabled";
-+};
-+
-+&pwm {
-+	pinctrl-0 = <&pwm_ph0_pin>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+};
-+
-+&mmc0 {
-+	bus-width = <4>;
-+	broken-cd;
-+	disable-wp;
-+	vmmc-supply = <&reg_vcc_3v3>;
-+	vqmmc-supply = <&reg_vcc_3v3>;
-+	pinctrl-0 = <&mmc0_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+};
-+
-+&mmc1 {
-+	bus-width = <4>;
-+	mmc-pwrseq = <&wifi_pwrseq>;
-+	non-removable;
-+	vmmc-supply = <&reg_vcc_3v3>;
-+	vqmmc-supply = <&reg_vcc_3v3>;
-+	pinctrl-0 = <&mmc1_pins>;
-+	pinctrl-names = "default";
-+	status = "okay";
-+
-+	xr829: wifi@1 {
-+		reg = <1>;
-+		interrupt-parent = <&pio>;
-+		interrupts = <4 7 IRQ_TYPE_LEVEL_HIGH>; /* PE7 */
-+		interrupt-names = "host-wake";
-+	};
-+};
-+
-+&usb_otg {
-+	dr_mode = "otg";
-+	status = "okay";
-+};
-+
-+&ehci0 {
-+	status = "okay";
-+};
-+
-+&ohci0 {
-+	status = "okay";
-+};
-+
-+&usbphy {
-+	usb0_vbus-supply = <&reg_usbvbus>;
-+	usb1_vbus-supply = <&reg_usbvbus>;
-+	usb0_id_det-gpio = <&pio 4 9 GPIO_ACTIVE_LOW>;
-+	status = "okay";
-+};
-+
-+&gpadc {
-+	status = "okay";
-+
-+	#address-cells = <1>;
-+	#size-cells = <0>;
-+
-+	channel@0 {
-+	    reg = <0>;
-+	};
-+};
-+
-+&de {
-+	status = "disabled";
-+};
-+
-+&dphy {
-+	status = "disabled";
-+};
-+
-+&tcon_lcd0 {
-+	status = "disabled";
-+};
-+
-+&dsi {
-+	status = "disabled";
-+
-+	pinctrl-0 = <&dsi_2lane_pins>;
-+	pinctrl-names = "default";
-+
-+	ports {
-+	    #address-cells = <1>;
-+	    #size-cells = <0>;
-+
-+	    dsi_out: port@0 {
-+		reg = <0>;
-+
-+		dsi_out_panel: endpoint {
-+		    remote-endpoint = <&panel_out_dsi>;
-+		};
-+	    };
-+	};
-+
-+	panel@0 {
-+	    compatible = "lg,lh500wx1-sd03";
-+	    reg = <0>;
-+	    port {
-+		panel_out_dsi: endpoint {
-+		    remote-endpoint = <&dsi_out_panel>;
-+		};
-+	    };
-+	};
-+};
-+
-+&npu {
-+	status = "okay";
-+};
-diff -urN linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard-overlay.dts linux-6.10.11-wip/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard-overlay.dts
---- linux-6.10.11/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard-overlay.dts	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard-overlay.dts	2024-09-11 11:05:54.302079714 +0200
-@@ -0,0 +1,15 @@
-+/dts-v1/;
-+/plugin/;
-+/ {
-+	fragment@0 {
-+		target-path = "/base_fpga_region";
-+		#address-cells = <1>;
-+		#size-cells = <1>;
-+		__overlay__ {
-+			#address-cells = <1>;
-+			#size-cells = <1>;
-+
-+			firmware-name = "ice40-firmware.bin";
-+		};
-+	};
-+};
-diff -urN linux-6.10.11/Documentation/devicetree/bindings/clock/allwinner,sun4i-a10-ccu.yaml linux-6.10.11-wip/Documentation/devicetree/bindings/clock/allwinner,sun4i-a10-ccu.yaml
---- linux-6.10.11/Documentation/devicetree/bindings/clock/allwinner,sun4i-a10-ccu.yaml	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/Documentation/devicetree/bindings/clock/allwinner,sun4i-a10-ccu.yaml	2024-09-11 11:05:54.302079714 +0200
+diff -urN linux-6.11.5/Documentation/devicetree/bindings/clock/allwinner,sun4i-a10-ccu.yaml linux-6.11.5-wip/Documentation/devicetree/bindings/clock/allwinner,sun4i-a10-ccu.yaml
+--- linux-6.11.5/Documentation/devicetree/bindings/clock/allwinner,sun4i-a10-ccu.yaml	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/Documentation/devicetree/bindings/clock/allwinner,sun4i-a10-ccu.yaml	2024-10-11 14:19:17.000000000 +0200
 @@ -33,6 +33,8 @@
        - allwinner,sun8i-r40-ccu
        - allwinner,sun8i-v3-ccu
@@ -1385,9 +1402,9 @@ diff -urN linux-6.10.11/Documentation/devicetree/bindings/clock/allwinner,sun4i-
            - allwinner,sun50i-a100-ccu
            - allwinner,sun50i-h6-ccu
            - allwinner,sun50i-h616-ccu
-diff -urN linux-6.10.11/Documentation/devicetree/bindings/phy/allwinner,sun8i-v3s-usb-phy.yaml linux-6.10.11-wip/Documentation/devicetree/bindings/phy/allwinner,sun8i-v3s-usb-phy.yaml
---- linux-6.10.11/Documentation/devicetree/bindings/phy/allwinner,sun8i-v3s-usb-phy.yaml	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/Documentation/devicetree/bindings/phy/allwinner,sun8i-v3s-usb-phy.yaml	2024-09-11 11:05:54.302079714 +0200
+diff -urN linux-6.11.5/Documentation/devicetree/bindings/phy/allwinner,sun8i-v3s-usb-phy.yaml linux-6.11.5-wip/Documentation/devicetree/bindings/phy/allwinner,sun8i-v3s-usb-phy.yaml
+--- linux-6.11.5/Documentation/devicetree/bindings/phy/allwinner,sun8i-v3s-usb-phy.yaml	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/Documentation/devicetree/bindings/phy/allwinner,sun8i-v3s-usb-phy.yaml	2024-10-11 14:19:17.000000000 +0200
 @@ -15,7 +15,9 @@
      const: 1
  
@@ -1399,9 +1416,9 @@ diff -urN linux-6.10.11/Documentation/devicetree/bindings/phy/allwinner,sun8i-v3
  
    reg:
      items:
-diff -urN linux-6.10.11/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml linux-6.10.11-wip/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml
---- linux-6.10.11/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml	2024-09-11 11:05:54.302079714 +0200
+diff -urN linux-6.11.5/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml linux-6.11.5-wip/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml
+--- linux-6.11.5/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml	2024-10-11 14:19:17.000000000 +0200
 @@ -44,6 +44,7 @@
        - allwinner,sun8i-r40-pinctrl
        - allwinner,sun8i-v3-pinctrl
@@ -1429,9 +1446,9 @@ diff -urN linux-6.10.11/Documentation/devicetree/bindings/pinctrl/allwinner,sun4
          compatible:
            enum:
              - allwinner,sun9i-a80-pinctrl
-diff -urN linux-6.10.11/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml linux-6.10.11-wip/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml
---- linux-6.10.11/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml	2024-09-11 11:05:54.302079714 +0200
+diff -urN linux-6.11.5/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml linux-6.11.5-wip/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml
+--- linux-6.11.5/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/Documentation/devicetree/bindings/power/allwinner,sun20i-d1-ppu.yaml	2024-10-11 14:19:17.000000000 +0200
 @@ -17,6 +17,7 @@
    compatible:
      enum:
@@ -1440,9 +1457,9 @@ diff -urN linux-6.10.11/Documentation/devicetree/bindings/power/allwinner,sun20i
  
    reg:
      maxItems: 1
-diff -urN linux-6.10.11/Documentation/devicetree/bindings/rtc/allwinner,sun6i-a31-rtc.yaml linux-6.10.11-wip/Documentation/devicetree/bindings/rtc/allwinner,sun6i-a31-rtc.yaml
---- linux-6.10.11/Documentation/devicetree/bindings/rtc/allwinner,sun6i-a31-rtc.yaml	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/Documentation/devicetree/bindings/rtc/allwinner,sun6i-a31-rtc.yaml	2024-09-11 11:05:54.302079714 +0200
+diff -urN linux-6.11.5/Documentation/devicetree/bindings/rtc/allwinner,sun6i-a31-rtc.yaml linux-6.11.5-wip/Documentation/devicetree/bindings/rtc/allwinner,sun6i-a31-rtc.yaml
+--- linux-6.11.5/Documentation/devicetree/bindings/rtc/allwinner,sun6i-a31-rtc.yaml	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/Documentation/devicetree/bindings/rtc/allwinner,sun6i-a31-rtc.yaml	2024-10-11 14:19:17.000000000 +0200
 @@ -31,6 +31,7 @@
            - const: allwinner,sun8i-h3-rtc
        - items:
@@ -1451,9 +1468,9 @@ diff -urN linux-6.10.11/Documentation/devicetree/bindings/rtc/allwinner,sun6i-a3
            - const: allwinner,sun50i-r329-rtc
  
    reg:
-diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu_reset.c linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu_reset.c
---- linux-6.10.11/drivers/clk/sunxi-ng/ccu_reset.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu_reset.c	2024-09-11 11:05:54.302079714 +0200
+diff -urN linux-6.11.5/drivers/clk/sunxi-ng/ccu_reset.c linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu_reset.c
+--- linux-6.11.5/drivers/clk/sunxi-ng/ccu_reset.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu_reset.c	2024-10-11 14:19:17.000000000 +0200
 @@ -9,6 +9,9 @@
  #include <linux/reset-controller.h>
  
@@ -1484,9 +1501,9 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu_reset.c linux-6.10.11-wip/drive
  	writel(reg | map->bit, ccu->base + map->reg);
  
  	spin_unlock_irqrestore(ccu->lock, flags);
-diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu_reset.h linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu_reset.h
---- linux-6.10.11/drivers/clk/sunxi-ng/ccu_reset.h	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu_reset.h	2024-09-11 11:05:54.302079714 +0200
+diff -urN linux-6.11.5/drivers/clk/sunxi-ng/ccu_reset.h linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu_reset.h
+--- linux-6.11.5/drivers/clk/sunxi-ng/ccu_reset.h	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu_reset.h	2024-10-11 14:19:17.000000000 +0200
 @@ -12,9 +12,9 @@
  struct ccu_reset_map {
  	u16	reg;
@@ -1498,13 +1515,13 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu_reset.h linux-6.10.11-wip/drive
  struct ccu_reset {
  	void __iomem			*base;
  	struct ccu_reset_map		*reset_map;
-diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.c
---- linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.c	2024-09-12 09:13:52.651433394 +0200
-@@ -0,0 +1,1145 @@
+diff -urN linux-6.11.5/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.c
+--- linux-6.11.5/drivers/clk/sunxi-ng/ccu-sun8i-v853.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.c	2024-10-28 15:20:54.000000000 +0100
+@@ -0,0 +1,1129 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
-+ * Copyright (C) 2023 Andras Szemzo <szemzo.andras@gmail.com>
++ * Copyright (C) 2024 Andras Szemzo <szemzo.andras@gmail.com>
 + *
 + * Based on ccu-sun20i-d1.c, which is:
 + * Copyright (C) 2021 Samuel Holland. All rights reserved.
@@ -1585,10 +1602,6 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/
 +static SUNXI_CCU_M(pll_periph_2x_clk, "pll-periph-2x", "pll-periph-4x",
 +		       0x020, 16, 3, 0);
 +
-+static CLK_FIXED_FACTOR_HW(pll_periph_div3_clk, "pll-periph-div3",
-+                &pll_periph_2x_clk.common.hw,
-+                6, 1, 0);
-+
 +static SUNXI_CCU_M(pll_periph_800M_clk, "pll-periph-800M", "pll-periph-4x",
 +		       0x020, 20, 3, 0);
 +
@@ -1665,44 +1678,35 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/
 +			    &pll_csi_4x_clk.common.hw, 4, 1, CLK_SET_RATE_PARENT);
 +
 +
-+/*
-+ * PLL_AUDIO doesn't need Fractional-N. The output is usually 614.4 MHz for
-+ * pll-audio-div5. The ADC or DAC should divide the PLL output further to 24.576 MHz.
-+ */
-+#define SUN8I_V853_PLL_AUDIO_REG                0x078
++#define SUN8I_V853_PLL_AUDIO_REG		0x78
 +static struct ccu_sdm_setting pll_audio_div5_sdm_table[] = {
-+        { .rate = 196608000, .pattern = 0xC001EB85, .m = 5, .n = 40 }, /* 24.576 */
-+        { .rate = 67737600, .pattern = 0xC001288D, .m = 8, .n = 22 }, /* 22.5792 */
++	{ .rate = 196608000, .pattern = 0xc001eb85, .m = 5, .n = 40 }, /* 24.576 */
++	{ .rate = 67737600, .pattern = 0xc001288d, .m = 8, .n = 22 }, /* 22.5792 */
 +};
 +
-+static struct ccu_nm pll_audio_clk = {
-+        .enable         = BIT(27) | BIT(30) | BIT(31),
-+        .lock           = BIT(28),
-+        .n              = _SUNXI_CCU_MULT(8, 8),
-+        .m              = _SUNXI_CCU_DIV(1, 1),
-+        .sdm            = _SUNXI_CCU_SDM(pll_audio_div5_sdm_table, BIT(24),
-+                        0x0178, BIT(31)),
-+        .common         = {
-+                .reg            = 0x078,
-+                .hw.init        = CLK_HW_INIT_PARENTS_DATA("pll-audio", osc24M,
-+                                                           &ccu_nm_ops,
-+                                                           CLK_SET_RATE_UNGATE),
-+        },
++static struct ccu_nm pll_audio_div5_clk = {
++	.enable		= BIT(27) | BIT(30) | BIT(31),
++	.lock           = BIT(28),
++	.n              = _SUNXI_CCU_MULT(8, 8),
++	.m              = _SUNXI_CCU_DIV(20, 3),
++	.sdm            = _SUNXI_CCU_SDM(pll_audio_div5_sdm_table, 
++				    BIT(24), 0x0178, BIT(31)),
++	.common         = {
++		.reg            = 0x0078,
++		.features       = CCU_FEATURE_SIGMA_DELTA_MOD,
++		.hw.init        = CLK_HW_INIT_PARENTS_DATA("pll-audio-div5", osc24M,
++							   &ccu_nm_ops,
++							   CLK_SET_RATE_UNGATE),
++	},
 +};
++static SUNXI_CCU_M(pll_audio_1x_clk, "pll-audio-1x", "pll-audio-div5", 
++		0xe00, 0, 5, CLK_SET_RATE_PARENT);
 +
-+static const struct clk_hw *pll_audio_hws[] = {
-+	&pll_audio_clk.common.hw
-+};
-+
-+static SUNXI_CCU_M_HWS(pll_audio_div2_clk, "pll-audio-div2",
-+                       pll_audio_hws, 0x078, 16, 3, 0);
-+static SUNXI_CCU_M_HWS(pll_audio_div5_clk, "pll-audio-div5",
-+                       pll_audio_hws, 0x078, 20, 3, 0);
-+
-+static SUNXI_CCU_M(pll_audio_4x_clk, "pll-audio-4x", "pll-audio-div2",
-+                       0xE00, 5, 5, 0);
-+static SUNXI_CCU_M(pll_audio_1x_clk, "pll-audio-1x", "pll-audio-div5",
-+                       0xE00, 0, 5, 0);
++/* pll-audio-div2 and pll-aduio-4x not used, because audio-1x can cover 22.5792M and 24.576M */
++static SUNXI_CCU_M(pll_audio_div2_clk, "pll-audio-div2", "pll-audio", 
++		0x078, 16, 3, 0);
++static SUNXI_CCU_M(pll_audio_4x_clk, "pll-audio-4x", "pll-audio-div2", 
++		0xe00, 5, 5, 0);
 +
 +/*
 + * For the NPU PLL, the output divider is described as "only for testing"
@@ -2035,26 +2039,26 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/
 +
 +static SUNXI_CCU_M_HW_WITH_MUX_GATE(dmic_clk, "dmic", audio_parents, 0xa40,
 +				     0, 4,	/* M */
-+				     24, 3,	/* mux */
++				     24, 1,	/* mux */
 +				     BIT(31),	/* gate */
 +				     0);
 +
 +static SUNXI_CCU_GATE_HWS(bus_dmic_clk, "bus-dmic", apb0_hws,
 +			  0xa4c, BIT(0), 0);
 +
-+static SUNXI_CCU_M_HW_WITH_MUX_GATE(audio_dac_clk, "audio-dac", audio_parents, 0xa50,
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(audio_codec_dac_clk, "audio-codec-dac", audio_parents, 0xa50,
 +				     0, 4,	/* M */
-+				     24, 3,	/* mux */
++				     24, 1,	/* mux */
 +				     BIT(31),	/* gate */
-+				     0);
++				     CLK_SET_RATE_PARENT);
 +
-+static SUNXI_CCU_M_HW_WITH_MUX_GATE(audio_adc_clk, "audio-adc", audio_parents, 0xa54,
++static SUNXI_CCU_M_HW_WITH_MUX_GATE(audio_codec_adc_clk, "audio-codec-adc", audio_parents, 0xa54,
 +				     0, 4,	/* M */
-+				     24, 3,	/* mux */
++				     24, 1,	/* mux */
 +				     BIT(31),	/* gate */
-+				     0);
++				     CLK_SET_RATE_PARENT);
 +
-+static SUNXI_CCU_GATE_HWS(bus_audio_clk, "bus-audio", apb0_hws,
++static SUNXI_CCU_GATE_HWS(bus_audio_codec_clk, "bus-audio-codec", apb0_hws,
 +			  0xa5c, BIT(0), 0);
 +
 +
@@ -2271,11 +2275,10 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/
 +	&pll_periph_480M_clk.common,
 +	&pll_video_4x_clk.common,
 +	&pll_csi_4x_clk.common,
-+	&pll_audio_clk.common,
 +	&pll_audio_div2_clk.common,
 +	&pll_audio_div5_clk.common,
-+	&pll_audio_1x_clk.common,
 +	&pll_audio_4x_clk.common,
++	&pll_audio_1x_clk.common,
 +	&pll_npu_4x_clk.common,
 +	&cpu_clk.common,
 +	&cpu_axi_clk.common,
@@ -2345,9 +2348,9 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/
 +	&bus_i2s_clk.common,
 +	&dmic_clk.common,
 +	&bus_dmic_clk.common,
-+	&audio_dac_clk.common,
-+	&audio_adc_clk.common,
-+	&bus_audio_clk.common,
++	&audio_codec_dac_clk.common,
++	&audio_codec_adc_clk.common,
++	&bus_audio_codec_clk.common,
 +	&bus_dpss_top_clk.common,
 +	&mipi_dsi_clk.common,
 +	&bus_mipi_dsi_clk.common,
@@ -2380,7 +2383,6 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/
 +		[CLK_PLL_DDR]		= &pll_ddr_clk.common.hw,
 +		[CLK_PLL_PERIPH_4X]	= &pll_periph_4x_clk.common.hw,
 +		[CLK_PLL_PERIPH_2X]	= &pll_periph_2x_clk.common.hw,
-+		[CLK_PLL_PERIPH_DIV3]	= &pll_periph_div3_clk.hw,
 +		[CLK_PLL_PERIPH_800M]	= &pll_periph_800M_clk.common.hw,
 +		[CLK_PLL_PERIPH_480M]	= &pll_periph_480M_clk.common.hw,
 +		[CLK_PLL_PERIPH_600M]	= &pll_periph_600M_clk.hw,
@@ -2393,7 +2395,6 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/
 +		[CLK_PLL_VIDEO_2X]	= &pll_video_2x_clk.hw,
 +		[CLK_PLL_VIDEO_1X]	= &pll_video_1x_clk.hw,
 +		[CLK_PLL_CSI_4X]	= &pll_csi_4x_clk.common.hw,
-+		[CLK_PLL_AUDIO]		= &pll_audio_clk.common.hw,
 +		[CLK_PLL_AUDIO_DIV2]	= &pll_audio_div2_clk.common.hw,
 +		[CLK_PLL_AUDIO_DIV5]	= &pll_audio_div5_clk.common.hw,
 +		[CLK_PLL_AUDIO_4X]	= &pll_audio_4x_clk.common.hw,
@@ -2464,9 +2465,9 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/
 +		[CLK_BUS_I2S]		= &bus_i2s_clk.common.hw,
 +		[CLK_DMIC]		= &dmic_clk.common.hw,
 +		[CLK_BUS_DMIC]		= &bus_dmic_clk.common.hw,
-+		[CLK_AUDIO_DAC]		= &audio_dac_clk.common.hw,
-+		[CLK_AUDIO_ADC]		= &audio_adc_clk.common.hw,
-+		[CLK_BUS_AUDIO]		= &bus_audio_clk.common.hw,
++		[CLK_AUDIO_CODEC_DAC]	= &audio_codec_dac_clk.common.hw,
++		[CLK_AUDIO_CODEC_ADC]	= &audio_codec_adc_clk.common.hw,
++		[CLK_BUS_AUDIO_CODEC]	= &bus_audio_codec_clk.common.hw,
 +		[CLK_USB_OHCI]		= &usb_ohci_clk.common.hw,
 +		[CLK_BUS_OHCI]		= &bus_ohci_clk.common.hw,
 +		[CLK_BUS_EHCI]		= &bus_ehci_clk.common.hw,
@@ -2533,7 +2534,7 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/
 +	[RST_BUS_THS]		= { 0x9fc, BIT(16) },
 +	[RST_BUS_I2S]		= { 0xa20, BIT(17) },
 +	[RST_BUS_DMIC]		= { 0xa4c, BIT(16) },
-+	[RST_BUS_AUDIO]		= { 0xa5c, BIT(16) },
++	[RST_BUS_AUDIO_CODEC]	= { 0xa5c, BIT(16) },
 +	[RST_USB_PHY]		= { 0xa70, BIT(30) },
 +	[RST_BUS_OHCI]		= { 0xa8c, BIT(16) },
 +	[RST_BUS_EHCI]		= { 0xa8c, BIT(20) },
@@ -2647,14 +2648,13 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.10.11-wip/
 +
 +MODULE_IMPORT_NS(SUNXI_CCU);
 +MODULE_LICENSE("GPL");
-diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.h linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.h
---- linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.h	2024-09-11 11:05:54.302079714 +0200
-@@ -0,0 +1,15 @@
+diff -urN linux-6.11.5/drivers/clk/sunxi-ng/ccu-sun8i-v853.h linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.h
+--- linux-6.11.5/drivers/clk/sunxi-ng/ccu-sun8i-v853.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.h	2024-10-11 14:19:17.000000000 +0200
+@@ -0,0 +1,14 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
-+ * Copyright (c) 2020 frank@allwinnertech.com
-+ * Copyright (C) 2021 Samuel Holland <samuel@sholland.org>
++ * Copyright (C) 2024 Andras Szemzo <szemzo.andras@gmail.com>
 + */
 +
 +#ifndef _CCU_SUN8I_V853_H_
@@ -2666,9 +2666,9 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853.h linux-6.10.11-wip/
 +#define CLK_NUMBER		(CLK_FANOUT2 + 1)
 +
 +#endif /* _CCU_SUN8I_V853_H_ */
-diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c
---- linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c	2024-09-11 11:05:54.302079714 +0200
+diff -urN linux-6.11.5/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c
+--- linux-6.11.5/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c	2024-10-11 14:19:17.000000000 +0200
 @@ -0,0 +1,95 @@
 +// SPDX-License-Identifier: GPL-3.0
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
@@ -2765,9 +2765,9 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c linux-6.10.11-wi
 +
 +MODULE_IMPORT_NS(SUNXI_CCU);
 +MODULE_LICENSE("GPL");
-diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h
---- linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h	2024-09-11 11:05:54.302079714 +0200
+diff -urN linux-6.11.5/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h
+--- linux-6.11.5/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h	2024-10-11 14:19:17.000000000 +0200
 @@ -0,0 +1,15 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
@@ -2784,9 +2784,9 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h linux-6.10.11-wi
 +#define CLK_NUMBER	CLK_R_MAX_NO
 +
 +#endif
-diff -urN linux-6.10.11/drivers/clk/sunxi-ng/Kconfig linux-6.10.11-wip/drivers/clk/sunxi-ng/Kconfig
---- linux-6.10.11/drivers/clk/sunxi-ng/Kconfig	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/clk/sunxi-ng/Kconfig	2024-09-11 11:05:54.306079615 +0200
+diff -urN linux-6.11.5/drivers/clk/sunxi-ng/Kconfig linux-6.11.5-wip/drivers/clk/sunxi-ng/Kconfig
+--- linux-6.11.5/drivers/clk/sunxi-ng/Kconfig	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/clk/sunxi-ng/Kconfig	2024-10-11 14:19:17.000000000 +0200
 @@ -12,6 +12,16 @@
  	default y
  	depends on MACH_SUNIV || COMPILE_TEST
@@ -2804,9 +2804,9 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/Kconfig linux-6.10.11-wip/drivers/c
  config SUN20I_D1_CCU
  	tristate "Support for the Allwinner D1/R528/T113 CCU"
  	default y
-diff -urN linux-6.10.11/drivers/clk/sunxi-ng/Makefile linux-6.10.11-wip/drivers/clk/sunxi-ng/Makefile
---- linux-6.10.11/drivers/clk/sunxi-ng/Makefile	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/clk/sunxi-ng/Makefile	2024-09-11 11:05:54.306079615 +0200
+diff -urN linux-6.11.5/drivers/clk/sunxi-ng/Makefile linux-6.11.5-wip/drivers/clk/sunxi-ng/Makefile
+--- linux-6.11.5/drivers/clk/sunxi-ng/Makefile	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/clk/sunxi-ng/Makefile	2024-10-11 14:19:17.000000000 +0200
 @@ -25,6 +25,8 @@
  
  # SoC support
@@ -2825,100 +2825,9 @@ diff -urN linux-6.10.11/drivers/clk/sunxi-ng/Makefile linux-6.10.11-wip/drivers/
  sun20i-d1-ccu-y			+= ccu-sun20i-d1.o
  sun20i-d1-r-ccu-y		+= ccu-sun20i-d1-r.o
  sun50i-a64-ccu-y		+= ccu-sun50i-a64.o
-diff -urN linux-6.10.11/drivers/fpga/ice40-spi-loader.c linux-6.10.11-wip/drivers/fpga/ice40-spi-loader.c
---- linux-6.10.11/drivers/fpga/ice40-spi-loader.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/drivers/fpga/ice40-spi-loader.c	2024-09-11 11:05:54.306079615 +0200
-@@ -0,0 +1,59 @@
-+#include <linux/of.h>
-+#include <linux/module.h>
-+#include <linux/kernel.h>
-+#include <linux/init.h>
-+#include <linux/fpga/fpga-mgr.h>
-+
-+MODULE_LICENSE("GPL");
-+MODULE_AUTHOR("Michael Welling");
-+MODULE_DESCRIPTION("FPGA loader module");
-+
-+static char *path = "ice40-firmware.bin";
-+module_param(path, charp, S_IRUGO);
-+MODULE_PARM_DESC(path, "Bitstream to load");
-+
-+static int __init fpga_load_init(void)
-+{
-+    struct device_node *mgr_node;
-+    struct fpga_image_info fpga_info;
-+    struct fpga_manager *mgr;
-+    int ret;
-+
-+    pr_info("Starting FPGA loader\n");
-+
-+    mgr_node = of_find_node_by_name(NULL, "ice40");
-+    if (!mgr_node) {
-+	pr_info("Cannot find manager node\n");
-+	return -ENODEV;
-+    }
-+
-+    mgr = of_fpga_mgr_get(mgr_node);
-+    fpga_info.flags = 0;
-+
-+    if (IS_ERR(mgr)) {
-+	pr_info("Cannot get manager\n");
-+	return -ENODEV;
-+    }
-+
-+    fpga_info.firmware_name = path;
-+    fpga_info.sgt = NULL;
-+    fpga_info.buf = NULL;
-+    ret = fpga_mgr_load(mgr, &fpga_info);
-+
-+    if (ret) {
-+	pr_info("Cannot load FPGA firmware\n");
-+	return -ENODEV;
-+    }
-+
-+    fpga_mgr_put(mgr);
-+
-+    return 0;
-+}
-+
-+static void __exit fpga_load_cleanup(void)
-+{
-+    pr_info("Stopping FPGA loader\n");
-+}
-+
-+module_init(fpga_load_init);
-+module_exit(fpga_load_cleanup);
-diff -urN linux-6.10.11/drivers/fpga/Kconfig linux-6.10.11-wip/drivers/fpga/Kconfig
---- linux-6.10.11/drivers/fpga/Kconfig	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/fpga/Kconfig	2024-09-11 11:05:54.306079615 +0200
-@@ -89,6 +89,13 @@
- 	help
- 	  FPGA manager driver support for Lattice iCE40 FPGAs over SPI.
- 
-+config FPGA_MGR_ICE40_SPI_LOADER
-+	tristate "Lattice iCE40 SPI Loader"
-+	depends on OF && SPI
-+	help
-+	  FPGA manager driver support for Lattice iCE40 FPGAs over SPI
-+	  to load FPGA firmware from kernel space
-+
- config FPGA_MGR_MACHXO2_SPI
- 	tristate "Lattice MachXO2 SPI"
- 	depends on SPI
-diff -urN linux-6.10.11/drivers/fpga/Makefile linux-6.10.11-wip/drivers/fpga/Makefile
---- linux-6.10.11/drivers/fpga/Makefile	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/fpga/Makefile	2024-09-11 11:05:54.306079615 +0200
-@@ -10,6 +10,7 @@
- obj-$(CONFIG_FPGA_MGR_ALTERA_CVP)	+= altera-cvp.o
- obj-$(CONFIG_FPGA_MGR_ALTERA_PS_SPI)	+= altera-ps-spi.o
- obj-$(CONFIG_FPGA_MGR_ICE40_SPI)	+= ice40-spi.o
-+obj-$(CONFIG_FPGA_MGR_ICE40_SPI_LOADER)	+= ice40-spi-loader.o
- obj-$(CONFIG_FPGA_MGR_MACHXO2_SPI)	+= machxo2-spi.o
- obj-$(CONFIG_FPGA_MGR_SOCFPGA)		+= socfpga.o
- obj-$(CONFIG_FPGA_MGR_SOCFPGA_A10)	+= socfpga-a10.o
-diff -urN linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_drv.h linux-6.10.11-wip/drivers/gpu/drm/etnaviv/etnaviv_drv.h
---- linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_drv.h	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/gpu/drm/etnaviv/etnaviv_drv.h	2024-09-11 11:05:54.306079615 +0200
+diff -urN linux-6.11.5/drivers/gpu/drm/etnaviv/etnaviv_drv.h linux-6.11.5-wip/drivers/gpu/drm/etnaviv/etnaviv_drv.h
+--- linux-6.11.5/drivers/gpu/drm/etnaviv/etnaviv_drv.h	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/gpu/drm/etnaviv/etnaviv_drv.h	2024-10-11 14:19:17.000000000 +0200
 @@ -13,6 +13,7 @@
  #include <linux/time64.h>
  #include <linux/types.h>
@@ -2927,10 +2836,10 @@ diff -urN linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_drv.h linux-6.10.11-wip/
  
  #include <drm/drm_drv.h>
  #include <drm/drm_gem.h>
-diff -urN linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_gpu.c linux-6.10.11-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.c
---- linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_gpu.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.c	2024-09-11 11:05:54.306079615 +0200
-@@ -1894,9 +1894,16 @@
+diff -urN linux-6.11.5/drivers/gpu/drm/etnaviv/etnaviv_gpu.c linux-6.11.5-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.c
+--- linux-6.11.5/drivers/gpu/drm/etnaviv/etnaviv_gpu.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.c	2024-10-11 14:19:17.000000000 +0200
+@@ -1906,9 +1906,16 @@
  		return PTR_ERR(gpu->clk_shader);
  	gpu->base_rate_shader = clk_get_rate(gpu->clk_shader);
  
@@ -2947,10 +2856,10 @@ diff -urN linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_gpu.c linux-6.10.11-wip/
  	/*
  	 * We treat the device as initially suspended.  The runtime PM
  	 * autosuspend delay is rather arbitary: no measurements have
-diff -urN linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_gpu.h linux-6.10.11-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.h
---- linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_gpu.h	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.h	2024-09-11 11:05:54.306079615 +0200
-@@ -156,6 +156,7 @@
+diff -urN linux-6.11.5/drivers/gpu/drm/etnaviv/etnaviv_gpu.h linux-6.11.5-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.h
+--- linux-6.11.5/drivers/gpu/drm/etnaviv/etnaviv_gpu.h	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.h	2024-10-11 14:19:17.000000000 +0200
+@@ -157,6 +157,7 @@
  	struct clk *clk_reg;
  	struct clk *clk_core;
  	struct clk *clk_shader;
@@ -2958,9 +2867,9 @@ diff -urN linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_gpu.h linux-6.10.11-wip/
  
  	unsigned int freq_scale;
  	unsigned int fe_waitcycles;
-diff -urN linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c linux-6.10.11-wip/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c
---- linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c	2024-09-11 11:05:54.306079615 +0200
+diff -urN linux-6.11.5/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c linux-6.11.5-wip/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c
+--- linux-6.11.5/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c	2024-10-11 14:19:17.000000000 +0200
 @@ -260,6 +260,38 @@
  		.minor_features10 = 0x108048c0,
  		.minor_features11 = 0x00000010,
@@ -3000,9 +2909,9 @@ diff -urN linux-6.10.11/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c linux-6.10.11-wip
  };
  
  bool etnaviv_fill_identity_from_hwdb(struct etnaviv_gpu *gpu)
-diff -urN linux-6.10.11/drivers/gpu/drm/sun4i/sun4i_drv.c linux-6.10.11-wip/drivers/gpu/drm/sun4i/sun4i_drv.c
---- linux-6.10.11/drivers/gpu/drm/sun4i/sun4i_drv.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/gpu/drm/sun4i/sun4i_drv.c	2024-09-11 11:05:54.310079518 +0200
+diff -urN linux-6.11.5/drivers/gpu/drm/sun4i/sun4i_drv.c linux-6.11.5-wip/drivers/gpu/drm/sun4i/sun4i_drv.c
+--- linux-6.11.5/drivers/gpu/drm/sun4i/sun4i_drv.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/gpu/drm/sun4i/sun4i_drv.c	2024-10-11 14:19:17.000000000 +0200
 @@ -431,6 +431,7 @@
  	{ .compatible = "allwinner,sun8i-h3-display-engine" },
  	{ .compatible = "allwinner,sun8i-r40-display-engine" },
@@ -3011,10 +2920,10 @@ diff -urN linux-6.10.11/drivers/gpu/drm/sun4i/sun4i_drv.c linux-6.10.11-wip/driv
  	{ .compatible = "allwinner,sun9i-a80-display-engine" },
  	{ .compatible = "allwinner,sun20i-d1-display-engine" },
  	{ .compatible = "allwinner,sun50i-a64-display-engine" },
-diff -urN linux-6.10.11/drivers/gpu/drm/sun4i/sun8i_mixer.c linux-6.10.11-wip/drivers/gpu/drm/sun4i/sun8i_mixer.c
---- linux-6.10.11/drivers/gpu/drm/sun4i/sun8i_mixer.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/gpu/drm/sun4i/sun8i_mixer.c	2024-09-11 11:05:54.310079518 +0200
-@@ -641,6 +641,15 @@
+diff -urN linux-6.11.5/drivers/gpu/drm/sun4i/sun8i_mixer.c linux-6.11.5-wip/drivers/gpu/drm/sun4i/sun8i_mixer.c
+--- linux-6.11.5/drivers/gpu/drm/sun4i/sun8i_mixer.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/gpu/drm/sun4i/sun8i_mixer.c	2024-10-11 14:19:17.000000000 +0200
+@@ -705,6 +705,15 @@
  	.vi_num		= 1,
  };
  
@@ -3030,7 +2939,7 @@ diff -urN linux-6.10.11/drivers/gpu/drm/sun4i/sun8i_mixer.c linux-6.10.11-wip/dr
  static const struct sun8i_mixer_cfg sun50i_a64_mixer1_cfg = {
  	.ccsc		= CCSC_MIXER1_LAYOUT,
  	.mod_rate	= 297000000,
-@@ -686,6 +695,10 @@
+@@ -750,6 +759,10 @@
  		.data = &sun8i_v3s_mixer_cfg,
  	},
  	{
@@ -3041,10 +2950,10 @@ diff -urN linux-6.10.11/drivers/gpu/drm/sun4i/sun8i_mixer.c linux-6.10.11-wip/dr
  		.compatible = "allwinner,sun20i-d1-de2-mixer-0",
  		.data = &sun20i_d1_mixer0_cfg,
  	},
-diff -urN linux-6.10.11/drivers/mailbox/Kconfig linux-6.10.11-wip/drivers/mailbox/Kconfig
---- linux-6.10.11/drivers/mailbox/Kconfig	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/mailbox/Kconfig	2024-09-12 12:45:33.273490316 +0200
-@@ -268,6 +268,15 @@
+diff -urN linux-6.11.5/drivers/mailbox/Kconfig linux-6.11.5-wip/drivers/mailbox/Kconfig
+--- linux-6.11.5/drivers/mailbox/Kconfig	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/mailbox/Kconfig	2024-10-11 14:19:17.000000000 +0200
+@@ -269,6 +269,15 @@
  	  various Allwinner SoCs. This mailbox is used for communication
  	  between the application CPUs and the power management coprocessor.
  
@@ -3060,9 +2969,9 @@ diff -urN linux-6.10.11/drivers/mailbox/Kconfig linux-6.10.11-wip/drivers/mailbo
  config SPRD_MBOX
  	tristate "Spreadtrum Mailbox"
  	depends on ARCH_SPRD || COMPILE_TEST
-diff -urN linux-6.10.11/drivers/mailbox/Makefile linux-6.10.11-wip/drivers/mailbox/Makefile
---- linux-6.10.11/drivers/mailbox/Makefile	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/mailbox/Makefile	2024-09-12 12:45:48.329121732 +0200
+diff -urN linux-6.11.5/drivers/mailbox/Makefile linux-6.11.5-wip/drivers/mailbox/Makefile
+--- linux-6.11.5/drivers/mailbox/Makefile	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/mailbox/Makefile	2024-10-11 14:19:17.000000000 +0200
 @@ -59,6 +59,8 @@
  
  obj-$(CONFIG_SUN6I_MSGBOX)	+= sun6i-msgbox.o
@@ -3071,15 +2980,14 @@ diff -urN linux-6.10.11/drivers/mailbox/Makefile linux-6.10.11-wip/drivers/mailb
 +
  obj-$(CONFIG_SPRD_MBOX)		+= sprd-mailbox.o
  
- obj-$(CONFIG_QCOM_IPCC)		+= qcom-ipcc.o
-diff -urN linux-6.10.11/drivers/mailbox/sunxi-msgbox.c linux-6.10.11-wip/drivers/mailbox/sunxi-msgbox.c
---- linux-6.10.11/drivers/mailbox/sunxi-msgbox.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/drivers/mailbox/sunxi-msgbox.c	2024-09-13 10:35:23.010672564 +0200
-@@ -0,0 +1,766 @@
+ obj-$(CONFIG_QCOM_CPUCP_MBOX)	+= qcom-cpucp-mbox.o
+diff -urN linux-6.11.5/drivers/mailbox/sunxi-msgbox.c linux-6.11.5-wip/drivers/mailbox/sunxi-msgbox.c
+--- linux-6.11.5/drivers/mailbox/sunxi-msgbox.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/drivers/mailbox/sunxi-msgbox.c	2024-10-11 14:28:26.000000000 +0200
+@@ -0,0 +1,763 @@
 +// SPDX-License-Identifier: GPL-2.0
 +//
 +// Copyright (c) 2017-2019 wujiayi <wujiayi@allwinnertech.com>
-+#define DEBUG
 +
 +#include <linux/bitops.h>
 +#include <linux/clk.h>
@@ -3793,15 +3701,13 @@ diff -urN linux-6.10.11/drivers/mailbox/sunxi-msgbox.c linux-6.10.11-wip/drivers
 +	return ret;
 +}
 +
-+static int sunxi_msgbox_remove(struct platform_device *pdev)
++static void sunxi_msgbox_remove(struct platform_device *pdev)
 +{
 +	struct sunxi_msgbox *msgbox = platform_get_drvdata(pdev);
 +
 +	mbox_controller_unregister(&msgbox->controller);
 +	/* See the comment in sunxi_msgbox_probe about the reset line. */
 +	clk_disable_unprepare(msgbox->clk);
-+
-+	return 0;
 +}
 +
 +static const struct of_device_id sunxi_msgbox_of_match[] = {
@@ -3842,9 +3748,9 @@ diff -urN linux-6.10.11/drivers/mailbox/sunxi-msgbox.c linux-6.10.11-wip/drivers
 +MODULE_DESCRIPTION("Sunxi Msgbox Driver");
 +MODULE_AUTHOR("wujiayi <wujiayi@allwinnertech.com>");
 +MODULE_LICENSE("GPL v2");
-diff -urN linux-6.10.11/drivers/mtd/nand/spi/foresee.c linux-6.10.11-wip/drivers/mtd/nand/spi/foresee.c
---- linux-6.10.11/drivers/mtd/nand/spi/foresee.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/mtd/nand/spi/foresee.c	2024-09-11 11:05:54.310079518 +0200
+diff -urN linux-6.11.5/drivers/mtd/nand/spi/foresee.c linux-6.11.5-wip/drivers/mtd/nand/spi/foresee.c
+--- linux-6.11.5/drivers/mtd/nand/spi/foresee.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/mtd/nand/spi/foresee.c	2024-10-11 14:19:17.000000000 +0200
 @@ -81,6 +81,16 @@
  		     SPINAND_HAS_QE_BIT,
  		     SPINAND_ECCINFO(&f35sqa002g_ooblayout,
@@ -3862,9 +3768,9 @@ diff -urN linux-6.10.11/drivers/mtd/nand/spi/foresee.c linux-6.10.11-wip/drivers
  };
  
  static const struct spinand_manufacturer_ops foresee_spinand_manuf_ops = {
-diff -urN linux-6.10.11/drivers/phy/allwinner/phy-sun4i-usb.c linux-6.10.11-wip/drivers/phy/allwinner/phy-sun4i-usb.c
---- linux-6.10.11/drivers/phy/allwinner/phy-sun4i-usb.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/phy/allwinner/phy-sun4i-usb.c	2024-09-11 11:05:54.310079518 +0200
+diff -urN linux-6.11.5/drivers/phy/allwinner/phy-sun4i-usb.c linux-6.11.5-wip/drivers/phy/allwinner/phy-sun4i-usb.c
+--- linux-6.11.5/drivers/phy/allwinner/phy-sun4i-usb.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/phy/allwinner/phy-sun4i-usb.c	2024-10-11 14:19:17.000000000 +0200
 @@ -1006,6 +1006,15 @@
  	.phy0_dual_route = true,
  };
@@ -3889,9 +3795,9 @@ diff -urN linux-6.10.11/drivers/phy/allwinner/phy-sun4i-usb.c linux-6.10.11-wip/
  	{ .compatible = "allwinner,suniv-f1c100s-usb-phy",
  	  .data = &suniv_f1c100s_cfg },
  	{ },
-diff -urN linux-6.10.11/drivers/pinctrl/sunxi/Kconfig linux-6.10.11-wip/drivers/pinctrl/sunxi/Kconfig
---- linux-6.10.11/drivers/pinctrl/sunxi/Kconfig	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/pinctrl/sunxi/Kconfig	2024-09-11 11:05:54.310079518 +0200
+diff -urN linux-6.11.5/drivers/pinctrl/sunxi/Kconfig linux-6.11.5-wip/drivers/pinctrl/sunxi/Kconfig
+--- linux-6.11.5/drivers/pinctrl/sunxi/Kconfig	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/pinctrl/sunxi/Kconfig	2024-10-11 14:19:17.000000000 +0200
 @@ -81,6 +81,11 @@
  	default MACH_SUN9I
  	select PINCTRL_SUNXI
@@ -3904,9 +3810,9 @@ diff -urN linux-6.10.11/drivers/pinctrl/sunxi/Kconfig linux-6.10.11-wip/drivers/
  config PINCTRL_SUN20I_D1
  	bool "Support for the Allwinner D1 PIO"
  	default MACH_SUN8I || (RISCV && ARCH_SUNXI)
-diff -urN linux-6.10.11/drivers/pinctrl/sunxi/Makefile linux-6.10.11-wip/drivers/pinctrl/sunxi/Makefile
---- linux-6.10.11/drivers/pinctrl/sunxi/Makefile	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/pinctrl/sunxi/Makefile	2024-09-11 11:05:54.310079518 +0200
+diff -urN linux-6.11.5/drivers/pinctrl/sunxi/Makefile linux-6.11.5-wip/drivers/pinctrl/sunxi/Makefile
+--- linux-6.11.5/drivers/pinctrl/sunxi/Makefile	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/pinctrl/sunxi/Makefile	2024-10-11 14:19:17.000000000 +0200
 @@ -20,6 +20,7 @@
  obj-$(CONFIG_PINCTRL_SUN8I_H3)		+= pinctrl-sun8i-h3.o
  obj-$(CONFIG_PINCTRL_SUN8I_H3_R)	+= pinctrl-sun8i-h3-r.o
@@ -3915,9 +3821,9 @@ diff -urN linux-6.10.11/drivers/pinctrl/sunxi/Makefile linux-6.10.11-wip/drivers
  obj-$(CONFIG_PINCTRL_SUN20I_D1)		+= pinctrl-sun20i-d1.o
  obj-$(CONFIG_PINCTRL_SUN50I_H5)		+= pinctrl-sun50i-h5.o
  obj-$(CONFIG_PINCTRL_SUN50I_H6)		+= pinctrl-sun50i-h6.o
-diff -urN linux-6.10.11/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c linux-6.10.11-wip/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c
---- linux-6.10.11/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c	2024-09-11 11:05:54.310079518 +0200
+diff -urN linux-6.11.5/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c linux-6.11.5-wip/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c
+--- linux-6.11.5/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c	2024-10-11 14:19:17.000000000 +0200
 @@ -0,0 +1,980 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
@@ -4899,9 +4805,9 @@ diff -urN linux-6.10.11/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c linux-6.10.11
 +	},
 +};
 +builtin_platform_driver(sun8i_v853_pinctrl_driver);
-diff -urN linux-6.10.11/drivers/pmdomain/sunxi/sun20i-ppu.c linux-6.10.11-wip/drivers/pmdomain/sunxi/sun20i-ppu.c
---- linux-6.10.11/drivers/pmdomain/sunxi/sun20i-ppu.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/pmdomain/sunxi/sun20i-ppu.c	2024-09-11 11:05:54.310079518 +0200
+diff -urN linux-6.11.5/drivers/pmdomain/sunxi/sun20i-ppu.c linux-6.11.5-wip/drivers/pmdomain/sunxi/sun20i-ppu.c
+--- linux-6.11.5/drivers/pmdomain/sunxi/sun20i-ppu.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/pmdomain/sunxi/sun20i-ppu.c	2024-10-11 14:19:17.000000000 +0200
 @@ -182,11 +182,26 @@
  	.num_domains	= ARRAY_SIZE(sun20i_d1_ppu_pd_names),
  };
@@ -4929,10 +4835,424 @@ diff -urN linux-6.10.11/drivers/pmdomain/sunxi/sun20i-ppu.c linux-6.10.11-wip/dr
  	{ }
  };
  MODULE_DEVICE_TABLE(of, sun20i_ppu_of_match);
-diff -urN linux-6.10.11/drivers/remoteproc/Kconfig linux-6.10.11-wip/drivers/remoteproc/Kconfig
---- linux-6.10.11/drivers/remoteproc/Kconfig	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/remoteproc/Kconfig	2024-09-19 09:51:47.891197259 +0200
-@@ -326,6 +326,13 @@
+diff -urN linux-6.11.5/drivers/pwm/Kconfig linux-6.11.5-wip/drivers/pwm/Kconfig
+--- linux-6.11.5/drivers/pwm/Kconfig	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/pwm/Kconfig	2024-10-14 09:57:25.000000000 +0200
+@@ -645,6 +645,16 @@
+ 	  To compile this driver as a module, choose M here: the module
+ 	  will be called pwm-sun4i.
+ 
++config PWM_SUN20I
++	tristate "Allwinner D1/T113s/R329 PWM support"
++	depends on ARCH_SUNXI || COMPILE_TEST
++	depends on COMMON_CLK
++	help
++	  Generic PWM framework driver for Allwinner D1/T113s/R329 SoCs.
++
++	  To compile this driver as a module, choose M here: the module
++	  will be called pwm-sun20i.
++
+ config PWM_SUNPLUS
+ 	tristate "Sunplus PWM support"
+ 	depends on ARCH_SUNPLUS || COMPILE_TEST
+diff -urN linux-6.11.5/drivers/pwm/Makefile linux-6.11.5-wip/drivers/pwm/Makefile
+--- linux-6.11.5/drivers/pwm/Makefile	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/pwm/Makefile	2024-10-14 09:57:25.000000000 +0200
+@@ -59,6 +59,7 @@
+ obj-$(CONFIG_PWM_STM32_LP)	+= pwm-stm32-lp.o
+ obj-$(CONFIG_PWM_STMPE)		+= pwm-stmpe.o
+ obj-$(CONFIG_PWM_SUN4I)		+= pwm-sun4i.o
++obj-$(CONFIG_PWM_SUN20I)	+= pwm-sun20i.o
+ obj-$(CONFIG_PWM_SUNPLUS)	+= pwm-sunplus.o
+ obj-$(CONFIG_PWM_TEGRA)		+= pwm-tegra.o
+ obj-$(CONFIG_PWM_TIECAP)	+= pwm-tiecap.o
+diff -urN linux-6.11.5/drivers/pwm/pwm-sun20i.c linux-6.11.5-wip/drivers/pwm/pwm-sun20i.c
+--- linux-6.11.5/drivers/pwm/pwm-sun20i.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/drivers/pwm/pwm-sun20i.c	2024-10-14 10:27:42.000000000 +0200
+@@ -0,0 +1,379 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * PWM Controller Driver for sunxi platforms (D1, T113-S3 and R329)
++ *
++ * Limitations:
++ * - When the parameters change, current running period will not be completed
++ *   and run new settings immediately.
++ * - It output HIGH-Z state when PWM channel disabled.
++ *
++ * Copyright (c) 2023 Aleksandr Shubin <privatesub2 at gmail.com>
++ */
++
++#include <linux/bitfield.h>
++#include <linux/clk.h>
++#include <linux/err.h>
++#include <linux/io.h>
++#include <linux/module.h>
++#include <linux/of.h>
++#include <linux/platform_device.h>
++#include <linux/pwm.h>
++#include <linux/reset.h>
++
++#define SUN20I_PWM_CLK_CFG(chan)		(0x20 + ((chan) * 0x4))
++#define SUN20I_PWM_CLK_CFG_SRC			GENMASK(8, 7)
++#define SUN20I_PWM_CLK_CFG_DIV_M		GENMASK(3, 0)
++#define SUN20I_PWM_CLK_DIV_M_MAX		8
++
++#define SUN20I_PWM_CLK_GATE			0x40
++#define SUN20I_PWM_CLK_GATE_BYPASS(chan)	BIT((chan) + 16)
++#define SUN20I_PWM_CLK_GATE_GATING(chan)	BIT(chan)
++
++#define SUN20I_PWM_ENABLE			0x80
++#define SUN20I_PWM_ENABLE_EN(chan)		BIT(chan)
++
++#define SUN20I_PWM_CTL(chan)			(0x100 + (chan) * 0x20)
++#define SUN20I_PWM_CTL_ACT_STA			BIT(8)
++#define SUN20I_PWM_CTL_PRESCAL_K		GENMASK(7, 0)
++#define SUN20I_PWM_CTL_PRESCAL_K_MAX		field_max(SUN20I_PWM_CTL_PRESCAL_K)
++
++#define SUN20I_PWM_PERIOD(chan)			(0x104 + (chan) * 0x20)
++#define SUN20I_PWM_PERIOD_ENTIRE_CYCLE		GENMASK(31, 16)
++#define SUN20I_PWM_PERIOD_ACT_CYCLE		GENMASK(15, 0)
++
++#define SUN20I_PWM_PCNTR_SIZE			BIT(16)
++
++/*
++ * SUN20I_PWM_MAGIC is used to quickly compute the values of the clock dividers
++ * div_m (SUN20I_PWM_CLK_CFG_DIV_M) & prescale_k (SUN20I_PWM_CTL_PRESCAL_K)
++ * without using a loop. These dividers limit the # of cycles in a period
++ * to SUN20I_PWM_PCNTR_SIZE by applying a scaling factor of
++ * 1/(div_m * (prescale_k + 1)) to the clock source.
++ *
++ * SUN20I_PWM_MAGIC is derived by solving for div_m and prescale_k
++ * such that for a given requested period,
++ *
++ * i) div_m is minimized for any prescale_k ≤ SUN20I_PWM_CTL_PRESCAL_K_MAX,
++ * ii) prescale_k is minimized.
++ *
++ * The derivation proceeds as follows, with val = # of cycles for requested
++ * period:
++ *
++ * for a given value of div_m we want the smallest prescale_k such that
++ *
++ * (val >> div_m) // (prescale_k + 1) ≤ 65536 (SUN20I_PWM_PCNTR_SIZE)
++ *
++ * This is equivalent to:
++ *
++ * (val >> div_m) ≤ 65536 * (prescale_k + 1) + prescale_k
++ * ⟺ (val >> div_m) ≤ 65537 * prescale_k + 65536
++ * ⟺ (val >> div_m) - 65536 ≤ 65537 * prescale_k
++ * ⟺ ((val >> div_m) - 65536) / 65537 ≤ prescale_k
++ *
++ * As prescale_k is integer, this becomes
++ *
++ * ((val >> div_m) - 65536) // 65537 ≤ prescale_k
++ *
++ * And is minimized at
++ *
++ * ((val >> div_m) - 65536) // 65537
++ *
++ * Now we pick the smallest div_m that satifies prescale_k ≤ 255
++ * (i.e SUN20I_PWM_CTL_PRESCAL_K_MAX),
++ *
++ * ((val >> div_m) - 65536) // 65537 ≤ 255
++ * ⟺ (val >> div_m) - 65536 ≤ 255 * 65537 + 65536
++ * ⟺ val >> div_m ≤ 255 * 65537 + 2 * 65536
++ * ⟺ val >> div_m < (255 * 65537 + 2 * 65536 + 1)
++ * ⟺ div_m = fls((val) / (255 * 65537 + 2 * 65536 + 1))
++ *
++ * Suggested by Uwe Kleine-König
++ */
++#define SUN20I_PWM_MAGIC			(255 * 65537 + 2 * 65536 + 1)
++
++struct sun20i_pwm_chip {
++	struct clk *clk_bus, *clk_hosc, *clk_apb;
++	struct reset_control *rst;
++	void __iomem *base;
++	struct mutex mutex; /* Protect PWM apply state */
++};
++
++static inline struct sun20i_pwm_chip *to_sun20i_pwm_chip(struct pwm_chip *chip)
++{
++	return pwmchip_get_drvdata(chip);
++}
++
++static inline u32 sun20i_pwm_readl(struct sun20i_pwm_chip *chip,
++				   unsigned long offset)
++{
++	return readl(chip->base + offset);
++}
++
++static inline void sun20i_pwm_writel(struct sun20i_pwm_chip *chip,
++				     u32 val, unsigned long offset)
++{
++	writel(val, chip->base + offset);
++}
++
++static int sun20i_pwm_get_state(struct pwm_chip *chip,
++				struct pwm_device *pwm,
++				struct pwm_state *state)
++{
++	struct sun20i_pwm_chip *sun20i_chip = to_sun20i_pwm_chip(chip);
++	u16 ent_cycle, act_cycle, prescale_k;
++	u64 clk_rate, tmp;
++	u8 div_m;
++	u32 val;
++
++	mutex_lock(&sun20i_chip->mutex);
++
++	val = sun20i_pwm_readl(sun20i_chip, SUN20I_PWM_CLK_CFG(pwm->hwpwm / 2));
++	div_m = FIELD_GET(SUN20I_PWM_CLK_CFG_DIV_M, val);
++	if (div_m > SUN20I_PWM_CLK_DIV_M_MAX)
++		div_m = SUN20I_PWM_CLK_DIV_M_MAX;
++
++	if (FIELD_GET(SUN20I_PWM_CLK_CFG_SRC, val) == 0)
++		clk_rate = clk_get_rate(sun20i_chip->clk_hosc);
++	else
++		clk_rate = clk_get_rate(sun20i_chip->clk_apb);
++
++	val = sun20i_pwm_readl(sun20i_chip, SUN20I_PWM_CTL(pwm->hwpwm));
++	state->polarity = (SUN20I_PWM_CTL_ACT_STA & val) ?
++			   PWM_POLARITY_NORMAL : PWM_POLARITY_INVERSED;
++
++	prescale_k = FIELD_GET(SUN20I_PWM_CTL_PRESCAL_K, val) + 1;
++
++	val = sun20i_pwm_readl(sun20i_chip, SUN20I_PWM_ENABLE);
++	state->enabled = (SUN20I_PWM_ENABLE_EN(pwm->hwpwm) & val) ? true : false;
++
++	val = sun20i_pwm_readl(sun20i_chip, SUN20I_PWM_PERIOD(pwm->hwpwm));
++
++	mutex_unlock(&sun20i_chip->mutex);
++
++	act_cycle = FIELD_GET(SUN20I_PWM_PERIOD_ACT_CYCLE, val);
++	ent_cycle = FIELD_GET(SUN20I_PWM_PERIOD_ENTIRE_CYCLE, val);
++
++	/*
++	 * The duration of the active phase should not be longer
++	 * than the duration of the period
++	 */
++	if (act_cycle > ent_cycle)
++		act_cycle = ent_cycle;
++
++	/*
++	 * We have act_cycle <= ent_cycle <= 0xffff, prescale_k <= 0x100,
++	 * div_m <= 8. So the multiplication fits into an u64 without
++	 * overflow.
++	 */
++	tmp = ((u64)(act_cycle) * prescale_k << div_m) * NSEC_PER_SEC;
++	state->duty_cycle = DIV_ROUND_UP_ULL(tmp, clk_rate);
++	tmp = ((u64)(ent_cycle) * prescale_k << div_m) * NSEC_PER_SEC;
++	state->period = DIV_ROUND_UP_ULL(tmp, clk_rate);
++
++	return 0;
++}
++
++static int sun20i_pwm_apply(struct pwm_chip *chip, struct pwm_device *pwm,
++			    const struct pwm_state *state)
++{
++	struct sun20i_pwm_chip *sun20i_chip = to_sun20i_pwm_chip(chip);
++	u64 bus_rate, hosc_rate, val, ent_cycle, act_cycle;
++	u32 clk_gate, clk_cfg, pwm_en, ctl, reg_period;
++	u32 prescale_k, div_m;
++	bool use_bus_clk;
++
++	guard(mutex)(&sun20i_chip->mutex);
++
++	pwm_en = sun20i_pwm_readl(sun20i_chip, SUN20I_PWM_ENABLE);
++
++	if (state->enabled != pwm->state.enabled) {
++		clk_gate = sun20i_pwm_readl(sun20i_chip, SUN20I_PWM_CLK_GATE);
++
++		if (!state->enabled) {
++			clk_gate &= ~SUN20I_PWM_CLK_GATE_GATING(pwm->hwpwm);
++			pwm_en &= ~SUN20I_PWM_ENABLE_EN(pwm->hwpwm);
++			sun20i_pwm_writel(sun20i_chip, pwm_en, SUN20I_PWM_ENABLE);
++			sun20i_pwm_writel(sun20i_chip, clk_gate, SUN20I_PWM_CLK_GATE);
++
++			return 0;
++		}
++	}
++
++	ctl = sun20i_pwm_readl(sun20i_chip, SUN20I_PWM_CTL(pwm->hwpwm));
++	clk_cfg = sun20i_pwm_readl(sun20i_chip, SUN20I_PWM_CLK_CFG(pwm->hwpwm / 2));
++	hosc_rate = clk_get_rate(sun20i_chip->clk_hosc);
++	bus_rate = clk_get_rate(sun20i_chip->clk_apb);
++	if (pwm_en & SUN20I_PWM_ENABLE_EN(pwm->hwpwm ^ 1)) {
++		/* if the neighbor channel is enabled, check period only */
++		use_bus_clk = FIELD_GET(SUN20I_PWM_CLK_CFG_SRC, clk_cfg) != 0;
++		val = mul_u64_u64_div_u64(state->period,
++					  (use_bus_clk ? bus_rate : hosc_rate),
++					  NSEC_PER_SEC);
++
++		div_m = FIELD_GET(SUN20I_PWM_CLK_CFG_DIV_M, clk_cfg);
++	} else {
++		/*
++		 * Select the clock source based on the period,
++		 * since bus_rate > hosc_rate, which means bus_rate
++		 * can provide a higher frequency than hosc_rate.
++		 */
++		use_bus_clk = false;
++		val = mul_u64_u64_div_u64(state->period, hosc_rate, NSEC_PER_SEC);
++		if (val <= 1) {
++			use_bus_clk = true;
++			val = mul_u64_u64_div_u64(state->period, bus_rate, NSEC_PER_SEC);
++			if (val <= 1)
++				return -EINVAL;
++		}
++		div_m = fls(DIV_ROUND_DOWN_ULL(val, SUN20I_PWM_MAGIC));
++		if (div_m > SUN20I_PWM_CLK_DIV_M_MAX)
++			return -EINVAL;
++
++		/* set up the CLK_DIV_M and clock CLK_SRC */
++		clk_cfg = FIELD_PREP(SUN20I_PWM_CLK_CFG_DIV_M, div_m);
++		clk_cfg |= FIELD_PREP(SUN20I_PWM_CLK_CFG_SRC, use_bus_clk);
++
++		sun20i_pwm_writel(sun20i_chip, clk_cfg, SUN20I_PWM_CLK_CFG(pwm->hwpwm / 2));
++	}
++
++	/* calculate prescale_k, PWM entire cycle */
++	ent_cycle = val >> div_m;
++	prescale_k = DIV_ROUND_DOWN_ULL(ent_cycle, 65537);
++	if (prescale_k > SUN20I_PWM_CTL_PRESCAL_K_MAX)
++		prescale_k = SUN20I_PWM_CTL_PRESCAL_K_MAX;
++
++	do_div(ent_cycle, prescale_k + 1);
++
++	/* for N cycles, PPRx.PWM_ENTIRE_CYCLE = (N-1) */
++	reg_period = FIELD_PREP(SUN20I_PWM_PERIOD_ENTIRE_CYCLE, ent_cycle - 1);
++
++	/* set duty cycle */
++	val = mul_u64_u64_div_u64(state->duty_cycle,
++				  (use_bus_clk ? bus_rate : hosc_rate),
++				  NSEC_PER_SEC);
++	act_cycle = val >> div_m;
++	do_div(act_cycle, prescale_k + 1);
++
++	/*
++	 * The formula of the output period and the duty-cycle for PWM are as follows.
++	 * T period = PWM0_PRESCALE_K / PWM01_CLK * (PPR0.PWM_ENTIRE_CYCLE + 1)
++	 * T high-level = PWM0_PRESCALE_K / PWM01_CLK * PPR0.PWM_ACT_CYCLE
++	 * Duty-cycle = T high-level / T period
++	 */
++	reg_period |= FIELD_PREP(SUN20I_PWM_PERIOD_ACT_CYCLE, act_cycle);
++	sun20i_pwm_writel(sun20i_chip, reg_period, SUN20I_PWM_PERIOD(pwm->hwpwm));
++
++	ctl = FIELD_PREP(SUN20I_PWM_CTL_PRESCAL_K, prescale_k);
++	if (state->polarity == PWM_POLARITY_NORMAL)
++		ctl |= SUN20I_PWM_CTL_ACT_STA;
++
++	sun20i_pwm_writel(sun20i_chip, ctl, SUN20I_PWM_CTL(pwm->hwpwm));
++
++	if (state->enabled != pwm->state.enabled && state->enabled) {
++		clk_gate &= ~SUN20I_PWM_CLK_GATE_BYPASS(pwm->hwpwm);
++		clk_gate |= SUN20I_PWM_CLK_GATE_GATING(pwm->hwpwm);
++		pwm_en |= SUN20I_PWM_ENABLE_EN(pwm->hwpwm);
++		sun20i_pwm_writel(sun20i_chip, pwm_en, SUN20I_PWM_ENABLE);
++		sun20i_pwm_writel(sun20i_chip, clk_gate, SUN20I_PWM_CLK_GATE);
++	}
++
++	return 0;
++}
++
++static const struct pwm_ops sun20i_pwm_ops = {
++	.apply = sun20i_pwm_apply,
++	.get_state = sun20i_pwm_get_state,
++};
++
++static const struct of_device_id sun20i_pwm_dt_ids[] = {
++	{ .compatible = "allwinner,sun20i-d1-pwm" },
++	{ },
++};
++MODULE_DEVICE_TABLE(of, sun20i_pwm_dt_ids);
++
++static void sun20i_pwm_reset_ctrl_release(void *data)
++{
++	struct reset_control *rst = data;
++
++	reset_control_assert(rst);
++}
++
++static int sun20i_pwm_probe(struct platform_device *pdev)
++{
++	struct pwm_chip *chip;
++	struct sun20i_pwm_chip *sun20i_chip;
++	int ret;
++
++	chip = devm_pwmchip_alloc(&pdev->dev, 8, sizeof(*sun20i_chip));
++	if (IS_ERR(chip))
++		return PTR_ERR(chip);
++	sun20i_chip = to_sun20i_pwm_chip(chip);
++
++	sun20i_chip->base = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(sun20i_chip->base))
++		return PTR_ERR(sun20i_chip->base);
++
++	sun20i_chip->clk_bus = devm_clk_get_enabled(&pdev->dev, "bus");
++	if (IS_ERR(sun20i_chip->clk_bus))
++		return dev_err_probe(&pdev->dev, PTR_ERR(sun20i_chip->clk_bus),
++				     "failed to get bus clock\n");
++
++	sun20i_chip->clk_hosc = devm_clk_get_enabled(&pdev->dev, "hosc");
++	if (IS_ERR(sun20i_chip->clk_hosc))
++		return dev_err_probe(&pdev->dev, PTR_ERR(sun20i_chip->clk_hosc),
++				     "failed to get hosc clock\n");
++
++	sun20i_chip->clk_apb = devm_clk_get_enabled(&pdev->dev, "apb");
++	if (IS_ERR(sun20i_chip->clk_apb))
++		return dev_err_probe(&pdev->dev, PTR_ERR(sun20i_chip->clk_apb),
++				     "failed to get apb clock\n");
++
++	if (clk_get_rate(sun20i_chip->clk_apb) < clk_get_rate(sun20i_chip->clk_hosc))
++		dev_info(&pdev->dev, "apb clock must be greater than hosc clock");
++
++	sun20i_chip->rst = devm_reset_control_get_exclusive(&pdev->dev, NULL);
++	if (IS_ERR(sun20i_chip->rst))
++		return dev_err_probe(&pdev->dev, PTR_ERR(sun20i_chip->rst),
++				     "failed to get bus reset\n");
++
++	ret = of_property_read_u32(pdev->dev.of_node, "allwinner,pwm-channels",
++				   &chip->npwm);
++
++	if (chip->npwm > 16) {
++		dev_info(&pdev->dev, "limiting number of PWM lines from %u to 16",
++			 chip->npwm);
++		chip->npwm = 16;
++	}
++
++	/* Deassert reset */
++	ret = reset_control_deassert(sun20i_chip->rst);
++	if (ret)
++		return dev_err_probe(&pdev->dev, ret, "failed to deassert reset\n");
++
++	ret = devm_add_action_or_reset(&pdev->dev, sun20i_pwm_reset_ctrl_release, sun20i_chip->rst);
++	if (ret)
++		return ret;
++
++	chip->ops = &sun20i_pwm_ops;
++
++	mutex_init(&sun20i_chip->mutex);
++
++	ret = devm_pwmchip_add(&pdev->dev, chip);
++	if (ret < 0)
++		return dev_err_probe(&pdev->dev, ret, "failed to add PWM chip\n");
++
++	return 0;
++}
++
++static struct platform_driver sun20i_pwm_driver = {
++	.driver = {
++		.name = "sun20i-pwm",
++		.of_match_table = sun20i_pwm_dt_ids,
++	},
++	.probe = sun20i_pwm_probe,
++};
++module_platform_driver(sun20i_pwm_driver);
++
++MODULE_AUTHOR("Aleksandr Shubin <privatesub2 at gmail.com>");
++MODULE_DESCRIPTION("Allwinner sun20i PWM driver");
++MODULE_LICENSE("GPL");
+diff -urN linux-6.11.5/drivers/remoteproc/Kconfig linux-6.11.5-wip/drivers/remoteproc/Kconfig
+--- linux-6.11.5/drivers/remoteproc/Kconfig	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/remoteproc/Kconfig	2024-10-11 14:19:17.000000000 +0200
+@@ -327,6 +327,13 @@
  
  	  This can be either built-in or a loadable module.
  
@@ -4946,9 +5266,9 @@ diff -urN linux-6.10.11/drivers/remoteproc/Kconfig linux-6.10.11-wip/drivers/rem
  config TI_K3_DSP_REMOTEPROC
  	tristate "TI K3 DSP remoteproc support"
  	depends on ARCH_K3
-diff -urN linux-6.10.11/drivers/remoteproc/Makefile linux-6.10.11-wip/drivers/remoteproc/Makefile
---- linux-6.10.11/drivers/remoteproc/Makefile	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/remoteproc/Makefile	2024-09-19 09:51:17.215999230 +0200
+diff -urN linux-6.11.5/drivers/remoteproc/Makefile linux-6.11.5-wip/drivers/remoteproc/Makefile
+--- linux-6.11.5/drivers/remoteproc/Makefile	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/remoteproc/Makefile	2024-10-11 14:19:17.000000000 +0200
 @@ -36,6 +36,7 @@
  obj-$(CONFIG_ST_REMOTEPROC)		+= st_remoteproc.o
  obj-$(CONFIG_ST_SLIM_REMOTEPROC)	+= st_slim_rproc.o
@@ -4957,21 +5277,18 @@ diff -urN linux-6.10.11/drivers/remoteproc/Makefile linux-6.10.11-wip/drivers/re
  obj-$(CONFIG_TI_K3_DSP_REMOTEPROC)	+= ti_k3_dsp_remoteproc.o
  obj-$(CONFIG_TI_K3_R5_REMOTEPROC)	+= ti_k3_r5_remoteproc.o
  obj-$(CONFIG_XLNX_R5_REMOTEPROC)	+= xlnx_r5_remoteproc.o
-diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drivers/remoteproc/sun8i_rproc.c
---- linux-6.10.11/drivers/remoteproc/sun8i_rproc.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/drivers/remoteproc/sun8i_rproc.c	2024-09-19 11:37:13.933454886 +0200
-@@ -0,0 +1,473 @@
+diff -urN linux-6.11.5/drivers/remoteproc/sun8i_rproc.c linux-6.11.5-wip/drivers/remoteproc/sun8i_rproc.c
+--- linux-6.11.5/drivers/remoteproc/sun8i_rproc.c	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/drivers/remoteproc/sun8i_rproc.c	2024-10-11 14:19:17.000000000 +0200
+@@ -0,0 +1,468 @@
 +// SPDX-License-Identifier: GPL-2.0
 +//
 +// Copyright (c) 2024 Andras Szemzo <szemzo.andras@gmail.com>
-+
-+#include <linux/arm-smccc.h>
-+#include <linux/dma-mapping.h>
++ 
 +#include <linux/interrupt.h>
 +#include <linux/clk.h>
 +#include <linux/io.h>
 +#include <linux/mailbox_client.h>
-+#include <linux/mfd/syscon.h>
 +#include <linux/module.h>
 +#include <linux/of.h>
 +#include <linux/of_reserved_mem.h>
@@ -4980,7 +5297,6 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +#include <linux/regmap.h>
 +#include <linux/remoteproc.h>
 +#include <linux/reset.h>
-+#include <linux/slab.h>
 +#include <linux/workqueue.h>
 +
 +#include "remoteproc_internal.h"
@@ -4993,9 +5309,8 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +#define SUN8I_MBX_VQ1		"tx"
 +#define SUN8I_MBX_VQ1_ID	1
 +
-+#define SUN8I_RISCV_START_ADDR_REG	0x0204
-+#define SUN8I_RISCV_CLK_FREQ		600000000
-+
++#define RISC_STA_ADD_REG	0x0204
++#define RISC_CLK_FREQ		600000000
 +
 +struct sun8i_mbox {
 +	const unsigned char name[10];
@@ -5006,13 +5321,13 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +};
 +
 +struct sun8i_rproc {
-+	void __iomem *cfg_base;
++	void __iomem *reg_base;
 +	struct clk *clk;
 +        struct clk *clk_cfg;
-+	struct reset_control *rst_sys_apb;
-+	struct reset_control *rst_soft;
-+	struct reset_control *rst_clk_gate;
-+	struct reset_control *rst_cfg;
++	struct reset_control *sys_apb_reset;
++	struct reset_control *soft_reset;
++	struct reset_control *clk_gate_reset;
++	struct reset_control *cfg_reset;
 +	struct sun8i_mbox mb[MBOX_NB_MBX];
 +	struct workqueue_struct *workqueue;
 +};
@@ -5223,17 +5538,17 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +
 +	sun8i_rproc_add_coredump_trace(rproc);
 +
-+	reset_control_deassert(ddata->rst_sys_apb);
++	reset_control_deassert(ddata->sys_apb_reset);
 +
 +	clk_prepare_enable(ddata->clk);
 +	clk_prepare_enable(ddata->clk_cfg);
 +
-+	reset_control_deassert(ddata->rst_cfg);
++	reset_control_deassert(ddata->cfg_reset);
 +
-+	writel(rproc->bootaddr, ddata->cfg_base + SUN8I_RISCV_START_ADDR_REG);
++	writel(rproc->bootaddr, ddata->reg_base + RISC_STA_ADD_REG);
 +
-+	reset_control_deassert(ddata->rst_soft);
-+	reset_control_deassert(ddata->rst_clk_gate);
++	reset_control_deassert(ddata->soft_reset);
++	reset_control_deassert(ddata->clk_gate_reset);
 +
 +	return 0;
 +}
@@ -5245,10 +5560,10 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +	clk_disable_unprepare(ddata->clk);
 +	clk_disable_unprepare(ddata->clk_cfg);
 +
-+	reset_control_assert(ddata->rst_clk_gate);
++	reset_control_assert(ddata->clk_gate_reset);
 +
-+	reset_control_assert(ddata->rst_soft);
-+	reset_control_assert(ddata->rst_sys_apb);
++	reset_control_assert(ddata->soft_reset);
++	reset_control_assert(ddata->sys_apb_reset);
 +
 +	return 0;
 +}
@@ -5286,12 +5601,6 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +	.get_boot_addr	= rproc_elf_get_boot_addr,
 +};
 +
-+static const struct of_device_id sun8i_rproc_match[] = {
-+	{ .compatible = "allwinner,sun8i-rproc" },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, sun8i_rproc_match);
-+
 +static int sun8i_rproc_probe(struct platform_device *pdev)
 +{
 +	struct device *dev = &pdev->dev;
@@ -5311,8 +5620,8 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +
 +	ddata = rproc->priv;
 +
-+	ddata->cfg_base = devm_platform_ioremap_resource(pdev, 0);
-+	if (IS_ERR(ddata->cfg_base))
++	ddata->reg_base = devm_platform_ioremap_resource(pdev, 0);
++	if (IS_ERR(ddata->reg_base))
 +		return -EINVAL;
 +
 +	rproc->auto_boot = false;
@@ -5330,32 +5639,32 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +		return dev_err_probe(dev, PTR_ERR(ddata->clk_cfg),
 +				     "Failed to get clk_cfg clock\n");
 +
-+	freq = SUN8I_RISCV_CLK_FREQ;
++	freq = RISC_CLK_FREQ;
 +	of_property_read_u32(np, "clock-frequency", &freq);
 +	ret = clk_set_rate(ddata->clk, freq);
 +	if (ret)
 +		return dev_err_probe(dev, ret,
 +				     "Failed to set clock frequency\n");
 +
-+	ddata->rst_sys_apb = devm_reset_control_get_exclusive(dev, "sys_apb");
-+	if (IS_ERR(ddata->rst_sys_apb))
-+		return dev_err_probe(dev, PTR_ERR(ddata->rst_sys_apb),
++	ddata->sys_apb_reset = devm_reset_control_get_exclusive(dev, "sys_apb");
++	if (IS_ERR(ddata->sys_apb_reset))
++		return dev_err_probe(dev, PTR_ERR(ddata->sys_apb_reset),
 +				     "Failed to get sys_apb reset\n");
 +
 +
-+	ddata->rst_soft = devm_reset_control_get_exclusive(dev, "soft");
-+	if (IS_ERR(ddata->rst_soft))
-+		return dev_err_probe(dev, PTR_ERR(ddata->rst_soft),
++	ddata->soft_reset = devm_reset_control_get_exclusive(dev, "soft");
++	if (IS_ERR(ddata->soft_reset))
++		return dev_err_probe(dev, PTR_ERR(ddata->soft_reset),
 +				     "Failed to get soft reset\n");
 +
-+	ddata->rst_clk_gate = devm_reset_control_get_exclusive(dev, "clk_gate");
-+	if (IS_ERR(ddata->rst_clk_gate))
-+		return dev_err_probe(dev, PTR_ERR(ddata->rst_clk_gate),
++	ddata->clk_gate_reset = devm_reset_control_get_exclusive(dev, "clk_gate");
++	if (IS_ERR(ddata->clk_gate_reset))
++		return dev_err_probe(dev, PTR_ERR(ddata->clk_gate_reset),
 +				     "Failed to get clk_gate reset\n");
 +
-+	ddata->rst_cfg = devm_reset_control_get_exclusive(dev, "cfg");
-+	if (IS_ERR(ddata->rst_cfg))
-+		return dev_err_probe(dev, PTR_ERR(ddata->rst_cfg),
++	ddata->cfg_reset = devm_reset_control_get_exclusive(dev, "cfg");
++	if (IS_ERR(ddata->cfg_reset))
++		return dev_err_probe(dev, PTR_ERR(ddata->cfg_reset),
 +				     "Failed to get cfg reset\n");
 +
 +	ddata->workqueue = create_workqueue(dev_name(dev));
@@ -5391,7 +5700,6 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +{
 +	struct rproc *rproc = platform_get_drvdata(pdev);
 +	struct sun8i_rproc *ddata = rproc->priv;
-+//	struct device *dev = &pdev->dev;
 +
 +	if (atomic_read(&rproc->power) > 0)
 +		rproc_shutdown(rproc);
@@ -5420,6 +5728,13 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +static DEFINE_SIMPLE_DEV_PM_OPS(sun8i_rproc_pm_ops,
 +				sun8i_rproc_suspend, sun8i_rproc_resume);
 +
++
++static const struct of_device_id sun8i_rproc_match[] = {
++	{ .compatible = "allwinner,sun8i-rproc" },
++	{},
++};
++MODULE_DEVICE_TABLE(of, sun8i_rproc_match);
++
 +static struct platform_driver sun8i_rproc_driver = {
 +	.probe = sun8i_rproc_probe,
 +	.remove_new = sun8i_rproc_remove,
@@ -5432,11 +5747,11 @@ diff -urN linux-6.10.11/drivers/remoteproc/sun8i_rproc.c linux-6.10.11-wip/drive
 +module_platform_driver(sun8i_rproc_driver);
 +
 +MODULE_AUTHOR("Andras Szemzo <szemzo.andras@gmail.com>");
-+MODULE_DESCRIPTION("Allwinner sun8i-v853 remoteproc driver");
++MODULE_DESCRIPTION("Allwinner sun8i remoteproc driver");
 +MODULE_LICENSE("GPL");
-diff -urN linux-6.10.11/drivers/rtc/rtc-sun6i.c linux-6.10.11-wip/drivers/rtc/rtc-sun6i.c
---- linux-6.10.11/drivers/rtc/rtc-sun6i.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/rtc/rtc-sun6i.c	2024-09-11 11:05:54.314079420 +0200
+diff -urN linux-6.11.5/drivers/rtc/rtc-sun6i.c linux-6.11.5-wip/drivers/rtc/rtc-sun6i.c
+--- linux-6.11.5/drivers/rtc/rtc-sun6i.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/rtc/rtc-sun6i.c	2024-10-11 14:19:17.000000000 +0200
 @@ -867,6 +867,8 @@
  		.data = (void *)RTC_LINEAR_DAY },
  	{ .compatible = "allwinner,sun50i-r329-rtc",
@@ -5446,9 +5761,9 @@ diff -urN linux-6.10.11/drivers/rtc/rtc-sun6i.c linux-6.10.11-wip/drivers/rtc/rt
  	{ /* sentinel */ },
  };
  MODULE_DEVICE_TABLE(of, sun6i_rtc_dt_ids);
-diff -urN linux-6.10.11/drivers/staging/media/sunxi/cedrus/cedrus.c linux-6.10.11-wip/drivers/staging/media/sunxi/cedrus/cedrus.c
---- linux-6.10.11/drivers/staging/media/sunxi/cedrus/cedrus.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/staging/media/sunxi/cedrus/cedrus.c	2024-09-11 11:05:54.314079420 +0200
+diff -urN linux-6.11.5/drivers/staging/media/sunxi/cedrus/cedrus.c linux-6.11.5-wip/drivers/staging/media/sunxi/cedrus/cedrus.c
+--- linux-6.11.5/drivers/staging/media/sunxi/cedrus/cedrus.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/staging/media/sunxi/cedrus/cedrus.c	2024-10-11 14:19:17.000000000 +0200
 @@ -621,6 +621,13 @@
  	.mod_rate	= 432000000,
  };
@@ -5474,9 +5789,9 @@ diff -urN linux-6.10.11/drivers/staging/media/sunxi/cedrus/cedrus.c linux-6.10.1
  	{ /* sentinel */ }
  };
  MODULE_DEVICE_TABLE(of, cedrus_dt_match);
-diff -urN linux-6.10.11/drivers/thermal/sun8i_thermal.c linux-6.10.11-wip/drivers/thermal/sun8i_thermal.c
---- linux-6.10.11/drivers/thermal/sun8i_thermal.c	2024-09-18 19:25:18.000000000 +0200
-+++ linux-6.10.11-wip/drivers/thermal/sun8i_thermal.c	2024-09-11 11:05:54.314079420 +0200
+diff -urN linux-6.11.5/drivers/thermal/sun8i_thermal.c linux-6.11.5-wip/drivers/thermal/sun8i_thermal.c
+--- linux-6.11.5/drivers/thermal/sun8i_thermal.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/drivers/thermal/sun8i_thermal.c	2024-10-11 14:19:17.000000000 +0200
 @@ -140,6 +140,15 @@
  	return 0;
  }
@@ -5601,10 +5916,10 @@ diff -urN linux-6.10.11/drivers/thermal/sun8i_thermal.c linux-6.10.11-wip/driver
  	{ .compatible = "allwinner,sun50i-h6-ths", .data = &sun50i_h6_ths },
  	{ .compatible = "allwinner,sun20i-d1-ths", .data = &sun20i_d1_ths },
  	{ .compatible = "allwinner,sun50i-h616-ths", .data = &sun50i_h616_ths },
-diff -urN linux-6.10.11/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.10.11-wip/include/dt-bindings/clock/sun8i-v853-ccu.h
---- linux-6.10.11/include/dt-bindings/clock/sun8i-v853-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/include/dt-bindings/clock/sun8i-v853-ccu.h	2024-09-12 09:14:24.902637603 +0200
-@@ -0,0 +1,130 @@
+diff -urN linux-6.11.5/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.11.5-wip/include/dt-bindings/clock/sun8i-v853-ccu.h
+--- linux-6.11.5/include/dt-bindings/clock/sun8i-v853-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/include/dt-bindings/clock/sun8i-v853-ccu.h	2024-10-25 14:21:36.000000000 +0200
+@@ -0,0 +1,127 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/*
 + * Copyright (C) 2020 huangzhenwei@allwinnertech.com
@@ -5618,126 +5933,123 @@ diff -urN linux-6.10.11/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.10.11
 +#define CLK_PLL_DDR		1
 +#define CLK_PLL_PERIPH_4X	2
 +#define CLK_PLL_PERIPH_2X	3
-+#define CLK_PLL_PERIPH_DIV3     4
-+#define CLK_PLL_PERIPH_800M	5
-+#define CLK_PLL_PERIPH_480M	6
-+#define CLK_PLL_PERIPH_600M	7
-+#define CLK_PLL_PERIPH_400M	8
-+#define CLK_PLL_PERIPH_300M	9
-+#define CLK_PLL_PERIPH_200M	10
-+#define CLK_PLL_PERIPH_160M	11
-+#define CLK_PLL_PERIPH_150M	12
-+#define CLK_PLL_PERIPH		13
-+#define CLK_PLL_VIDEO_4X	14
-+#define CLK_PLL_VIDEO_2X	15
-+#define CLK_PLL_VIDEO_1X	16
-+#define CLK_PLL_CSI_4X		17
-+#define CLK_PLL_AUDIO		18
-+#define CLK_PLL_AUDIO_DIV2	19
-+#define CLK_PLL_AUDIO_DIV5	20
-+#define CLK_PLL_AUDIO_4X	21
-+#define CLK_PLL_AUDIO_1X	22
-+#define CLK_PLL_NPU_4X		23
-+#define CLK_CPU			24
-+#define CLK_CPU_AXI		25
-+#define CLK_CPU_APB		26
-+#define CLK_AHB			27
-+#define CLK_APB0		28
-+#define CLK_APB1		29
-+#define CLK_MBUS		30
-+#define CLK_DE			31
-+#define CLK_BUS_DE		32
-+#define CLK_G2D			33
-+#define CLK_BUS_G2D		34
-+#define CLK_CE			35
-+#define CLK_BUS_CE		36
-+#define CLK_VE			37
-+#define CLK_BUS_VE		38
-+#define CLK_NPU			39
-+#define CLK_BUS_NPU		40
-+#define CLK_BUS_DMA		41
-+#define CLK_BUS_MSGBOX0		42
-+#define CLK_BUS_MSGBOX1		43
-+#define CLK_BUS_SPINLOCK	44
-+#define CLK_BUS_HSTIMER		45
-+#define CLK_AVS			46
-+#define CLK_BUS_DBG		47
-+#define CLK_BUS_PWM		48
-+#define CLK_BUS_IOMMU		49
-+#define CLK_DRAM		50
-+#define CLK_MBUS_DMA		51
-+#define CLK_MBUS_VE		52
-+#define CLK_MBUS_CE		53
-+#define CLK_MBUS_CSI		54
-+#define CLK_MBUS_ISP		55
-+#define CLK_MBUS_G2D		56
-+#define CLK_BUS_DRAM		57
-+#define CLK_MMC0		58
-+#define CLK_MMC1		59
-+#define CLK_MMC2		60
-+#define CLK_BUS_MMC0		61
-+#define CLK_BUS_MMC1		62
-+#define CLK_BUS_MMC2		63
-+#define CLK_BUS_UART0		64
-+#define CLK_BUS_UART1		65
-+#define CLK_BUS_UART2		66
-+#define CLK_BUS_UART3		67
-+#define CLK_BUS_I2C0		68
-+#define CLK_BUS_I2C1		69
-+#define CLK_BUS_I2C2		70
-+#define CLK_BUS_I2C3		71
-+#define CLK_BUS_I2C4		72
-+#define CLK_SPI0		73
-+#define CLK_SPI1		74
-+#define CLK_SPI2		75
-+#define CLK_SPI3		76
-+#define CLK_BUS_SPI0		77
-+#define CLK_BUS_SPI1		78
-+#define CLK_BUS_SPI2		79
-+#define CLK_BUS_SPI3		80
-+#define CLK_EMAC_25M		81
-+#define CLK_BUS_EMAC		82
-+#define CLK_BUS_GPADC		83
-+#define CLK_BUS_THS		84
-+#define CLK_I2S			85
-+#define CLK_BUS_I2S		86
-+#define CLK_DMIC		87
-+#define CLK_BUS_DMIC		88
-+#define CLK_AUDIO_DAC		89
-+#define CLK_AUDIO_ADC		90
-+#define CLK_BUS_AUDIO		91
-+#define CLK_USB_OHCI		92
-+#define CLK_BUS_OHCI		93
-+#define CLK_BUS_EHCI		94
-+#define CLK_BUS_OTG		95
-+#define CLK_BUS_DPSS_TOP	96
-+#define CLK_MIPI_DSI		97
-+#define CLK_BUS_MIPI_DSI	98
-+#define CLK_TCON_LCD		99
-+#define CLK_BUS_TCON_LCD	100
-+#define CLK_CSI_TOP		101
-+#define CLK_CSI_MCLK0		102
-+#define CLK_CSI_MCLK1		103
-+#define CLK_CSI_MCLK2		104
-+#define CLK_BUS_CSI		105
-+#define CLK_BUS_WIEGAND		106
-+#define CLK_RISCV		107
-+#define CLK_RISCV_AXI		108
-+#define CLK_RISCV_CFG		109
-+#define CLK_FANOUT_24M		110
-+#define CLK_FANOUT_12M		111
-+#define CLK_FANOUT_16M		112
-+#define CLK_FANOUT_25M		113
-+#define CLK_FANOUT_27M		114
-+#define CLK_FANOUT_PCLK		115
-+#define CLK_FANOUT0		116
-+#define CLK_FANOUT1		117
-+#define CLK_FANOUT2		118
++#define CLK_PLL_PERIPH_800M	4
++#define CLK_PLL_PERIPH_480M	5
++#define CLK_PLL_PERIPH_600M	6
++#define CLK_PLL_PERIPH_400M	7
++#define CLK_PLL_PERIPH_300M	8
++#define CLK_PLL_PERIPH_200M	9
++#define CLK_PLL_PERIPH_160M	10
++#define CLK_PLL_PERIPH_150M	11
++#define CLK_PLL_VIDEO_4X	12
++#define CLK_PLL_VIDEO_2X	13
++#define CLK_PLL_VIDEO_1X	14
++#define CLK_PLL_CSI_4X		15
++#define CLK_PLL_AUDIO_DIV2	16
++#define CLK_PLL_AUDIO_DIV5	17
++#define CLK_PLL_AUDIO_4X	18
++#define CLK_PLL_AUDIO_1X	19
++#define CLK_PLL_NPU_4X		20
++#define CLK_CPU			21
++#define CLK_CPU_AXI		22
++#define CLK_CPU_APB		23
++#define CLK_AHB			24
++#define CLK_APB0		25
++#define CLK_APB1		26
++#define CLK_MBUS		27
++#define CLK_DE			28
++#define CLK_BUS_DE		29
++#define CLK_G2D			30
++#define CLK_BUS_G2D		31
++#define CLK_CE			32
++#define CLK_BUS_CE		33
++#define CLK_VE			34
++#define CLK_BUS_VE		35
++#define CLK_NPU			36
++#define CLK_BUS_NPU		37
++#define CLK_BUS_DMA		38
++#define CLK_BUS_MSGBOX0		39
++#define CLK_BUS_MSGBOX1		40
++#define CLK_BUS_SPINLOCK	41
++#define CLK_BUS_HSTIMER		42
++#define CLK_AVS			43
++#define CLK_BUS_DBG		44
++#define CLK_BUS_PWM		45
++#define CLK_BUS_IOMMU		46
++#define CLK_DRAM		47
++#define CLK_MBUS_DMA		48
++#define CLK_MBUS_VE		49
++#define CLK_MBUS_CE		50
++#define CLK_MBUS_CSI		51
++#define CLK_MBUS_ISP		52
++#define CLK_MBUS_G2D		53
++#define CLK_BUS_DRAM		54
++#define CLK_MMC0		55
++#define CLK_MMC1		56
++#define CLK_MMC2		57
++#define CLK_BUS_MMC0		58
++#define CLK_BUS_MMC1		59
++#define CLK_BUS_MMC2		60
++#define CLK_BUS_UART0		61
++#define CLK_BUS_UART1		62
++#define CLK_BUS_UART2		63
++#define CLK_BUS_UART3		64
++#define CLK_BUS_I2C0		65
++#define CLK_BUS_I2C1		66
++#define CLK_BUS_I2C2		67
++#define CLK_BUS_I2C3		68
++#define CLK_BUS_I2C4		69
++#define CLK_SPI0		70
++#define CLK_SPI1		71
++#define CLK_SPI2		72
++#define CLK_SPI3		73
++#define CLK_BUS_SPI0		74
++#define CLK_BUS_SPI1		75
++#define CLK_BUS_SPI2		76
++#define CLK_BUS_SPI3		77
++#define CLK_EMAC_25M		78
++#define CLK_BUS_EMAC		79
++#define CLK_BUS_GPADC		80
++#define CLK_BUS_THS		81
++#define CLK_I2S			82
++#define CLK_BUS_I2S		83
++#define CLK_DMIC		84
++#define CLK_BUS_DMIC		85
++#define CLK_AUDIO_CODEC_DAC	86
++#define CLK_AUDIO_CODEC_ADC	87
++#define CLK_BUS_AUDIO_CODEC	88
++#define CLK_USB_OHCI		89
++#define CLK_BUS_OHCI		90
++#define CLK_BUS_EHCI		91
++#define CLK_BUS_OTG		92
++#define CLK_BUS_DPSS_TOP	93
++#define CLK_MIPI_DSI		94
++#define CLK_BUS_MIPI_DSI	95
++#define CLK_TCON_LCD		96
++#define CLK_BUS_TCON_LCD	97
++#define CLK_CSI_TOP		98
++#define CLK_CSI_MCLK0		99
++#define CLK_CSI_MCLK1		100
++#define CLK_CSI_MCLK2		101
++#define CLK_BUS_CSI		102
++#define CLK_BUS_WIEGAND		103
++#define CLK_RISCV		104
++#define CLK_RISCV_AXI		105
++#define CLK_RISCV_CFG		106
++#define CLK_FANOUT_24M		107
++#define CLK_FANOUT_12M		108
++#define CLK_FANOUT_16M		109
++#define CLK_FANOUT_25M		110
++#define CLK_FANOUT_27M		111
++#define CLK_FANOUT_PCLK		112
++#define CLK_FANOUT0		113
++#define CLK_FANOUT1		114
++#define CLK_FANOUT2		115
 +
 +#endif /* _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_ */
-diff -urN linux-6.10.11/include/dt-bindings/clock/sun8i-v853-r-ccu.h linux-6.10.11-wip/include/dt-bindings/clock/sun8i-v853-r-ccu.h
---- linux-6.10.11/include/dt-bindings/clock/sun8i-v853-r-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/include/dt-bindings/clock/sun8i-v853-r-ccu.h	2024-09-11 11:05:54.314079420 +0200
+diff -urN linux-6.11.5/include/dt-bindings/clock/sun8i-v853-r-ccu.h linux-6.11.5-wip/include/dt-bindings/clock/sun8i-v853-r-ccu.h
+--- linux-6.11.5/include/dt-bindings/clock/sun8i-v853-r-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/include/dt-bindings/clock/sun8i-v853-r-ccu.h	2024-10-11 14:19:17.000000000 +0200
 @@ -0,0 +1,16 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
@@ -5755,9 +6067,9 @@ diff -urN linux-6.10.11/include/dt-bindings/clock/sun8i-v853-r-ccu.h linux-6.10.
 +#define CLK_R_MAX_NO		(CLK_R_CPUCFG + 1)
 +
 +#endif
-diff -urN linux-6.10.11/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h linux-6.10.11-wip/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h
---- linux-6.10.11/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h	2024-09-11 11:05:54.314079420 +0200
+diff -urN linux-6.11.5/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h linux-6.11.5-wip/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h
+--- linux-6.11.5/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h	2024-10-11 14:19:17.000000000 +0200
 @@ -0,0 +1,10 @@
 +/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
 +
@@ -5769,9 +6081,9 @@ diff -urN linux-6.10.11/include/dt-bindings/power/allwinner,sun8i-v853-ppu.h lin
 +#define PD_VE			2
 +
 +#endif
-diff -urN linux-6.10.11/include/dt-bindings/reset/sun8i-v853-ccu.h linux-6.10.11-wip/include/dt-bindings/reset/sun8i-v853-ccu.h
---- linux-6.10.11/include/dt-bindings/reset/sun8i-v853-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/include/dt-bindings/reset/sun8i-v853-ccu.h	2024-09-12 09:16:41.215282479 +0200
+diff -urN linux-6.11.5/include/dt-bindings/reset/sun8i-v853-ccu.h linux-6.11.5-wip/include/dt-bindings/reset/sun8i-v853-ccu.h
+--- linux-6.11.5/include/dt-bindings/reset/sun8i-v853-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/include/dt-bindings/reset/sun8i-v853-ccu.h	2024-10-25 10:02:02.000000000 +0200
 @@ -0,0 +1,60 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/*
@@ -5817,7 +6129,7 @@ diff -urN linux-6.10.11/include/dt-bindings/reset/sun8i-v853-ccu.h linux-6.10.11
 +#define RST_BUS_THS		32
 +#define RST_BUS_I2S		33
 +#define RST_BUS_DMIC		34
-+#define RST_BUS_AUDIO		35
++#define RST_BUS_AUDIO_CODEC	35
 +#define RST_USB_PHY		36
 +#define RST_BUS_OHCI		37
 +#define RST_BUS_EHCI		38
@@ -5833,9 +6145,9 @@ diff -urN linux-6.10.11/include/dt-bindings/reset/sun8i-v853-ccu.h linux-6.10.11
 +#define RST_RISCV_CFG		48
 +
 +#endif /* _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_ */
-diff -urN linux-6.10.11/include/dt-bindings/reset/sun8i-v853-r-ccu.h linux-6.10.11-wip/include/dt-bindings/reset/sun8i-v853-r-ccu.h
---- linux-6.10.11/include/dt-bindings/reset/sun8i-v853-r-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.10.11-wip/include/dt-bindings/reset/sun8i-v853-r-ccu.h	2024-09-11 11:05:54.314079420 +0200
+diff -urN linux-6.11.5/include/dt-bindings/reset/sun8i-v853-r-ccu.h linux-6.11.5-wip/include/dt-bindings/reset/sun8i-v853-r-ccu.h
+--- linux-6.11.5/include/dt-bindings/reset/sun8i-v853-r-ccu.h	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.11.5-wip/include/dt-bindings/reset/sun8i-v853-r-ccu.h	2024-10-11 14:19:17.000000000 +0200
 @@ -0,0 +1,14 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
@@ -5851,3 +6163,625 @@ diff -urN linux-6.10.11/include/dt-bindings/reset/sun8i-v853-r-ccu.h linux-6.10.
 +#define RST_BUS_R_CPUCFG	2
 +
 +#endif /* _DT_BINDINGS_RESET_SUN8IW21_R_CCU_H_ */
+diff -urN linux-6.11.5/sound/soc/sunxi/sun4i-codec.c linux-6.11.5-wip/sound/soc/sunxi/sun4i-codec.c
+--- linux-6.11.5/sound/soc/sunxi/sun4i-codec.c	2024-10-22 15:51:37.000000000 +0200
++++ linux-6.11.5-wip/sound/soc/sunxi/sun4i-codec.c	2024-10-29 10:17:15.000000000 +0100
+@@ -226,6 +226,43 @@
+ #define SUN8I_H3_CODEC_DAC_DBG			(0x48)
+ #define SUN8I_H3_CODEC_ADC_DBG			(0x4c)
+ 
++/* H616 specific registers */
++#define SUN50I_H616_CODEC_DAC_FIFOC		(0x10)
++
++#define SUN50I_DAC_FIFO_STA			(0x14)
++#define SUN50I_DAC_TXE_INT			(3)
++#define SUN50I_DAC_TXU_INT			(2)
++#define SUN50I_DAC_TXO_INT			(1)
++
++#define SUN50I_DAC_CNT				(0x24)
++#define SUN50I_DAC_DG_REG			(0x28)
++#define SUN50I_DAC_DAP_CTL			(0xf0)
++
++#define SUN50I_H616_DAC_AC_DAC_REG		(0x310)
++#define SUN50I_H616_DAC_LEN			(15)
++#define SUN50I_H616_DAC_REN			(14)
++#define SUN50I_H616_LINEOUTL_EN			(13)
++#define SUN50I_H616_LMUTE			(12)
++#define SUN50I_H616_LINEOUTR_EN			(11)
++#define SUN50I_H616_RMUTE			(10)
++#define SUN50I_H616_RSWITCH			(9)
++#define SUN50I_H616_RAMPEN			(8)
++#define SUN50I_H616_LINEOUTL_SEL		(6)
++#define SUN50I_H616_LINEOUTR_SEL		(5)
++#define SUN50I_H616_LINEOUT_VOL			(0)
++
++#define SUN50I_H616_DAC_AC_MIXER_REG		(0x314)
++#define SUN50I_H616_LMIX_LDAC			(21)
++#define SUN50I_H616_LMIX_RDAC			(20)
++#define SUN50I_H616_RMIX_RDAC			(17)
++#define SUN50I_H616_RMIX_LDAC			(16)
++#define SUN50I_H616_LMIXEN			(11)
++#define SUN50I_H616_RMIXEN			(10)
++
++#define SUN50I_H616_DAC_AC_RAMP_REG		(0x31c)
++#define SUN50I_H616_RAMP_STEP			(4)
++#define SUN50I_H616_RDEN			(0)
++
+ /* TODO H3 DAP (Digital Audio Processing) bits */
+ 
+ struct sun4i_codec {
+@@ -238,6 +275,8 @@
+ 
+ 	/* ADC_FIFOC register is at different offset on different SoCs */
+ 	struct regmap_field *reg_adc_fifoc;
++	/* DAC_FIFOC register is at different offset on different SoCs */
++	struct regmap_field *reg_dac_fifoc;
+ 
+ 	struct snd_dmaengine_dai_dma_data	capture_dma_data;
+ 	struct snd_dmaengine_dai_dma_data	playback_dma_data;
+@@ -246,19 +285,19 @@
+ static void sun4i_codec_start_playback(struct sun4i_codec *scodec)
+ {
+ 	/* Flush TX FIFO */
+-	regmap_set_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-			BIT(SUN4I_CODEC_DAC_FIFOC_FIFO_FLUSH));
++	regmap_field_set_bits(scodec->reg_dac_fifoc,
++			      BIT(SUN4I_CODEC_DAC_FIFOC_FIFO_FLUSH));
+ 
+ 	/* Enable DAC DRQ */
+-	regmap_set_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-			BIT(SUN4I_CODEC_DAC_FIFOC_DAC_DRQ_EN));
++	regmap_field_set_bits(scodec->reg_dac_fifoc,
++			      BIT(SUN4I_CODEC_DAC_FIFOC_DAC_DRQ_EN));
+ }
+ 
+ static void sun4i_codec_stop_playback(struct sun4i_codec *scodec)
+ {
+ 	/* Disable DAC DRQ */
+-	regmap_clear_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-			  BIT(SUN4I_CODEC_DAC_FIFOC_DAC_DRQ_EN));
++	regmap_field_clear_bits(scodec->reg_dac_fifoc,
++				BIT(SUN4I_CODEC_DAC_FIFOC_DAC_DRQ_EN));
+ }
+ 
+ static void sun4i_codec_start_capture(struct sun4i_codec *scodec)
+@@ -356,13 +395,13 @@
+ 	u32 val;
+ 
+ 	/* Flush the TX FIFO */
+-	regmap_set_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-			   BIT(SUN4I_CODEC_DAC_FIFOC_FIFO_FLUSH));
++	regmap_field_set_bits(scodec->reg_dac_fifoc,
++			      BIT(SUN4I_CODEC_DAC_FIFOC_FIFO_FLUSH));
+ 
+ 	/* Set TX FIFO Empty Trigger Level */
+-	regmap_update_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-			   0x3f << SUN4I_CODEC_DAC_FIFOC_TX_TRIG_LEVEL,
+-			   0xf << SUN4I_CODEC_DAC_FIFOC_TX_TRIG_LEVEL);
++	regmap_field_update_bits(scodec->reg_dac_fifoc,
++				 0x3f << SUN4I_CODEC_DAC_FIFOC_TX_TRIG_LEVEL,
++				 0xf << SUN4I_CODEC_DAC_FIFOC_TX_TRIG_LEVEL);
+ 
+ 	if (substream->runtime->rate > 32000)
+ 		/* Use 64 bits FIR filter */
+@@ -371,13 +410,13 @@
+ 		/* Use 32 bits FIR filter */
+ 		val = BIT(SUN4I_CODEC_DAC_FIFOC_FIR_VERSION);
+ 
+-	regmap_update_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-			   BIT(SUN4I_CODEC_DAC_FIFOC_FIR_VERSION),
+-			   val);
++	regmap_field_update_bits(scodec->reg_dac_fifoc,
++				 BIT(SUN4I_CODEC_DAC_FIFOC_FIR_VERSION),
++				 val);
+ 
+ 	/* Send zeros when we have an underrun */
+-	regmap_clear_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-			   BIT(SUN4I_CODEC_DAC_FIFOC_SEND_LASAT));
++	regmap_field_clear_bits(scodec->reg_dac_fifoc,
++				BIT(SUN4I_CODEC_DAC_FIFOC_SEND_LASAT));
+ 
+ 	return 0;
+ };
+@@ -510,9 +549,9 @@
+ 	u32 val;
+ 
+ 	/* Set DAC sample rate */
+-	regmap_update_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-			   7 << SUN4I_CODEC_DAC_FIFOC_DAC_FS,
+-			   hwrate << SUN4I_CODEC_DAC_FIFOC_DAC_FS);
++	regmap_field_update_bits(scodec->reg_dac_fifoc,
++				 7 << SUN4I_CODEC_DAC_FIFOC_DAC_FS,
++				 hwrate << SUN4I_CODEC_DAC_FIFOC_DAC_FS);
+ 
+ 	/* Set the number of channels we want to use */
+ 	if (params_channels(params) == 1)
+@@ -520,27 +559,27 @@
+ 	else
+ 		val = 0;
+ 
+-	regmap_update_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-			   BIT(SUN4I_CODEC_DAC_FIFOC_MONO_EN),
+-			   val);
++	regmap_field_update_bits(scodec->reg_dac_fifoc,
++				 BIT(SUN4I_CODEC_DAC_FIFOC_MONO_EN),
++				 val);
+ 
+ 	/* Set the number of sample bits to either 16 or 24 bits */
+ 	if (hw_param_interval(params, SNDRV_PCM_HW_PARAM_SAMPLE_BITS)->min == 32) {
+-		regmap_set_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-				   BIT(SUN4I_CODEC_DAC_FIFOC_TX_SAMPLE_BITS));
++		regmap_field_set_bits(scodec->reg_dac_fifoc,
++				      BIT(SUN4I_CODEC_DAC_FIFOC_TX_SAMPLE_BITS));
+ 
+ 		/* Set TX FIFO mode to padding the LSBs with 0 */
+-		regmap_clear_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-				   BIT(SUN4I_CODEC_DAC_FIFOC_TX_FIFO_MODE));
++		regmap_field_clear_bits(scodec->reg_dac_fifoc,
++					BIT(SUN4I_CODEC_DAC_FIFOC_TX_FIFO_MODE));
+ 
+ 		scodec->playback_dma_data.addr_width = DMA_SLAVE_BUSWIDTH_4_BYTES;
+ 	} else {
+-		regmap_clear_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-				   BIT(SUN4I_CODEC_DAC_FIFOC_TX_SAMPLE_BITS));
++		regmap_field_clear_bits(scodec->reg_dac_fifoc,
++					BIT(SUN4I_CODEC_DAC_FIFOC_TX_SAMPLE_BITS));
+ 
+ 		/* Set TX FIFO mode to repeat the MSB */
+-		regmap_set_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-				   BIT(SUN4I_CODEC_DAC_FIFOC_TX_FIFO_MODE));
++		regmap_field_set_bits(scodec->reg_dac_fifoc,
++				      BIT(SUN4I_CODEC_DAC_FIFOC_TX_FIFO_MODE));
+ 
+ 		scodec->playback_dma_data.addr_width = DMA_SLAVE_BUSWIDTH_2_BYTES;
+ 	}
+@@ -558,7 +597,7 @@
+ 	int ret, hwrate;
+ 
+ 	clk_freq = sun4i_codec_get_mod_freq(params);
+-	if (!clk_freq)
++	if (!clk_freq) 
+ 		return -EINVAL;
+ 
+ 	ret = clk_set_rate(scodec->clk_module, clk_freq);
+@@ -603,8 +642,8 @@
+ 	 * Stop issuing DRQ when we have room for less than 16 samples
+ 	 * in our TX FIFO
+ 	 */
+-	regmap_set_bits(scodec->regmap, SUN4I_CODEC_DAC_FIFOC,
+-			   3 << SUN4I_CODEC_DAC_FIFOC_DRQ_CLR_CNT);
++	regmap_field_set_bits(scodec->reg_dac_fifoc,
++			      3 << SUN4I_CODEC_DAC_FIFOC_DRQ_CLR_CNT);
+ 
+ 	return clk_prepare_enable(scodec->clk_module);
+ }
+@@ -1528,6 +1567,269 @@
+ 	return card;
+ };
+ 
++static const struct snd_kcontrol_new sun50i_h616_codec_codec_controls[] = {
++	SOC_SINGLE_TLV("DAC Playback Volume", SUN4I_CODEC_DAC_DPC,
++		       SUN4I_CODEC_DAC_DPC_DVOL, 0x3f, 1,
++		       sun6i_codec_dvol_scale),
++	SOC_SINGLE_TLV("Line Out Playback Volume",
++		       SUN50I_H616_DAC_AC_DAC_REG,
++		       SUN50I_H616_LINEOUT_VOL, 0x1f, 0,
++		       sun6i_codec_lineout_vol_scale),
++	SOC_DOUBLE("Line Out Playback Switch",
++		   SUN50I_H616_DAC_AC_DAC_REG,
++		   SUN50I_H616_LINEOUTL_EN,
++		   SUN50I_H616_LINEOUTR_EN, 1, 0),
++};
++
++static const struct snd_kcontrol_new sun50i_h616_codec_mixer_controls[] = {
++	SOC_DAPM_DOUBLE("DAC Playback Switch",
++			SUN50I_H616_DAC_AC_MIXER_REG,
++			SUN50I_H616_LMIX_LDAC,
++			SUN50I_H616_RMIX_RDAC, 1, 0),
++	SOC_DAPM_DOUBLE("DAC Reversed Playback Switch",
++			SUN50I_H616_DAC_AC_MIXER_REG,
++			SUN50I_H616_LMIX_RDAC,
++			SUN50I_H616_RMIX_LDAC, 1, 0),
++};
++
++static SOC_ENUM_DOUBLE_DECL(sun50i_h616_codec_lineout_src_enum,
++			    SUN50I_H616_DAC_AC_DAC_REG,
++			    SUN50I_H616_LINEOUTL_SEL,
++			    SUN50I_H616_LINEOUTR_SEL,
++			    sun6i_codec_lineout_src_enum_text);
++
++static const struct snd_kcontrol_new sun50i_h616_codec_lineout_src[] = {
++		SOC_DAPM_ENUM("Line Out Source Playback Route",
++			      sun50i_h616_codec_lineout_src_enum),
++};
++
++static const struct snd_soc_dapm_widget sun50i_h616_codec_codec_widgets[] = {
++	/* Digital parts of the DACs */
++	SND_SOC_DAPM_SUPPLY("DAC Enable", SUN4I_CODEC_DAC_DPC,
++			    SUN4I_CODEC_DAC_DPC_EN_DA, 0,
++			    NULL, 0),
++
++	/* Analog parts of the DACs */
++	SND_SOC_DAPM_DAC("Left DAC", "Codec Playback",
++			 SUN50I_H616_DAC_AC_DAC_REG,
++			 SUN50I_H616_DAC_LEN, 0),
++	SND_SOC_DAPM_DAC("Right DAC", "Codec Playback",
++			 SUN50I_H616_DAC_AC_DAC_REG,
++			 SUN50I_H616_DAC_REN, 0),
++
++	/* Mixers */
++	SOC_MIXER_ARRAY("Left Mixer", SUN50I_H616_DAC_AC_MIXER_REG,
++			SUN50I_H616_LMIXEN, 0,
++			sun50i_h616_codec_mixer_controls),
++	SOC_MIXER_ARRAY("Right Mixer", SUN50I_H616_DAC_AC_MIXER_REG,
++			SUN50I_H616_RMIXEN, 0,
++			sun50i_h616_codec_mixer_controls),
++
++	/* Line Out path */
++	SND_SOC_DAPM_MUX("Line Out Source Playback Route",
++			 SND_SOC_NOPM, 0, 0, sun50i_h616_codec_lineout_src),
++	SND_SOC_DAPM_OUT_DRV("Line Out Ramp Controller",
++			     SUN50I_H616_DAC_AC_RAMP_REG,
++			     SUN50I_H616_RDEN, 0, NULL, 0),
++	SND_SOC_DAPM_OUTPUT("LINEOUT"),
++};
++
++static const struct snd_soc_component_driver sun50i_h616_codec_codec = {
++	.controls   = sun50i_h616_codec_codec_controls,
++	.num_controls   = ARRAY_SIZE(sun50i_h616_codec_codec_controls),
++	.dapm_widgets   = sun50i_h616_codec_codec_widgets,
++	.num_dapm_widgets = ARRAY_SIZE(sun50i_h616_codec_codec_widgets),
++	.idle_bias_on   = 1,
++	.use_pmdown_time  = 1,
++	.endianness   = 1,
++};
++
++static const struct snd_kcontrol_new sun50i_h616_card_controls[] = {
++	SOC_DAPM_PIN_SWITCH("LINEOUT"),
++};
++
++static const struct snd_soc_dapm_widget sun50i_h616_codec_card_dapm_widgets[] = {
++	SND_SOC_DAPM_LINE("Line Out", NULL),
++	SND_SOC_DAPM_SPK("Speaker", sun4i_codec_spk_event),
++};
++
++/* Connect digital side enables to analog side widgets */
++static const struct snd_soc_dapm_route sun50i_h616_codec_card_routes[] = {
++	/* DAC Routes */
++	{ "Left DAC", NULL, "DAC Enable" },
++	{ "Right DAC", NULL, "DAC Enable" },
++
++	/* Left Mixer Routes */
++	{ "Left Mixer", "DAC Playback Switch", "Left DAC" },
++	{ "Left Mixer", "DAC Reversed Playback Switch", "Right DAC" },
++
++	/* Right Mixer Routes */
++	{ "Right Mixer", "DAC Playback Switch", "Right DAC" },
++	{ "Right Mixer", "DAC Reversed Playback Switch", "Left DAC" },
++
++	/* Line Out Routes */
++	{ "Line Out Source Playback Route", "Stereo", "Left Mixer" },
++	{ "Line Out Source Playback Route", "Stereo", "Right Mixer" },
++	{ "Line Out Source Playback Route", "Mono Differential", "Left Mixer" },
++	{ "Line Out Source Playback Route", "Mono Differential", "Right Mixer" },
++	{ "Line Out Ramp Controller", NULL, "Line Out Source Playback Route" },
++	{ "LINEOUT", NULL, "Line Out Ramp Controller" },
++};
++
++static struct snd_soc_card *sun50i_h616_codec_create_card(struct device *dev)
++{
++       struct snd_soc_card *card;
++       int ret;
++
++       card = devm_kzalloc(dev, sizeof(*card), GFP_KERNEL);
++       if (!card)
++               return ERR_PTR(-ENOMEM);
++
++       card->dai_link = sun4i_codec_create_link(dev, &card->num_links);
++       if (!card->dai_link)
++               return ERR_PTR(-ENOMEM);
++
++       card->dai_link->playback_only = true;
++       card->dai_link->capture_only = false;
++
++       card->dev               = dev;
++       card->owner             = THIS_MODULE;
++       card->name              = "H616 Audio Codec";
++       card->driver_name       = "sun4i-codec";
++       card->controls          = sun50i_h616_card_controls;
++       card->num_controls      = ARRAY_SIZE(sun50i_h616_card_controls);
++       card->dapm_widgets      = sun50i_h616_codec_card_dapm_widgets;
++       card->num_dapm_widgets  = ARRAY_SIZE(sun50i_h616_codec_card_dapm_widgets);
++       card->dapm_routes       = sun50i_h616_codec_card_routes;
++       card->num_dapm_routes   = ARRAY_SIZE(sun50i_h616_codec_card_routes);
++       card->fully_routed      = true;
++
++       ret = snd_soc_of_parse_audio_routing(card, "allwinner,audio-routing");
++       if (ret)
++               dev_warn(dev, "failed to parse audio-routing: %d\n", ret);
++
++       return card;
++};
++
++static const struct snd_kcontrol_new sun8i_v853_codec_codec_controls[] = {
++	SOC_SINGLE_TLV("DAC Playback Volume", SUN4I_CODEC_DAC_DPC,
++		       SUN4I_CODEC_DAC_DPC_DVOL, 0x3f, 1,
++		       sun6i_codec_dvol_scale),
++	SOC_SINGLE_TLV("Line Out Playback Volume",
++		       SUN50I_H616_DAC_AC_DAC_REG,
++		       SUN50I_H616_LINEOUT_VOL, 0x1f, 0,
++		       sun6i_codec_lineout_vol_scale),
++};
++
++static SOC_ENUM_SINGLE_DECL(sun8i_v853_codec_lineout_src_enum,
++			    SUN50I_H616_DAC_AC_DAC_REG,
++			    SUN50I_H616_LINEOUTL_SEL,
++			    sun6i_codec_lineout_src_enum_text);
++
++static const struct snd_kcontrol_new sun8i_v853_codec_lineout_src[] = {
++		SOC_DAPM_ENUM("Line Out Source Playback Route",
++			      sun8i_v853_codec_lineout_src_enum),
++};
++
++static const struct snd_soc_dapm_widget sun8i_v853_codec_codec_widgets[] = {
++	/* Digital parts of the DACs */
++	SND_SOC_DAPM_SUPPLY("DAC Enable", SUN4I_CODEC_DAC_DPC,
++			    SUN4I_CODEC_DAC_DPC_EN_DA, 0,
++			    NULL, 0),
++
++	SND_SOC_DAPM_SUPPLY("Line Out Enable",
++			     SUN50I_H616_DAC_AC_DAC_REG,
++			     SUN50I_H616_LINEOUTL_EN, 0, NULL, 0),
++
++	SND_SOC_DAPM_SUPPLY("Line Out Mute",
++			     SUN50I_H616_DAC_AC_DAC_REG,
++			     SUN50I_H616_LMUTE, 0, NULL, 1),
++
++	/* Analog parts of the DACs */
++	SND_SOC_DAPM_DAC("Left DAC", "Codec Playback",
++			 SUN50I_H616_DAC_AC_DAC_REG,
++			 SUN50I_H616_DAC_LEN, 0),
++
++	/* Line Out path */
++	SND_SOC_DAPM_MUX("Line Out Source Playback Route",
++			 SND_SOC_NOPM, 0, 0, sun8i_v853_codec_lineout_src),
++
++
++	SND_SOC_DAPM_OUT_DRV("Line Out Ramp Controller",
++			     SUN50I_H616_DAC_AC_RAMP_REG,
++			     SUN50I_H616_RDEN, 0, NULL, 0),
++
++	SND_SOC_DAPM_OUTPUT("LINEOUT"),
++};
++
++static const struct snd_soc_component_driver sun8i_v853_codec_codec = {
++	.controls   = sun8i_v853_codec_codec_controls,
++	.num_controls   = ARRAY_SIZE(sun8i_v853_codec_codec_controls),
++	.dapm_widgets   = sun8i_v853_codec_codec_widgets,
++	.num_dapm_widgets = ARRAY_SIZE(sun8i_v853_codec_codec_widgets),
++	.idle_bias_on   = 1,
++	.use_pmdown_time  = 1,
++	.endianness   = 1,
++};
++
++static const struct snd_kcontrol_new sun8i_v853_card_controls[] = {
++	SOC_DAPM_PIN_SWITCH("LINEOUT"),
++};
++
++static const struct snd_soc_dapm_widget sun8i_v853_codec_card_dapm_widgets[] = {
++	SND_SOC_DAPM_LINE("Line Out", NULL),
++	SND_SOC_DAPM_SPK("Speaker", sun4i_codec_spk_event),
++};
++
++/* Connect digital side enables to analog side widgets */
++static const struct snd_soc_dapm_route sun8i_v853_codec_card_routes[] = {
++	/* DAC Routes */
++	{ "Left DAC", NULL, "DAC Enable" },
++	{ "Left DAC", NULL, "Line Out Enable" },
++	{ "Left DAC", NULL, "Line Out Mute" },
++
++	/* Line Out Routes */
++	{ "Line Out Source Playback Route", "Stereo", "Left DAC" },
++	{ "Line Out Source Playback Route", "Mono Differential", "Left DAC" },
++	{ "Line Out Ramp Controller", NULL, "Line Out Source Playback Route" },
++	{ "LINEOUT", NULL, "Line Out Ramp Controller" },
++};
++
++static struct snd_soc_card *sun8i_v853_codec_create_card(struct device *dev)
++{
++	struct snd_soc_card *card;
++	int ret;
++
++	card = devm_kzalloc(dev, sizeof(*card), GFP_KERNEL);
++	if (!card)
++		return ERR_PTR(-ENOMEM);
++
++	card->dai_link = sun4i_codec_create_link(dev, &card->num_links);
++	if (!card->dai_link)
++		return ERR_PTR(-ENOMEM);
++
++	card->dai_link->playback_only = true;
++	card->dai_link->capture_only = false;
++
++	card->dev		= dev;
++	card->owner		= THIS_MODULE;
++	card->name		= "V853 Audio Codec";
++	card->driver_name	= "sun4i-codec";
++	card->controls		= sun8i_v853_card_controls;
++	card->num_controls	= ARRAY_SIZE(sun8i_v853_card_controls);
++	card->dapm_widgets	= sun8i_v853_codec_card_dapm_widgets;
++	card->num_dapm_widgets	= ARRAY_SIZE(sun8i_v853_codec_card_dapm_widgets);
++	card->dapm_routes	= sun8i_v853_codec_card_routes;
++	card->num_dapm_routes	= ARRAY_SIZE(sun8i_v853_codec_card_routes);
++	card->fully_routed	= true;
++
++	ret = snd_soc_of_parse_audio_routing(card, "allwinner,audio-routing");
++	if (ret)
++		dev_warn(dev, "failed to parse audio-routing: %d\n", ret);
++
++	return card;
++};
++
+ static const struct regmap_config sun4i_codec_regmap_config = {
+ 	.reg_bits	= 32,
+ 	.reg_stride	= 4,
+@@ -1570,14 +1872,32 @@
+ 	.max_register	= SUN8I_H3_CODEC_ADC_DBG,
+ };
+ 
++static const struct regmap_config sun50i_h616_codec_regmap_config = {
++	.reg_bits	= 32,
++	.reg_stride	= 4,
++	.val_bits	= 32,
++	.max_register	= SUN50I_H616_DAC_AC_RAMP_REG,
++	.cache_type	= REGCACHE_NONE,
++};
++
++static const struct regmap_config sun8i_v853_codec_regmap_config = {
++	.reg_bits	= 32,
++	.reg_stride	= 4,
++	.val_bits	= 32,
++	.max_register	= SUN50I_H616_DAC_AC_RAMP_REG,
++	.cache_type	= REGCACHE_NONE,
++};
++
+ struct sun4i_codec_quirks {
+ 	const struct regmap_config *regmap_config;
+ 	const struct snd_soc_component_driver *codec;
+ 	struct snd_soc_card * (*create_card)(struct device *dev);
+ 	struct reg_field reg_adc_fifoc;	/* used for regmap_field */
++	struct reg_field reg_dac_fifoc;	/* used for regmap_field */
+ 	unsigned int reg_dac_txdata;	/* TX FIFO offset for DMA config */
+ 	unsigned int reg_adc_rxdata;	/* RX FIFO offset for DMA config */
+ 	bool has_reset;
++	bool playback_only;
+ };
+ 
+ static const struct sun4i_codec_quirks sun4i_codec_quirks = {
+@@ -1585,6 +1905,7 @@
+ 	.codec		= &sun4i_codec_codec,
+ 	.create_card	= sun4i_codec_create_card,
+ 	.reg_adc_fifoc	= REG_FIELD(SUN4I_CODEC_ADC_FIFOC, 0, 31),
++	.reg_dac_fifoc	= REG_FIELD(SUN4I_CODEC_DAC_FIFOC, 0, 31),
+ 	.reg_dac_txdata	= SUN4I_CODEC_DAC_TXDATA,
+ 	.reg_adc_rxdata	= SUN4I_CODEC_ADC_RXDATA,
+ };
+@@ -1594,6 +1915,7 @@
+ 	.codec		= &sun6i_codec_codec,
+ 	.create_card	= sun6i_codec_create_card,
+ 	.reg_adc_fifoc	= REG_FIELD(SUN6I_CODEC_ADC_FIFOC, 0, 31),
++	.reg_dac_fifoc	= REG_FIELD(SUN4I_CODEC_DAC_FIFOC, 0, 31),
+ 	.reg_dac_txdata	= SUN4I_CODEC_DAC_TXDATA,
+ 	.reg_adc_rxdata	= SUN6I_CODEC_ADC_RXDATA,
+ 	.has_reset	= true,
+@@ -1604,6 +1926,7 @@
+ 	.codec		= &sun7i_codec_codec,
+ 	.create_card	= sun4i_codec_create_card,
+ 	.reg_adc_fifoc	= REG_FIELD(SUN4I_CODEC_ADC_FIFOC, 0, 31),
++	.reg_dac_fifoc	= REG_FIELD(SUN4I_CODEC_DAC_FIFOC, 0, 31),
+ 	.reg_dac_txdata	= SUN4I_CODEC_DAC_TXDATA,
+ 	.reg_adc_rxdata	= SUN4I_CODEC_ADC_RXDATA,
+ };
+@@ -1613,6 +1936,7 @@
+ 	.codec		= &sun8i_a23_codec_codec,
+ 	.create_card	= sun8i_a23_codec_create_card,
+ 	.reg_adc_fifoc	= REG_FIELD(SUN6I_CODEC_ADC_FIFOC, 0, 31),
++	.reg_dac_fifoc	= REG_FIELD(SUN4I_CODEC_DAC_FIFOC, 0, 31),
+ 	.reg_dac_txdata	= SUN4I_CODEC_DAC_TXDATA,
+ 	.reg_adc_rxdata	= SUN6I_CODEC_ADC_RXDATA,
+ 	.has_reset	= true,
+@@ -1628,6 +1952,7 @@
+ 	.codec		= &sun8i_a23_codec_codec,
+ 	.create_card	= sun8i_h3_codec_create_card,
+ 	.reg_adc_fifoc	= REG_FIELD(SUN6I_CODEC_ADC_FIFOC, 0, 31),
++	.reg_dac_fifoc	= REG_FIELD(SUN4I_CODEC_DAC_FIFOC, 0, 31),
+ 	.reg_dac_txdata	= SUN8I_H3_CODEC_DAC_TXDATA,
+ 	.reg_adc_rxdata	= SUN6I_CODEC_ADC_RXDATA,
+ 	.has_reset	= true,
+@@ -1642,11 +1967,30 @@
+ 	.codec		= &sun8i_a23_codec_codec,
+ 	.create_card	= sun8i_v3s_codec_create_card,
+ 	.reg_adc_fifoc	= REG_FIELD(SUN6I_CODEC_ADC_FIFOC, 0, 31),
++	.reg_dac_fifoc	= REG_FIELD(SUN4I_CODEC_DAC_FIFOC, 0, 31),
+ 	.reg_dac_txdata	= SUN8I_H3_CODEC_DAC_TXDATA,
+ 	.reg_adc_rxdata	= SUN6I_CODEC_ADC_RXDATA,
+ 	.has_reset	= true,
+ };
+ 
++static const struct sun4i_codec_quirks sun50i_h616_codec_quirks = {
++	.regmap_config	= &sun50i_h616_codec_regmap_config,
++	.codec		= &sun50i_h616_codec_codec,
++	.create_card	= sun50i_h616_codec_create_card,
++	.reg_dac_fifoc	= REG_FIELD(SUN50I_H616_CODEC_DAC_FIFOC, 0, 31),
++	.reg_dac_txdata	= SUN8I_H3_CODEC_DAC_TXDATA,
++	.has_reset	= true,
++};
++
++static const struct sun4i_codec_quirks sun8i_v853_codec_quirks = {
++	.regmap_config	= &sun8i_v853_codec_regmap_config,
++	.codec		= &sun8i_v853_codec_codec,
++	.create_card	= sun8i_v853_codec_create_card,
++	.reg_dac_fifoc	= REG_FIELD(SUN50I_H616_CODEC_DAC_FIFOC, 0, 31),
++	.reg_dac_txdata	= SUN8I_H3_CODEC_DAC_TXDATA,
++	.has_reset	= true,
++};
++
+ static const struct of_device_id sun4i_codec_of_match[] = {
+ 	{
+ 		.compatible = "allwinner,sun4i-a10-codec",
+@@ -1672,6 +2016,14 @@
+ 		.compatible = "allwinner,sun8i-v3s-codec",
+ 		.data = &sun8i_v3s_codec_quirks,
+ 	},
++	{
++		.compatible = "allwinner,sun50i-h616-codec",
++		.data = &sun50i_h616_codec_quirks,
++	},
++	{
++		.compatible = "allwinner,sun8i-v853-codec",
++		.data = &sun8i_v853_codec_quirks,
++	},
+ 	{}
+ };
+ MODULE_DEVICE_TABLE(of, sun4i_codec_of_match);
+@@ -1749,6 +2101,16 @@
+ 		return ret;
+ 	}
+ 
++	scodec->reg_dac_fifoc = devm_regmap_field_alloc(&pdev->dev,
++							scodec->regmap,
++							quirks->reg_dac_fifoc);
++	if (IS_ERR(scodec->reg_dac_fifoc)) {
++		ret = PTR_ERR(scodec->reg_dac_fifoc);
++		dev_err(&pdev->dev, "Failed to create regmap fields: %d\n",
++			ret);
++		return ret;
++	}
++
+ 	/* Enable the bus clock */
+ 	if (clk_prepare_enable(scodec->clk_apb)) {
+ 		dev_err(&pdev->dev, "Failed to enable the APB clock\n");
+@@ -1770,10 +2132,13 @@
+ 	scodec->playback_dma_data.maxburst = 8;
+ 	scodec->playback_dma_data.addr_width = DMA_SLAVE_BUSWIDTH_2_BYTES;
+ 
+-	/* DMA configuration for RX FIFO */
+-	scodec->capture_dma_data.addr = res->start + quirks->reg_adc_rxdata;
+-	scodec->capture_dma_data.maxburst = 8;
+-	scodec->capture_dma_data.addr_width = DMA_SLAVE_BUSWIDTH_2_BYTES;
++	if (!quirks->playback_only) {
++		/* DMA configuration for RX FIFO */
++		scodec->capture_dma_data.addr = res->start +
++						quirks->reg_adc_rxdata;
++		scodec->capture_dma_data.maxburst = 8;
++		scodec->capture_dma_data.addr_width = DMA_SLAVE_BUSWIDTH_2_BYTES;
++	}
+ 
+ 	ret = devm_snd_soc_register_component(&pdev->dev, quirks->codec,
+ 				     &sun4i_codec_dai, 1);
+@@ -1847,4 +2212,5 @@
+ MODULE_AUTHOR("Jon Smirl <jonsmirl@gmail.com>");
+ MODULE_AUTHOR("Maxime Ripard <maxime.ripard@free-electrons.com>");
+ MODULE_AUTHOR("Chen-Yu Tsai <wens@csie.org>");
++MODULE_AUTHOR("Ryan Walklin <ryan at testtoast.com");
+ MODULE_LICENSE("GPL");
