@@ -1,0 +1,15 @@
+diff -urN linux-6.12-rc6/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi linux-6.12-rc6-wip/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi
+--- linux-6.12-rc6/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.12-rc6-wip/arch/arm/boot/dts/allwinner/sun8i-v851s.dtsi	2024-10-31 13:18:34.000000000 +0100
+@@ -0,0 +1,11 @@
++// SPDX-License-Identifier: (GPL-2.0+ or MIT)
++// Copyright (C) 2024 Andras Szemzo <szemzo.andras@gmail.com>
++
++/dts-v1/;
++#include "sun8i-v853.dtsi"
++
++/ {
++	memory {
++	    reg = <0x40000000 0x4000000>;
++	};
++};

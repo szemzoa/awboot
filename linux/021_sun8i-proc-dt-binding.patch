@@ -1,0 +1,110 @@
+diff -urN linux-6.12-rc6/Documentation/devicetree/bindings/remoteproc/allwinner,sun8i-rproc.yaml linux-6.12-rc6-wip/Documentation/devicetree/bindings/remoteproc/allwinner,sun8i-rproc.yaml
+--- linux-6.12-rc6/Documentation/devicetree/bindings/remoteproc/allwinner,sun8i-rproc.yaml	1970-01-01 01:00:00.000000000 +0100
++++ linux-6.12-rc6-wip/Documentation/devicetree/bindings/remoteproc/allwinner,sun8i-rproc.yaml	2024-11-04 10:12:46.000000000 +0100
+@@ -0,0 +1,106 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/remoteproc/allwinner,sun8i-rproc.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Allwinner SUN8I remote processor controller
++
++description:
++  This document defines the binding for the remoteproc component that loads and
++  boots firmwares on the Allwinner SUN8I family chipset.
++
++maintainers:
++  - Andras Szemzo <szemzo.andras@gmail.com>
++
++properties:
++  compatible:
++    const: allwinner,sun8i-rproc
++
++  reg:
++    description:
++      Address ranges of the RISC-V mcu configuration registers.
++    maxItems: 2
++
++  resets:
++    minItems: 4
++    maxItems: 4
++
++  reset-names:
++    items:
++      - const: cfg
++      - const: sys_apb
++      - const: soft
++      - const: clk_gate
++    minItems: 4
++
++  firmware-name:
++    $ref: /schemas/types.yaml#/definitions/string
++    description:
++      The name of the firmware which should be loaded for this remote
++      processor.
++
++  mboxes:
++    description:
++      This property is required only if the rpmsg/virtio functionality is used.
++    items:
++      - description: |
++          A channel (rx) used to communicate from remote mcu through virtqueues with the
++          local processor.
++      - description: |
++          A channel (tx) used to communicate with remote mcu through virtqueues from the
++          local processor.
++    minItems: 2
++
++  mbox-names:
++    items:
++      - const: rx
++      - const: tx
++    minItems: 2
++
++  memory-region:
++    description:
++      List of phandles to the reserved memory regions associated with the
++      remoteproc device. This is variable and describes the memories shared with
++      the remote processor (e.g. remoteproc firmware and carveouts, rpmsg
++      vrings, ...).
++      (see ../reserved-memory/reserved-memory.txt)
++
++  power-domain:
++    items:
++      - description: RISC-V mcu power domain
++    minItems: 1
++
++required:
++  - compatible
++  - reg
++  - resets
++  - clocks
++  - memory-region
++  - firmware-name
++
++additionalProperties: false
++
++examples:
++
++#include <dt-bindings/clock/sun8i-v853-ccu.h>
++#include <dt-bindings/reset/sun8i-v853-ccu.h>
++#include <dt-bindings/power/allwinner,sun8i-v853-ppu.h>
++
++       remoteproc: rproc@6010000 {
++               compatible = "allwinner,sun8i-rproc";
++               reg = <0x06010000 0x1000>;
++               memory-region = <&riscv_reserved>, <&vdev0buffer>, <&vdev0vring0>,
++                   <&vdev0vring1>;
++               clocks = <&ccu CLK_RISCV_CFG>, <&ccu CLK_RISCV>;
++               clock-names = "cfg", "riscv";
++               resets = <&ccu RST_RISCV_CFG>,
++                        <&ccu RST_RISCV_SYS_APB>,
++                        <&ccu RST_RISCV_SOFT>,
++                        <&ccu RST_RISCV_CLK_GATING>;
++               reset-names = "cfg", "sys_apb", "soft", "clk_gate";
++	       firmware-name = "v851s-riscv-firmware.elf";
++               mbox-names = "rx", "tx";
++               mboxes = <&msgbox 0>, <&msgbox 1>;
++	       power-domains = <&ppu PD_RISCV>;
++       };
