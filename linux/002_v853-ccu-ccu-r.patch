@@ -1,7 +1,7 @@
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.c
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.c	2024-11-04 09:15:56.000000000 +0100
-@@ -0,0 +1,1112 @@
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.c	2024-11-05 09:53:42.670980400 +0100
+@@ -0,0 +1,1110 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2024 Andras Szemzo <szemzo.andras@gmail.com>
@@ -43,7 +43,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.12-rc6-wi
 +static struct ccu_mult pll_cpu_clk = {
 +	.enable		= BIT(27) | BIT(30) | BIT(31),
 +	.lock		= BIT(28),
-+	.mult		= _SUNXI_CCU_MULT_MIN(8, 8, 11),
++	.mult		= _SUNXI_CCU_MULT_MIN(8, 8, 12),
 +	.common		= {
 +		.reg		= 0x000,
 +		.hw.init	= CLK_HW_INIT_PARENTS_DATA("pll-cpu", osc24M,
@@ -57,7 +57,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.12-rc6-wi
 +static struct ccu_nkmp pll_ddr_clk = {
 +	.enable		= BIT(27) | BIT(30) | BIT(31),
 +	.lock		= BIT(28),
-+	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 11),
++	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 12),
 +	.m		= _SUNXI_CCU_DIV(1, 1), /* input divider */
 +	.p		= _SUNXI_CCU_DIV(0, 1), /* output divider */
 +	.common		= {
@@ -118,10 +118,8 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.12-rc6-wi
 +static struct ccu_nm pll_video_4x_clk = {
 +	.enable		= BIT(27) | BIT(30) | BIT(31),
 +	.lock		= BIT(28),
-+	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 11),
++	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 12),
 +	.m		= _SUNXI_CCU_DIV(1, 1), /* input divider */
-+	.min_rate	= 192000000U,
-+	.max_rate	= 2400000000U,
 +	.common		= {
 +		.reg		= 0x040,
 +		.hw.init	= CLK_HW_INIT_PARENTS_DATA("pll-video-4x", osc24M,
@@ -147,7 +145,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.12-rc6-wi
 +static struct ccu_nm pll_csi_4x_clk = {
 +	.enable		= BIT(27) | BIT(30) | BIT(31),
 +	.lock		= BIT(28),
-+	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 11),
++	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 12),
 +	.m		= _SUNXI_CCU_DIV(1, 1), /* input divider */
 +	.common		= {
 +		.reg		= 0x048,
@@ -199,10 +197,10 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.12-rc6-wi
 +static struct ccu_nm pll_npu_4x_clk = {
 +	.enable		= BIT(27) | BIT(30) | BIT(31),
 +	.lock		= BIT(28),
-+	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 11),
-+	.m		= _SUNXI_CCU_DIV(1, 1), /* output divider */
-+	.min_rate	= 500000000U,
-+	.max_rate	= 2100000000U,
++	.n		= _SUNXI_CCU_MULT_MIN(8, 8, 12),
++	.m		= _SUNXI_CCU_DIV(1, 1), /* input divider */
++	.min_rate	= 180000000U,
++	.max_rate	= 3500000000U,
 +	.common		= {
 +		.reg		= 0x080,
 +		.hw.init	= CLK_HW_INIT_PARENTS_DATA("pll-npu-4x", osc24M,
@@ -1116,7 +1114,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.12-rc6-wi
 +MODULE_LICENSE("GPL");
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.h linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.h
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.h	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.h	2024-11-05 08:57:58.559458319 +0100
 @@ -0,0 +1,14 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
@@ -1134,7 +1132,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.h linux-6.12-rc6-wi
 +#endif /* _CCU_SUN8I_V853_H_ */
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c	2024-11-05 08:57:58.559458319 +0100
 @@ -0,0 +1,95 @@
 +// SPDX-License-Identifier: GPL-3.0
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
@@ -1233,7 +1231,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c linux-6.12-rc6-
 +MODULE_LICENSE("GPL");
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h	2024-11-05 08:57:58.559458319 +0100
 @@ -0,0 +1,15 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
@@ -1252,7 +1250,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h linux-6.12-rc6-
 +#endif
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/Kconfig linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Kconfig
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/Kconfig	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Kconfig	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Kconfig	2024-11-05 08:57:58.563458220 +0100
 @@ -12,6 +12,16 @@
  	default y
  	depends on MACH_SUNIV || COMPILE_TEST
@@ -1272,7 +1270,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/Kconfig linux-6.12-rc6-wip/drivers
  	default y
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/Makefile linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Makefile
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/Makefile	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Makefile	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Makefile	2024-11-05 08:57:58.567458122 +0100
 @@ -25,6 +25,8 @@
  
  # SoC support
@@ -1293,7 +1291,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/Makefile linux-6.12-rc6-wip/driver
  sun50i-a64-ccu-y		+= ccu-sun50i-a64.o
 diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-ccu.h
 --- linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-ccu.h	2024-11-04 09:19:06.000000000 +0100
++++ linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-ccu.h	2024-11-05 08:57:58.567458122 +0100
 @@ -0,0 +1,128 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/*
@@ -1425,7 +1423,7 @@ diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.12-r
 +#endif /* _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_ */
 diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-r-ccu.h linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-r-ccu.h
 --- linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-r-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-r-ccu.h	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-r-ccu.h	2024-11-05 08:57:58.567458122 +0100
 @@ -0,0 +1,16 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
@@ -1445,7 +1443,7 @@ diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-r-ccu.h linux-6.12
 +#endif
 diff -urN linux-6.12-rc6/include/dt-bindings/reset/sun8i-v853-ccu.h linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-ccu.h
 --- linux-6.12-rc6/include/dt-bindings/reset/sun8i-v853-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-ccu.h	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-ccu.h	2024-11-05 08:57:58.567458122 +0100
 @@ -0,0 +1,60 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/*
@@ -1509,7 +1507,7 @@ diff -urN linux-6.12-rc6/include/dt-bindings/reset/sun8i-v853-ccu.h linux-6.12-r
 +#endif /* _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_ */
 diff -urN linux-6.12-rc6/include/dt-bindings/reset/sun8i-v853-r-ccu.h linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-r-ccu.h
 --- linux-6.12-rc6/include/dt-bindings/reset/sun8i-v853-r-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-r-ccu.h	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-r-ccu.h	2024-11-05 08:57:58.567458122 +0100
 @@ -0,0 +1,14 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.

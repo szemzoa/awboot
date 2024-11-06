@@ -6,7 +6,7 @@ diff -urN linux-6.12-rc6/drivers/remoteproc/Kconfig linux-6.12-rc6-wip/drivers/r
  	  This can be either built-in or a loadable module.
  
 +config SUN8I_REMOTEPROC
-+	tristate "Allwinner sun8i-v853 remoteproc support"
++	tristate "Allwinner sun8i remoteproc support"
 +	depends on ARCH_SUNXI || COMPILE_TEST
 +	help
 +	  Say y here to support the RISC_V mcu in V853/V851s/V851SE SoCs

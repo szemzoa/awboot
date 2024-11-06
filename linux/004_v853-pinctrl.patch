@@ -30,7 +30,7 @@ diff -urN linux-6.12-rc6/drivers/pinctrl/sunxi/pinctrl-sun8i-v853.c linux-6.12-r
 @@ -0,0 +1,980 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Allwinner V851s SoC pinctrl driver.
++ * Allwinner V853 SoC pinctrl driver.
 + *
 + * Copyright (c) 2016-2021  weidonghui <weidonghui@allwinnertech.com>
 + * Copyright (c) 2023 Andras Szemzo <szemzo.andras@gmail.com>
