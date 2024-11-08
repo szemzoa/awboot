@@ -1,6 +1,6 @@
 diff -urN linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_drv.h linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_drv.h
 --- linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_drv.h	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_drv.h	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_drv.h	2024-11-05 08:57:58.000000000 +0100
 @@ -13,6 +13,7 @@
  #include <linux/time64.h>
  #include <linux/types.h>
@@ -11,7 +11,7 @@ diff -urN linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_drv.h linux-6.12-rc6-wi
  #include <drm/drm_gem.h>
 diff -urN linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_gpu.c linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.c
 --- linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_gpu.c	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.c	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.c	2024-11-05 08:57:58.000000000 +0100
 @@ -1906,9 +1906,16 @@
  		return PTR_ERR(gpu->clk_shader);
  	gpu->base_rate_shader = clk_get_rate(gpu->clk_shader);
@@ -31,7 +31,7 @@ diff -urN linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_gpu.c linux-6.12-rc6-wi
  	 * autosuspend delay is rather arbitary: no measurements have
 diff -urN linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_gpu.h linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.h
 --- linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_gpu.h	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.h	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_gpu.h	2024-11-05 08:57:58.000000000 +0100
 @@ -157,6 +157,7 @@
  	struct clk *clk_reg;
  	struct clk *clk_core;
@@ -42,7 +42,7 @@ diff -urN linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_gpu.h linux-6.12-rc6-wi
  	unsigned int fe_waitcycles;
 diff -urN linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c
 --- linux-6.12-rc6/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/gpu/drm/etnaviv/etnaviv_hwdb.c	2024-11-05 08:57:58.000000000 +0100
 @@ -260,6 +260,38 @@
  		.minor_features10 = 0x108048c0,
  		.minor_features11 = 0x00000010,

@@ -1,6 +1,6 @@
 diff -urN linux-6.12-rc6/drivers/phy/allwinner/phy-sun4i-usb.c linux-6.12-rc6-wip/drivers/phy/allwinner/phy-sun4i-usb.c
 --- linux-6.12-rc6/drivers/phy/allwinner/phy-sun4i-usb.c	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/phy/allwinner/phy-sun4i-usb.c	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/phy/allwinner/phy-sun4i-usb.c	2024-11-05 08:57:58.000000000 +0100
 @@ -1006,6 +1006,15 @@
  	.phy0_dual_route = true,
  };

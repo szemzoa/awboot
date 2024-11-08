@@ -1,6 +1,6 @@
 diff -urN linux-6.12-rc6/drivers/pwm/Kconfig linux-6.12-rc6-wip/drivers/pwm/Kconfig
 --- linux-6.12-rc6/drivers/pwm/Kconfig	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/pwm/Kconfig	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/pwm/Kconfig	2024-11-05 08:57:58.000000000 +0100
 @@ -652,6 +652,16 @@
  	  To compile this driver as a module, choose M here: the module
  	  will be called pwm-sun4i.
@@ -20,7 +20,7 @@ diff -urN linux-6.12-rc6/drivers/pwm/Kconfig linux-6.12-rc6-wip/drivers/pwm/Kcon
  	depends on ARCH_SUNPLUS || COMPILE_TEST
 diff -urN linux-6.12-rc6/drivers/pwm/Makefile linux-6.12-rc6-wip/drivers/pwm/Makefile
 --- linux-6.12-rc6/drivers/pwm/Makefile	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/pwm/Makefile	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/pwm/Makefile	2024-11-05 08:57:58.000000000 +0100
 @@ -60,6 +60,7 @@
  obj-$(CONFIG_PWM_STM32_LP)	+= pwm-stm32-lp.o
  obj-$(CONFIG_PWM_STMPE)		+= pwm-stmpe.o
@@ -31,7 +31,7 @@ diff -urN linux-6.12-rc6/drivers/pwm/Makefile linux-6.12-rc6-wip/drivers/pwm/Mak
  obj-$(CONFIG_PWM_TIECAP)	+= pwm-tiecap.o
 diff -urN linux-6.12-rc6/drivers/pwm/pwm-sun20i.c linux-6.12-rc6-wip/drivers/pwm/pwm-sun20i.c
 --- linux-6.12-rc6/drivers/pwm/pwm-sun20i.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/pwm/pwm-sun20i.c	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/pwm/pwm-sun20i.c	2024-11-05 08:57:58.000000000 +0100
 @@ -0,0 +1,379 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*

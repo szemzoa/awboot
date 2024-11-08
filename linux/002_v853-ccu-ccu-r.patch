@@ -1,7 +1,7 @@
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.c
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.c	2024-11-05 09:53:42.670980400 +0100
-@@ -0,0 +1,1110 @@
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.c	2024-11-07 15:18:30.000000000 +0100
+@@ -0,0 +1,1111 @@
 +// SPDX-License-Identifier: GPL-2.0-only
 +/*
 + * Copyright (C) 2024 Andras Szemzo <szemzo.andras@gmail.com>
@@ -966,6 +966,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.12-rc6-wi
 +	[RST_BUS_HSTIMER]	= { 0x73c, BIT(16) },
 +	[RST_BUS_DBG]		= { 0x78c, BIT(16) },
 +	[RST_BUS_PWM]		= { 0x7ac, BIT(16) },
++	[RST_BUS_IOMMU]		= { 0x7bc, BIT(16) },
 +	[RST_BUS_DRAM]		= { 0x80c, BIT(16) },
 +	[RST_BUS_MMC0]		= { 0x84c, BIT(16) },
 +	[RST_BUS_MMC1]		= { 0x84c, BIT(17) },
@@ -1114,7 +1115,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.c linux-6.12-rc6-wi
 +MODULE_LICENSE("GPL");
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.h linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.h
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.h	2024-11-05 08:57:58.559458319 +0100
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853.h	2024-11-05 08:57:58.000000000 +0100
 @@ -0,0 +1,14 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/*
@@ -1132,7 +1133,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853.h linux-6.12-rc6-wi
 +#endif /* _CCU_SUN8I_V853_H_ */
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c	2024-11-05 08:57:58.559458319 +0100
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c	2024-11-05 08:57:58.000000000 +0100
 @@ -0,0 +1,95 @@
 +// SPDX-License-Identifier: GPL-3.0
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
@@ -1231,7 +1232,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.c linux-6.12-rc6-
 +MODULE_LICENSE("GPL");
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h	2024-11-05 08:57:58.559458319 +0100
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h	2024-11-05 08:57:58.000000000 +0100
 @@ -0,0 +1,15 @@
 +/* SPDX-License-Identifier: GPL-2.0 */
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
@@ -1250,7 +1251,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/ccu-sun8i-v853-r.h linux-6.12-rc6-
 +#endif
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/Kconfig linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Kconfig
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/Kconfig	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Kconfig	2024-11-05 08:57:58.563458220 +0100
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Kconfig	2024-11-05 08:57:58.000000000 +0100
 @@ -12,6 +12,16 @@
  	default y
  	depends on MACH_SUNIV || COMPILE_TEST
@@ -1270,7 +1271,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/Kconfig linux-6.12-rc6-wip/drivers
  	default y
 diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/Makefile linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Makefile
 --- linux-6.12-rc6/drivers/clk/sunxi-ng/Makefile	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Makefile	2024-11-05 08:57:58.567458122 +0100
++++ linux-6.12-rc6-wip/drivers/clk/sunxi-ng/Makefile	2024-11-05 08:57:58.000000000 +0100
 @@ -25,6 +25,8 @@
  
  # SoC support
@@ -1291,7 +1292,7 @@ diff -urN linux-6.12-rc6/drivers/clk/sunxi-ng/Makefile linux-6.12-rc6-wip/driver
  sun50i-a64-ccu-y		+= ccu-sun50i-a64.o
 diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-ccu.h
 --- linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-ccu.h	2024-11-05 08:57:58.567458122 +0100
++++ linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-ccu.h	2024-11-05 08:57:58.000000000 +0100
 @@ -0,0 +1,128 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/*
@@ -1324,29 +1325,29 @@ diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.12-r
 +#define CLK_PLL_AUDIO_4X	19
 +#define CLK_PLL_AUDIO_1X	20
 +#define CLK_PLL_NPU_4X		21
-+#define CLK_CPU			22
++#define CLK_CPU		22
 +#define CLK_CPU_AXI		23
 +#define CLK_CPU_APB		24
-+#define CLK_AHB			25
++#define CLK_AHB		25
 +#define CLK_APB0		26
 +#define CLK_APB1		27
 +#define CLK_MBUS		28
 +#define CLK_DE			29
 +#define CLK_BUS_DE		30
-+#define CLK_G2D			31
++#define CLK_G2D		31
 +#define CLK_BUS_G2D		32
 +#define CLK_CE			33
 +#define CLK_BUS_CE		34
 +#define CLK_VE			35
 +#define CLK_BUS_VE		36
-+#define CLK_NPU			37
++#define CLK_NPU		37
 +#define CLK_BUS_NPU		38
 +#define CLK_BUS_DMA		39
-+#define CLK_BUS_MSGBOX0		40
-+#define CLK_BUS_MSGBOX1		41
++#define CLK_BUS_MSGBOX0	40
++#define CLK_BUS_MSGBOX1	41
 +#define CLK_BUS_SPINLOCK	42
-+#define CLK_BUS_HSTIMER		43
-+#define CLK_AVS			44
++#define CLK_BUS_HSTIMER	43
++#define CLK_AVS		44
 +#define CLK_BUS_DBG		45
 +#define CLK_BUS_PWM		46
 +#define CLK_BUS_IOMMU		47
@@ -1385,7 +1386,7 @@ diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.12-r
 +#define CLK_BUS_EMAC		80
 +#define CLK_BUS_GPADC		81
 +#define CLK_BUS_THS		82
-+#define CLK_I2S			83
++#define CLK_I2S		83
 +#define CLK_BUS_I2S		84
 +#define CLK_DMIC		85
 +#define CLK_BUS_DMIC		86
@@ -1406,7 +1407,7 @@ diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.12-r
 +#define CLK_CSI_MCLK1		101
 +#define CLK_CSI_MCLK2		102
 +#define CLK_BUS_CSI		103
-+#define CLK_BUS_WIEGAND		104
++#define CLK_BUS_WIEGAND	104
 +#define CLK_RISCV		105
 +#define CLK_RISCV_AXI		106
 +#define CLK_RISCV_CFG		107
@@ -1415,7 +1416,7 @@ diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.12-r
 +#define CLK_FANOUT_16M		110
 +#define CLK_FANOUT_25M		111
 +#define CLK_FANOUT_27M		112
-+#define CLK_FANOUT_PCLK		113
++#define CLK_FANOUT_PCLK	113
 +#define CLK_FANOUT0		114
 +#define CLK_FANOUT1		115
 +#define CLK_FANOUT2		116
@@ -1423,7 +1424,7 @@ diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-ccu.h linux-6.12-r
 +#endif /* _DT_BINDINGS_CLK_SUN8I_V85X_CCU_H_ */
 diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-r-ccu.h linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-r-ccu.h
 --- linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-r-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-r-ccu.h	2024-11-05 08:57:58.567458122 +0100
++++ linux-6.12-rc6-wip/include/dt-bindings/clock/sun8i-v853-r-ccu.h	2024-11-05 08:57:58.000000000 +0100
 @@ -0,0 +1,16 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.
@@ -1443,8 +1444,8 @@ diff -urN linux-6.12-rc6/include/dt-bindings/clock/sun8i-v853-r-ccu.h linux-6.12
 +#endif
 diff -urN linux-6.12-rc6/include/dt-bindings/reset/sun8i-v853-ccu.h linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-ccu.h
 --- linux-6.12-rc6/include/dt-bindings/reset/sun8i-v853-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-ccu.h	2024-11-05 08:57:58.567458122 +0100
-@@ -0,0 +1,60 @@
++++ linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-ccu.h	2024-11-07 15:19:29.000000000 +0100
+@@ -0,0 +1,61 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/*
 + * Copyright (c) 2020 huangzhenwei@allwinnertech.com
@@ -1467,47 +1468,48 @@ diff -urN linux-6.12-rc6/include/dt-bindings/reset/sun8i-v853-ccu.h linux-6.12-r
 +#define RST_BUS_HSTIMER	10
 +#define RST_BUS_DBG		11
 +#define RST_BUS_PWM		12
-+#define RST_BUS_DRAM		13
-+#define RST_BUS_MMC0		14
-+#define RST_BUS_MMC1		15
-+#define RST_BUS_MMC2		16
-+#define RST_BUS_UART0		17
-+#define RST_BUS_UART1		18
-+#define RST_BUS_UART2		19
-+#define RST_BUS_UART3		20
-+#define RST_BUS_I2C0		21
-+#define RST_BUS_I2C1		22
-+#define RST_BUS_I2C2		23
-+#define RST_BUS_I2C3		24
-+#define RST_BUS_I2C4		25
-+#define RST_BUS_SPI0		26
-+#define RST_BUS_SPI1		27
-+#define RST_BUS_SPI2		28
-+#define RST_BUS_SPI3		29
-+#define RST_BUS_EMAC		30
-+#define RST_BUS_GPADC		31
-+#define RST_BUS_THS		32
-+#define RST_BUS_I2S		33
-+#define RST_BUS_DMIC		34
-+#define RST_BUS_AUDIO_CODEC	35
-+#define RST_USB_PHY		36
-+#define RST_BUS_OHCI		37
-+#define RST_BUS_EHCI		38
-+#define RST_BUS_OTG		39
-+#define RST_BUS_DPSS_TOP	40
-+#define RST_BUS_MIPI_DSI	41
-+#define RST_BUS_TCON_LCD	42
-+#define RST_BUS_CSI		43
-+#define RST_BUS_WIEGAND	44
-+#define RST_RISCV_SYS_APB	45
-+#define RST_RISCV_SOFT		46
-+#define RST_RISCV_CLK_GATING	47
-+#define RST_RISCV_CFG		48
++#define RST_BUS_IOMMU		13
++#define RST_BUS_DRAM		14
++#define RST_BUS_MMC0		15
++#define RST_BUS_MMC1		16
++#define RST_BUS_MMC2		17
++#define RST_BUS_UART0		18
++#define RST_BUS_UART1		19
++#define RST_BUS_UART2		20
++#define RST_BUS_UART3		21
++#define RST_BUS_I2C0		22
++#define RST_BUS_I2C1		23
++#define RST_BUS_I2C2		24
++#define RST_BUS_I2C3		25
++#define RST_BUS_I2C4		26
++#define RST_BUS_SPI0		27
++#define RST_BUS_SPI1		28
++#define RST_BUS_SPI2		29
++#define RST_BUS_SPI3		30
++#define RST_BUS_EMAC		31
++#define RST_BUS_GPADC		32
++#define RST_BUS_THS		33
++#define RST_BUS_I2S		34
++#define RST_BUS_DMIC		35
++#define RST_BUS_AUDIO_CODEC	36
++#define RST_USB_PHY		37
++#define RST_BUS_OHCI		38
++#define RST_BUS_EHCI		39
++#define RST_BUS_OTG		40
++#define RST_BUS_DPSS_TOP	41
++#define RST_BUS_MIPI_DSI	42
++#define RST_BUS_TCON_LCD	43
++#define RST_BUS_CSI		44
++#define RST_BUS_WIEGAND	45
++#define RST_RISCV_SYS_APB	46
++#define RST_RISCV_SOFT		47
++#define RST_RISCV_CLK_GATING	48
++#define RST_RISCV_CFG		49
 +
 +#endif /* _DT_BINDINGS_RST_SUN8I_V85X_CCU_H_ */
 diff -urN linux-6.12-rc6/include/dt-bindings/reset/sun8i-v853-r-ccu.h linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-r-ccu.h
 --- linux-6.12-rc6/include/dt-bindings/reset/sun8i-v853-r-ccu.h	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-r-ccu.h	2024-11-05 08:57:58.567458122 +0100
++++ linux-6.12-rc6-wip/include/dt-bindings/reset/sun8i-v853-r-ccu.h	2024-11-05 08:57:58.000000000 +0100
 @@ -0,0 +1,14 @@
 +/* SPDX-License-Identifier: (GPL-2.0+ OR MIT) */
 +/* Copyright(c) 2020 - 2023 Allwinner Technology Co.,Ltd. All rights reserved.

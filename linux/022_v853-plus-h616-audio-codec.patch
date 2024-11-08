@@ -1,6 +1,6 @@
 diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/soc/sunxi/sun4i-codec.c
 --- linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/sound/soc/sunxi/sun4i-codec.c	2024-10-31 13:56:32.000000000 +0100
++++ linux-6.12-rc6-wip/sound/soc/sunxi/sun4i-codec.c	2024-11-05 13:14:54.000000000 +0100
 @@ -226,6 +226,43 @@
  #define SUN8I_H3_CODEC_DAC_DBG			(0x48)
  #define SUN8I_H3_CODEC_ADC_DBG			(0x4c)
@@ -170,15 +170,6 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  
  		scodec->playback_dma_data.addr_width = DMA_SLAVE_BUSWIDTH_2_BYTES;
  	}
-@@ -558,7 +597,7 @@
- 	int ret, hwrate;
- 
- 	clk_freq = sun4i_codec_get_mod_freq(params);
--	if (!clk_freq)
-+	if (!clk_freq)
- 		return -EINVAL;
- 
- 	ret = clk_set_rate(scodec->clk_module, clk_freq);
 @@ -587,8 +626,8 @@
  	 * Stop issuing DRQ when we have room for less than 16 samples
  	 * in our TX FIFO
@@ -190,7 +181,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  
  	return clk_prepare_enable(scodec->clk_module);
  }
-@@ -1518,6 +1557,269 @@
+@@ -1518,6 +1557,271 @@
  	return card;
  };
  
@@ -338,6 +329,8 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
 +	return card;
 +};
 +
++
++
 +static const struct snd_kcontrol_new sun8i_v853_codec_codec_controls[] = {
 +	SOC_SINGLE_TLV("DAC Playback Volume", SUN4I_CODEC_DAC_DPC,
 +		       SUN4I_CODEC_DAC_DPC_DVOL, 0x3f, 1,
@@ -460,7 +453,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  static const struct regmap_config sun4i_codec_regmap_config = {
  	.reg_bits	= 32,
  	.reg_stride	= 4,
-@@ -1560,14 +1862,24 @@
+@@ -1560,14 +1864,24 @@
  	.max_register	= SUN8I_H3_CODEC_ADC_DBG,
  };
  
@@ -485,7 +478,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  };
  
  static const struct sun4i_codec_quirks sun4i_codec_quirks = {
-@@ -1575,6 +1887,7 @@
+@@ -1575,6 +1889,7 @@
  	.codec		= &sun4i_codec_codec,
  	.create_card	= sun4i_codec_create_card,
  	.reg_adc_fifoc	= REG_FIELD(SUN4I_CODEC_ADC_FIFOC, 0, 31),
@@ -493,7 +486,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  	.reg_dac_txdata	= SUN4I_CODEC_DAC_TXDATA,
  	.reg_adc_rxdata	= SUN4I_CODEC_ADC_RXDATA,
  };
-@@ -1584,6 +1897,7 @@
+@@ -1584,6 +1899,7 @@
  	.codec		= &sun6i_codec_codec,
  	.create_card	= sun6i_codec_create_card,
  	.reg_adc_fifoc	= REG_FIELD(SUN6I_CODEC_ADC_FIFOC, 0, 31),
@@ -501,7 +494,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  	.reg_dac_txdata	= SUN4I_CODEC_DAC_TXDATA,
  	.reg_adc_rxdata	= SUN6I_CODEC_ADC_RXDATA,
  	.has_reset	= true,
-@@ -1594,6 +1908,7 @@
+@@ -1594,6 +1910,7 @@
  	.codec		= &sun7i_codec_codec,
  	.create_card	= sun4i_codec_create_card,
  	.reg_adc_fifoc	= REG_FIELD(SUN4I_CODEC_ADC_FIFOC, 0, 31),
@@ -509,7 +502,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  	.reg_dac_txdata	= SUN4I_CODEC_DAC_TXDATA,
  	.reg_adc_rxdata	= SUN4I_CODEC_ADC_RXDATA,
  };
-@@ -1603,6 +1918,7 @@
+@@ -1603,6 +1920,7 @@
  	.codec		= &sun8i_a23_codec_codec,
  	.create_card	= sun8i_a23_codec_create_card,
  	.reg_adc_fifoc	= REG_FIELD(SUN6I_CODEC_ADC_FIFOC, 0, 31),
@@ -517,7 +510,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  	.reg_dac_txdata	= SUN4I_CODEC_DAC_TXDATA,
  	.reg_adc_rxdata	= SUN6I_CODEC_ADC_RXDATA,
  	.has_reset	= true,
-@@ -1618,6 +1934,7 @@
+@@ -1618,6 +1936,7 @@
  	.codec		= &sun8i_a23_codec_codec,
  	.create_card	= sun8i_h3_codec_create_card,
  	.reg_adc_fifoc	= REG_FIELD(SUN6I_CODEC_ADC_FIFOC, 0, 31),
@@ -525,7 +518,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  	.reg_dac_txdata	= SUN8I_H3_CODEC_DAC_TXDATA,
  	.reg_adc_rxdata	= SUN6I_CODEC_ADC_RXDATA,
  	.has_reset	= true,
-@@ -1632,11 +1949,30 @@
+@@ -1632,11 +1951,30 @@
  	.codec		= &sun8i_a23_codec_codec,
  	.create_card	= sun8i_v3s_codec_create_card,
  	.reg_adc_fifoc	= REG_FIELD(SUN6I_CODEC_ADC_FIFOC, 0, 31),
@@ -556,7 +549,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  static const struct of_device_id sun4i_codec_of_match[] = {
  	{
  		.compatible = "allwinner,sun4i-a10-codec",
-@@ -1662,6 +1998,14 @@
+@@ -1662,6 +2000,14 @@
  		.compatible = "allwinner,sun8i-v3s-codec",
  		.data = &sun8i_v3s_codec_quirks,
  	},
@@ -571,7 +564,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  	{}
  };
  MODULE_DEVICE_TABLE(of, sun4i_codec_of_match);
-@@ -1739,6 +2083,16 @@
+@@ -1739,6 +2085,16 @@
  		return ret;
  	}
  
@@ -588,7 +581,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  	/* Enable the bus clock */
  	if (clk_prepare_enable(scodec->clk_apb)) {
  		dev_err(&pdev->dev, "Failed to enable the APB clock\n");
-@@ -1760,10 +2114,13 @@
+@@ -1760,10 +2116,13 @@
  	scodec->playback_dma_data.maxburst = 8;
  	scodec->playback_dma_data.addr_width = DMA_SLAVE_BUSWIDTH_2_BYTES;
  
@@ -606,7 +599,7 @@ diff -urN linux-6.12-rc6/sound/soc/sunxi/sun4i-codec.c linux-6.12-rc6-wip/sound/
  
  	ret = devm_snd_soc_register_component(&pdev->dev, quirks->codec,
  				     &sun4i_codec_dai, 1);
-@@ -1837,4 +2194,5 @@
+@@ -1837,4 +2196,5 @@
  MODULE_AUTHOR("Jon Smirl <jonsmirl@gmail.com>");
  MODULE_AUTHOR("Maxime Ripard <maxime.ripard@free-electrons.com>");
  MODULE_AUTHOR("Chen-Yu Tsai <wens@csie.org>");

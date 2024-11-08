@@ -1,6 +1,6 @@
 diff -urN linux-6.12-rc6/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml linux-6.12-rc6-wip/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml
 --- linux-6.12-rc6/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/Documentation/devicetree/bindings/pinctrl/allwinner,sun4i-a10-pinctrl.yaml	2024-11-05 08:57:58.000000000 +0100
 @@ -44,6 +44,7 @@
        - allwinner,sun8i-r40-pinctrl
        - allwinner,sun8i-v3-pinctrl

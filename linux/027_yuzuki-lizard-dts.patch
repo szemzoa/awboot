@@ -1,6 +1,6 @@
 diff -urN linux-6.12-rc6/arch/arm/boot/dts/allwinner/Makefile linux-6.12-rc6-wip/arch/arm/boot/dts/allwinner/Makefile
 --- linux-6.12-rc6/arch/arm/boot/dts/allwinner/Makefile	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/arch/arm/boot/dts/allwinner/Makefile	2024-11-05 08:57:58.591457530 +0100
++++ linux-6.12-rc6-wip/arch/arm/boot/dts/allwinner/Makefile	2024-11-05 08:57:58.000000000 +0100
 @@ -258,6 +258,7 @@
  	sun8i-t3-cqa3t-bv3.dtb \
  	sun8i-v3-sl631-imx179.dtb \
@@ -11,8 +11,8 @@ diff -urN linux-6.12-rc6/arch/arm/boot/dts/allwinner/Makefile linux-6.12-rc6-wip
  	sun8i-v40-bananapi-m2-berry.dtb
 diff -urN linux-6.12-rc6/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts linux-6.12-rc6-wip/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts
 --- linux-6.12-rc6/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	2024-11-05 13:31:21.843720982 +0100
-@@ -0,0 +1,365 @@
++++ linux-6.12-rc6-wip/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts	2024-11-05 13:31:21.000000000 +0100
+@@ -0,0 +1,366 @@
 +// SPDX-License-Identifier: (GPL-2.0+ or MIT)
 +// Copyright (C) 2024 Andras Szemzo.andras@gmail.com>
 +
@@ -358,8 +358,9 @@ diff -urN linux-6.12-rc6/arch/arm/boot/dts/allwinner/sun8i-v851s-lizard.dts linu
 +};
 +
 +&audio_codec {
-+        allwinner,audio-routing = "Line Out", "LINEOUT",
-+                                  "Speaker", "LINEOUT";
++	allwinner,audio-routing = "Line Out", "LINEOUT",
++/*                                  "MIC", "Mic", */
++				  "Speaker", "LINEOUT";
 +	status = "okay";
 +};
 +

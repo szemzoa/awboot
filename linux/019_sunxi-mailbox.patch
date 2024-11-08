@@ -1,6 +1,6 @@
 diff -urN linux-6.12-rc6/drivers/mailbox/Kconfig linux-6.12-rc6-wip/drivers/mailbox/Kconfig
 --- linux-6.12-rc6/drivers/mailbox/Kconfig	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/mailbox/Kconfig	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/mailbox/Kconfig	2024-11-05 08:57:58.000000000 +0100
 @@ -269,6 +269,15 @@
  	  various Allwinner SoCs. This mailbox is used for communication
  	  between the application CPUs and the power management coprocessor.
@@ -19,7 +19,7 @@ diff -urN linux-6.12-rc6/drivers/mailbox/Kconfig linux-6.12-rc6-wip/drivers/mail
  	depends on ARCH_SPRD || COMPILE_TEST
 diff -urN linux-6.12-rc6/drivers/mailbox/Makefile linux-6.12-rc6-wip/drivers/mailbox/Makefile
 --- linux-6.12-rc6/drivers/mailbox/Makefile	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/mailbox/Makefile	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/mailbox/Makefile	2024-11-05 08:57:58.000000000 +0100
 @@ -59,6 +59,8 @@
  
  obj-$(CONFIG_SUN6I_MSGBOX)	+= sun6i-msgbox.o
@@ -31,7 +31,7 @@ diff -urN linux-6.12-rc6/drivers/mailbox/Makefile linux-6.12-rc6-wip/drivers/mai
  obj-$(CONFIG_QCOM_CPUCP_MBOX)	+= qcom-cpucp-mbox.o
 diff -urN linux-6.12-rc6/drivers/mailbox/sunxi-msgbox.c linux-6.12-rc6-wip/drivers/mailbox/sunxi-msgbox.c
 --- linux-6.12-rc6/drivers/mailbox/sunxi-msgbox.c	1970-01-01 01:00:00.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/mailbox/sunxi-msgbox.c	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/mailbox/sunxi-msgbox.c	2024-11-05 08:57:58.000000000 +0100
 @@ -0,0 +1,763 @@
 +// SPDX-License-Identifier: GPL-2.0
 +//

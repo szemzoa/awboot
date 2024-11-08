@@ -1,6 +1,6 @@
 diff -urN linux-6.12-rc6/drivers/mtd/nand/spi/foresee.c linux-6.12-rc6-wip/drivers/mtd/nand/spi/foresee.c
 --- linux-6.12-rc6/drivers/mtd/nand/spi/foresee.c	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/mtd/nand/spi/foresee.c	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/mtd/nand/spi/foresee.c	2024-11-05 08:57:58.000000000 +0100
 @@ -81,6 +81,16 @@
  		     SPINAND_HAS_QE_BIT,
  		     SPINAND_ECCINFO(&f35sqa002g_ooblayout,

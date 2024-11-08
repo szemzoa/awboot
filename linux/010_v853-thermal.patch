@@ -1,6 +1,6 @@
 diff -urN linux-6.12-rc6/drivers/thermal/sun8i_thermal.c linux-6.12-rc6-wip/drivers/thermal/sun8i_thermal.c
 --- linux-6.12-rc6/drivers/thermal/sun8i_thermal.c	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/drivers/thermal/sun8i_thermal.c	2024-10-30 11:38:30.000000000 +0100
++++ linux-6.12-rc6-wip/drivers/thermal/sun8i_thermal.c	2024-11-05 08:57:58.000000000 +0100
 @@ -140,6 +140,15 @@
  	return 0;
  }

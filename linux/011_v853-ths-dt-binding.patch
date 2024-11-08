@@ -1,6 +1,6 @@
 diff -urN linux-6.12-rc6/Documentation/devicetree/bindings/thermal/allwinner,sun8i-a83t-ths.yaml linux-6.12-rc6-wip/Documentation/devicetree/bindings/thermal/allwinner,sun8i-a83t-ths.yaml
 --- linux-6.12-rc6/Documentation/devicetree/bindings/thermal/allwinner,sun8i-a83t-ths.yaml	2024-10-27 23:52:02.000000000 +0100
-+++ linux-6.12-rc6-wip/Documentation/devicetree/bindings/thermal/allwinner,sun8i-a83t-ths.yaml	2024-11-04 09:46:50.000000000 +0100
++++ linux-6.12-rc6-wip/Documentation/devicetree/bindings/thermal/allwinner,sun8i-a83t-ths.yaml	2024-11-05 08:57:58.000000000 +0100
 @@ -19,6 +19,7 @@
        - allwinner,sun8i-h3-ths
        - allwinner,sun8i-r40-ths
