@@ -58,6 +58,11 @@ reset:
 	bic     r0, r0, #0x00001000     @ clear bit 12 (I) I-cache
 	mcr     p15, 0, r0, c1, c0, 0
 
+	/* enable smp */
+	mrc     p15, 0, r0, c1, c0, 1
+	orr     r0, r0, #0x00000040   @ enable bit6 (smp)
+	mcr     p15, 0, r0, c1, c0, 1
+
 	bl	cpu_init_cp15
 
 	/* Enable neon/vfp unit */
