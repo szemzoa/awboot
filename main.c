@@ -416,6 +416,8 @@ int main(void)
 		image.initrd_dest = NULL;
 	}
 
+	info("done in %" PRIu32 "ms\r\n", time_ms());
+
 	info("booting linux...\r\n");
 	board_set_led(LED_BOARD, 0);
 
