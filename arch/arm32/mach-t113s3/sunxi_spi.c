@@ -838,7 +838,7 @@ int spi_nor_detect(sunxi_spi_t *spi)
 	spi_transfer(spi, spi->info.mode, tx, sizeof(tx), rx, sizeof(rx));
 	trace("MF-ID: 0x%x, DEV-ID: 0x%x\r\n", rx[0], rx[1]);
 
-	if( rx[0] && rx[1] )
+	if(rx[0] && rx[1])
 		return 0;
 	else
 		return -1;
