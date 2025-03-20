@@ -66,7 +66,7 @@ build_revision:
 .SILENT:
 
 git:
-	cp -f tools/hooks/* .git/hooks/
+	#cp -f tools/hooks/* .git/hooks/
 
 build:: build_revision
 
