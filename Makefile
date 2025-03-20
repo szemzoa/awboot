@@ -209,5 +209,5 @@ spi-boot.img: mkboot
 	dd if=$(TARGET)-boot-spi.bin of=spi-boot.img bs=2k
 	dd if=$(TARGET)-boot-spi.bin of=spi-boot.img bs=2k seek=32 # Second copy on page 32
 	dd if=$(TARGET)-boot-spi.bin of=spi-boot.img bs=2k seek=64 # Third copy on page 64
-	# dd if=linux/boot/$(DTB) of=spi-boot.img bs=2k seek=128 # DTB on page 128
-	# dd if=linux/boot/$(KERNEL) of=spi-boot.img bs=2k seek=256 # Kernel on page 256
+	dd if=linux/boot/$(DTB) of=spi-boot.img bs=2k seek=128 # DTB on page 128
+	dd if=linux/boot/$(KERNEL) of=spi-boot.img bs=2k seek=256 # Kernel on page 256

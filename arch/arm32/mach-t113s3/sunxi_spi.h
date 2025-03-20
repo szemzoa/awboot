@@ -47,5 +47,7 @@ int		 sunxi_spi_init(sunxi_spi_t *spi);
 void	 sunxi_spi_disable(sunxi_spi_t *spi);
 int		 spi_nand_detect(sunxi_spi_t *spi);
 uint32_t spi_nand_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t rxlen);
+int 	spi_nor_detect(sunxi_spi_t *spi);
+uint32_t spi_nor_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t rxlen);
 
 #endif

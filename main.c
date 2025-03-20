@@ -133,6 +133,101 @@ static void boot_linux_psci(void (*kernel_entry)(int zero, int arch,
 	nonsec_entry((void *)kernel_entry, 0, machid, fdt_addr);
 }
 
+static int load_sdcard(image_info_t *image)
+{
+	FATFS	fs;
+	FRESULT fret;
+	int		ret;
+	u32 UNUSED_DEBUG	start;
+
+#if defined(CONFIG_SDMMC_SPEED_TEST_SIZE) && LOG_LEVEL >= LOG_DEBUG
+	u32 test_time;
+	start = time_ms();
+	sdmmc_blk_read(&card0, (u8 *)(SDRAM_BASE), 0, CONFIG_SDMMC_SPEED_TEST_SIZE);
+	test_time = time_ms() - start;
+	debug("SDMMC: speedtest %uKB in %" PRIu32 "ms at %" PRIu32 "KB/S\r\n", (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / 1024, test_time,
+		  (CONFIG_SDMMC_SPEED_TEST_SIZE * 512) / test_time);
+#endif // SDMMC_SPEED_TEST
+
+	start = time_ms();
+	/* mount fs */
+	fret = f_mount(&fs, "", 1);
+	if (fret != FR_OK) {
+		error("FATFS: mount error: %d\r\n", fret);
+		return -1;
+	} else {
+		debug("FATFS: mount OK\r\n");
+	}
+
+	info("FATFS: read %s addr=%x\r\n", image->of_filename, (unsigned int)image->of_dest);
+	ret = fatfs_loadimage(image->of_filename, image->of_dest);
+	if (ret)
+		return ret;
+
+	info("FATFS: read %s addr=%x\r\n", image->filename, (unsigned int)image->dest);
+	ret = fatfs_loadimage(image->filename, image->dest);
+	if (ret)
+		return ret;
+
+	/* umount fs */
+	fret = f_mount(0, "", 0);
+	if (fret != FR_OK) {
+		error("FATFS: unmount error %d\r\n", fret);
+		return -1;
+	} else {
+		debug("FATFS: unmount OK\r\n");
+	}
+	debug("FATFS: done in %" PRIu32 "ms\r\n", time_ms() - start);
+
+	return 0;
+}
+
+#endif
+
+#ifdef CONFIG_BOOT_SPINAND
+int load_spi_nand(sunxi_spi_t *spi, image_info_t *image)
+{
+	linux_zimage_header_t *hdr;
+	unsigned int		   size;
+	uint64_t UNUSED_DEBUG	   start, time;
+
+	if (spi_nor_detect(spi) != 0)
+		return -1;
+
+	/* get dtb size and read */
+	spi_nor_read(spi, image->of_dest, CONFIG_SPINAND_DTB_ADDR, (uint32_t)sizeof(boot_param_header_t));
+	if (of_get_magic_number(image->of_dest) != OF_DT_MAGIC) {
+		error("SPI-NAND: DTB verification failed\r\n");
+		return -1;
+	}
+
+	size = of_get_dt_total_size(image->of_dest);
+	debug("SPI-NAND: dt blob: Copy from 0x%08x to 0x%08lx size:0x%08x\r\n", CONFIG_SPINAND_DTB_ADDR,
+		  (uint32_t)image->of_dest, size);
+	start = time_us();
+	spi_nor_read(spi, image->of_dest, CONFIG_SPINAND_DTB_ADDR, (uint32_t)size);
+	time = time_us() - start;
+	info("SPI-NAND: read dt blob of size %u at %.2fMB/S\r\n", size, (f32)(size / time));
+
+	/* get kernel size and read */
+	spi_nor_read(spi, image->dest, CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)sizeof(linux_zimage_header_t));
+	hdr = (linux_zimage_header_t *)image->dest;
+	if (hdr->magic != LINUX_ZIMAGE_MAGIC) {
+		debug("SPI-NAND: zImage verification failed\r\n");
+		return -1;
+	}
+	size = hdr->end - hdr->start;
+	debug("SPI-NAND: Image: Copy from 0x%08x to 0x%08lx size:0x%08x\r\n", CONFIG_SPINAND_KERNEL_ADDR,
+		  (uint32_t)image->dest, size);
+	start = time_us();
+	spi_nor_read(spi, image->dest, CONFIG_SPINAND_KERNEL_ADDR, (uint32_t)size);
+	time = time_us() - start;
+	info("SPI-NAND: read Image of size %u at %.2fMB/S\r\n", size, (f32)(size / time));
+
+	return 0;
+}
+#endif
+
 int main(void)
 {
 	unsigned int entry_point = 0;

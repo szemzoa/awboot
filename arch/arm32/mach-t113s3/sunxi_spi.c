@@ -824,3 +824,34 @@ uint32_t spi_nand_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t r
 	}
 	return len;
 }
+
+int spi_nor_detect(sunxi_spi_t *spi)
+{
+	uint8_t tx[4];
+	uint8_t rx[2];
+
+	tx[0] = 0x90;
+	tx[1] = 0x00;
+	tx[2] = 0x00;
+	tx[3] = 0x00;
+
+	spi_transfer(spi, spi->info.mode, tx, sizeof(tx), rx, sizeof(rx));
+	trace("MF-ID: 0x%x, DEV-ID: 0x%x\r\n", rx[0], rx[1]);
+
+	if( rx[0] && rx[1] )
+		return 0;
+	else
+		return -1;
+}
+
+uint32_t spi_nor_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t rxlen)
+{
+	uint8_t tx[4];
+
+	tx[0] = 0x03;
+	tx[1] = (uint8_t)(addr >> 16);
+	tx[2] = (uint8_t)(addr >> 8);
+	tx[3] = (uint8_t)(addr >> 0);
+	spi_transfer(spi, spi->info.mode, tx, sizeof(tx), buf, rxlen);
+	return rxlen;
+}
