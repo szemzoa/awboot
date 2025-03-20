@@ -1408,11 +1408,13 @@ int init_DRAM(int type, dram_para_t *para)
 		clrsetbits_le32((MCTL_PHY_BASE + MCTL_PHY_ODTCFG), 0xf0000, 0x1000);
 
 	dram_enable_all_master();
+#if 0
 	if (para->dram_tpr13 & (1 << 28)) {
 		if ((readl((SUNXI_R_CPUCFG_BASE + SUNXI_R_CPUCFG_SUP_STAN_FLAG)) & (1 << 16)) ||
 			dramc_simple_wr_test(mem_size_mb, 4096))
 			return 0;
 	}
+#endif
 
 	return mem_size_mb;
 }
