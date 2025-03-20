@@ -836,22 +836,51 @@ int spi_nor_detect(sunxi_spi_t *spi)
 	tx[3] = 0x00;
 
 	spi_transfer(spi, spi->info.mode, tx, sizeof(tx), rx, sizeof(rx));
-	trace("MF-ID: 0x%x, DEV-ID: 0x%x\r\n", rx[0], rx[1]);
+	info("MF-ID: 0x%x, DEV-ID: 0x%x\r\n", rx[0], rx[1]);
 
-	if(rx[0] && rx[1])
+	if(rx[0] && rx[1]) {
+		spi->info.mode = SPI_IO_QUAD_IO;
 		return 0;
-	else
+	} else
 		return -1;
 }
 
 uint32_t spi_nor_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t rxlen)
 {
-	uint8_t tx[4];
+	int r;
+	uint8_t tx[7];
 
-	tx[0] = 0x03;
-	tx[1] = (uint8_t)(addr >> 16);
-	tx[2] = (uint8_t)(addr >> 8);
-	tx[3] = (uint8_t)(addr >> 0);
-	spi_transfer(spi, spi->info.mode, tx, sizeof(tx), buf, rxlen);
+	if (0) {
+		tx[0] = 0x0b;
+		tx[1] = (uint8_t)(addr >> 16);
+		tx[2] = (uint8_t)(addr >> 8);
+		tx[3] = (uint8_t)(addr >> 0);
+		tx[4] = 0x00;
+
+		r = spi_transfer(spi, SPI_IO_SINGLE, tx, 5, buf, rxlen);
+	} else if (1) {
+		tx[0] = 0x6b;
+		tx[1] = (uint8_t)(addr >> 16);
+		tx[2] = (uint8_t)(addr >> 8);
+		tx[3] = (uint8_t)(addr >> 0);
+		tx[4] = 0x00;
+
+		r = spi_transfer(spi, SPI_IO_QUAD_RX, tx, 5, buf, rxlen);
+	} else {
+		tx[0] = 0xeb;
+		tx[1] = (uint8_t)(addr >> 16);
+		tx[2] = (uint8_t)(addr >> 8);
+		tx[3] = (uint8_t)(addr >> 0);
+		// The first dummy is M7-M0 should be set to Fxh
+		tx[4] = 0xff;
+		tx[5] = 0x00;
+		tx[6] = 0x00;
+
+		r = spi_transfer(spi, SPI_IO_QUAD_IO, tx, sizeof(tx), buf, rxlen);
+
+	}
+	if (r < 0)
+		return r;
+
 	return rxlen;
 }
