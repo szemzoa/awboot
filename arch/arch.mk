@@ -3,10 +3,10 @@ SOC:=$(ARCH)/arm32/mach-t113s3
 
 INCLUDE_DIRS += -I $(ARCH)/arm32/include -I $(SOC)/include -I $(SOC) -I $(SOC)/mmc
 
-CFLAGS += -DCOUNTER_FREQUENCY=24000000
-
 ASRCS	+=  $(SOC)/start.S
 ASRCS	+=  $(SOC)/memcpy.S
+ASRCS	+=  $(SOC)/psci_vectors.S
+ASRCS	+=  $(SOC)/nonsec_virt.S
 
 ifneq ($(wildcard $(SOC)/dram_sun20i_d1.c),)
 SRCS	+=  $(SOC)/dram_sun20i_d1.c
@@ -19,6 +19,12 @@ SRCS	+=  $(SOC)/sunxi_gpio.c
 SRCS	+=  $(SOC)/sunxi_clk.c
 SRCS	+=  $(SOC)/exception.c
 SRCS	+=  $(SOC)/sunxi_wdg.c
+SRCS	+=  $(SOC)/psci.c
+SRCS	+=  $(SOC)/psci-common.c
+SRCS	+=  $(SOC)/armv7_nonsec.c
+SRCS	+=  $(SOC)/psci_board.c
+SRCS	+=  $(SOC)/security.c
+SRCS	+=  $(SOC)/cache_helpers.c
 
 USE_SPI = $(shell grep -E "^\#define CONFIG_BOOT_SPI" board.h)
 ifneq ($(USE_SPI),)

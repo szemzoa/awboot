@@ -52,5 +52,5 @@ unsigned int fdt_get_total_size(void *blob);
 int			 fdt_check_blob_valid(void *blob);
 int			 fdt_update_bootargs(void *blob, const char *bootargs);
 int			 fdt_update_initrd(void *blob, uint32_t start, uint32_t end);
-int			 fdt_update_memory(void *blob, unsigned int mem_bank, unsigned int mem_size);
+int			 fdt_update_memory(void *blob, uint32_t mem_bank, uint32_t mem_size);
 #endif /* #ifndef __FDT_H__ */

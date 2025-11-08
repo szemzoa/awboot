@@ -52,6 +52,8 @@
 #define CONFIG_SPINAND_DTB_ADDR	   (128 * 2048)
 #define CONFIG_SPINAND_KERNEL_ADDR (256 * 2048)
 
+#define CONFIG_PSCI_DRAM_RESERVE 0x00010000U
+
 #define LED_BOARD  1
 
 extern sunxi_usart_t usart0_dbg;

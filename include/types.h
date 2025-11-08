@@ -2,7 +2,16 @@
 #ifndef __ASM_ARM_TYPES_H
 #define __ASM_ARM_TYPES_H
 
+#if !defined(__ASSEMBLER__) && !defined(__ASSEMBLY__)
 #include <stdint.h>
+
+#ifndef __always_unused
+#define __always_unused __attribute__((unused))
+#endif
+
+#ifndef __weak
+#define __weak __attribute__((weak))
+#endif
 
 typedef unsigned short umode_t;
 
@@ -76,6 +85,6 @@ typedef unsigned long long dma_addr_t;
 typedef u32			  dma_addr_t;
 #endif
 
-//#endif /* __KERNEL__ */
+#endif /* !__ASSEMBLY__ */
 
 #endif

@@ -53,7 +53,7 @@ void set_pll_cpux_axi(void)
 	val = read32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG);
 	val &= ~((0x3 << 16) | (0xff << 8) | (0x3 << 0));
 #ifdef CONFIG_CPU_FREQ
-	val |= (((CONFIG_CPU_FREQ / 24000000) - 1) << 8);
+	val |= (((CONFIG_CPU_FREQ / CONFIG_COUNTER_FREQUENCY) - 1) << 8);
 #else
 	val |= (41 << 8);
 #endif

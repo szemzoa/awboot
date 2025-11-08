@@ -29,6 +29,7 @@
  */
 
 /* This file gets parsed by the preprocessor */
+#include "include/config.h"
 
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 OUTPUT_ARCH(arm)
@@ -58,6 +59,20 @@ SECTIONS
     . = ALIGN(4);
     } > ram
 
+    .secure_text :
+    {
+    . = ALIGN(4);
+    __secure_start = .;
+    * (._secure.text)
+    . = ALIGN(4);
+    } > ram
+
+    .secure_data :
+    {
+    * (._secure.data)
+    __secure_end = .;
+    } > ram
+
     . = ALIGN(4);
 
     .ARM.exidx : {
@@ -78,6 +93,15 @@ SECTIONS
         *(COMMON)
         . = ALIGN(4);
         _ebss = . ;
+    } > ram
+
+    .psci_stack (NOLOAD) :
+    {
+        . = ALIGN(4);
+        __secure_stack_start = .;
+        . = . + (CONFIG_ARMV7_PSCI_NR_CPUS * (1 << 10));
+        . = ALIGN(4);
+        __secure_stack_end = .;
     } > ram
 
     .stack (NOLOAD):
