@@ -22,7 +22,7 @@
  * MA 02111-1307 USA
  */
 
-#include <main.h>
+#include <common.h>
 #include "sunxi_dma.h"
 #include "debug.h"
 #include "reg-ccu.h"
@@ -99,11 +99,11 @@ void dma_exit(void)
 	/* close dma clock when dma exit */
 	dma_reg->auto_gate &= ~(1 << DMA_GATING_OFS | 1 << DMA_RST_OFS);
 #endif
-        dma_reg->irq_en0 = 0;
-        dma_reg->irq_en1 = 0;
+	dma_reg->irq_en0 = 0;
+	dma_reg->irq_en1 = 0;
 
-        dma_reg->irq_pending0 = 0xffffffff;
-        dma_reg->irq_pending1 = 0xffffffff;
+	dma_reg->irq_pending0 = 0xffffffff;
+	dma_reg->irq_pending1 = 0xffffffff;
 
 	dma_init_ok--;
 }
@@ -154,9 +154,9 @@ int dma_release(u32 hdma)
 int dma_setting(u32 hdma, dma_set_t *cfg)
 {
 	u32			  commit_para;
-	dma_set_t	  *dma_set	   = cfg;
+	dma_set_t	 *dma_set	   = cfg;
 	dma_source_t *dma_source   = (dma_source_t *)hdma;
-	dma_desc_t   *desc		   = dma_source->desc;
+	dma_desc_t	 *desc		   = dma_source->desc;
 	u32			  channel_addr = (u32)(&(dma_set->channel_cfg));
 
 	if (!dma_source->used)
@@ -178,9 +178,9 @@ int dma_setting(u32 hdma, dma_set_t *cfg)
 
 int dma_start(u32 hdma, u32 saddr, u32 daddr, u32 bytes)
 {
-	dma_source_t		 *dma_source = (dma_source_t *)hdma;
+	dma_source_t	  *dma_source = (dma_source_t *)hdma;
 	dma_channel_reg_t *channel	  = dma_source->channel;
-	dma_desc_t		   *desc		  = dma_source->desc;
+	dma_desc_t		  *desc		  = dma_source->desc;
 
 	if (!dma_source->used)
 		return -1;
@@ -199,7 +199,7 @@ int dma_start(u32 hdma, u32 saddr, u32 daddr, u32 bytes)
 
 int dma_stop(u32 hdma)
 {
-	dma_source_t		 *dma_source = (dma_source_t *)hdma;
+	dma_source_t	  *dma_source = (dma_source_t *)hdma;
 	dma_channel_reg_t *channel	  = dma_source->channel;
 
 	if (!dma_source->used)
@@ -213,7 +213,7 @@ int dma_querystatus(u32 hdma)
 {
 	u32			  channel_count;
 	dma_source_t *dma_source = (dma_source_t *)hdma;
-	dma_reg_t	  *dma_reg	 = (dma_reg_t *)SUNXI_DMA_BASE;
+	dma_reg_t	 *dma_reg	 = (dma_reg_t *)SUNXI_DMA_BASE;
 
 	if (!dma_source->used)
 		return -1;
@@ -225,8 +225,8 @@ int dma_querystatus(u32 hdma)
 
 int dma_test()
 {
-	u32		*src_addr = (u32 *)CONFIG_DTB_LOAD_ADDR;
-	u32		*dst_addr = (u32 *)CONFIG_KERNEL_LOAD_ADDR;
+	u32		  *src_addr = (u32 *)SDRAM_BASE;
+	u32		  *dst_addr = (u32 *)SDRAM_BASE + 0x100000;
 	u32		  len	   = 512 * 1024;
 	dma_set_t dma_set;
 	u32		  hdma, st = 0;
@@ -234,7 +234,8 @@ int dma_test()
 	u32		  i, valid;
 
 	len = ALIGN(len, 4);
-	trace("DMA: test 0x%08" PRIx32 " ====> 0x%08" PRIx32 ", len %" PRIu32 "KB \r\n", (u32)src_addr, (u32)dst_addr, (len / 1024));
+	trace("DMA: test 0x%08" PRIx32 " ====> 0x%08" PRIx32 ", len %" PRIu32 "KB \r\n", (u32)src_addr, (u32)dst_addr,
+		  (len / 1024));
 
 	/* dma */
 	dma_set.loop_mode		= 0;

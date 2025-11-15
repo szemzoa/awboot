@@ -37,11 +37,12 @@ SEARCH_DIR(.)
 /* Memory Spaces Definitions */
 MEMORY
 {
-  ram   (rwx) : ORIGIN = __RAM_BASE, LENGTH = 96K /* A1 + DSP0 IRAM + DSP0 DRAM0. 128K on boot mode, 96K on FEL mode */
+  ram   (rwx) : ORIGIN = __RAM_BASE, LENGTH = 128K /* A1 + DSP0 IRAM + DSP0 DRAM0. 160K in boot mode, 128K in FEL mode */
+  ddr   (rwx) : ORIGIN = 0x40000000, LENGTH = 128M
 }
 
 /* The stack size used by the application. NOTE: you need to adjust according to your application. */
-STACK_SIZE = 0x1000; /* 4KB */
+STACK_SIZE = 0x2000; /* 8KB */
 
 ENTRY(reset)
 

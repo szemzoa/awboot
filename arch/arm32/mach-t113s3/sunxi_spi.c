@@ -151,11 +151,11 @@ typedef enum {
 static const spi_nand_info_t spi_nand_infos[] = {
 	/* Winbond */
 	{	 "W25N512GV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa20, 2}, 2048,	 64, 64,	 512, 1, 1, SPI_IO_QUAD_RX},
-	{		 "W25N01GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa21, 2}, 2048,	64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
-	{		 "W25M02GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xab21, 2}, 2048,	64, 64, 1024, 1, 2, SPI_IO_QUAD_RX},
-	{		 "W25N02KV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa22, 2}, 2048, 128, 64, 2048, 1, 1, SPI_IO_QUAD_RX},
+	{	  "W25N01GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa21, 2}, 2048,	64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
+	{	  "W25M02GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xab21, 2}, 2048,	64, 64, 1024, 1, 2, SPI_IO_QUAD_RX},
+	{	  "W25N02KV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa22, 2}, 2048, 128, 64, 2048, 1, 1, SPI_IO_QUAD_RX},
 
- /* Gigadevice */
+	/* Gigadevice */
 	{ "GD5F1GQ4UAWxx", {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x10, 1}, 2048,  64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
 	{ "GD5F1GQ5UExxG", {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0x51, 1}, 2048, 128, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
 	{ "GD5F1GQ4UExIG", {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xd1, 1}, 2048, 128, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
@@ -170,7 +170,7 @@ static const spi_nand_info_t spi_nand_infos[] = {
 	{ "GD5F4GQ4UCxIG", {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xb4, 1}, 4096, 256, 64, 2048, 1, 1, SPI_IO_QUAD_RX},
 	{ "GD5F4GQ4RCxIG", {.mfr = SPI_NAND_MFR_GIGADEVICE, .dev = 0xa4, 1}, 4096, 256, 64, 2048, 1, 1, SPI_IO_QUAD_RX},
 
- /* Macronix */
+	/* Macronix */
 	{	 "MX35LF1GE4AB",	 {.mfr = SPI_NAND_MFR_MACRONIX, .dev = 0x12, 1}, 2048,  64, 64, 1024, 1, 1, SPI_IO_DUAL_RX},
 	{	 "MX35LF1G24AD",	 {.mfr = SPI_NAND_MFR_MACRONIX, .dev = 0x14, 1}, 2048, 128, 64, 1024, 1, 1, SPI_IO_DUAL_RX},
 	{	 "MX31LF1GE4BC",	 {.mfr = SPI_NAND_MFR_MACRONIX, .dev = 0x1e, 1}, 2048,  64, 64, 1024, 1, 1, SPI_IO_DUAL_RX},
@@ -181,7 +181,7 @@ static const spi_nand_info_t spi_nand_infos[] = {
 	{	 "MX35LF4G24AD",	 {.mfr = SPI_NAND_MFR_MACRONIX, .dev = 0x35, 1}, 4096, 256, 64, 2048, 1, 1, SPI_IO_DUAL_RX},
 	{	 "MX35LF4GE4AD",	 {.mfr = SPI_NAND_MFR_MACRONIX, .dev = 0x37, 1}, 4096, 256, 64, 2048, 1, 1, SPI_IO_DUAL_RX},
 
- /* Micron */
+	/* Micron */
 	{"MT29F1G01AAADD",	   {.mfr = SPI_NAND_MFR_MICRON, .dev = 0x12, 1}, 2048,  64, 64, 1024, 1, 1, SPI_IO_DUAL_RX},
 	{"MT29F1G01ABAFD",	   {.mfr = SPI_NAND_MFR_MICRON, .dev = 0x14, 1}, 2048, 128, 64, 1024, 1, 1, SPI_IO_DUAL_RX},
 	{"MT29F2G01AAAED",	   {.mfr = SPI_NAND_MFR_MICRON, .dev = 0x9f, 1}, 2048,  64, 64, 2048, 2, 1, SPI_IO_DUAL_RX},
@@ -198,9 +198,9 @@ static u32		 spi_rx_dma_hd;
 
 /* SPI Clock Control Register Bit Fields & Masks,default:0x0000_0002 */
 #define SPI_CLK_CTL_CDR2_MASK 0xff /* Clock Divide Rate 2,master mode only : SPI_CLK = AHB_CLK/(2*(n+1)) */
-#define SPI_CLK_CTL_CDR2(div) (((div)&SPI_CLK_CTL_CDR2_MASK) << 0)
+#define SPI_CLK_CTL_CDR2(div) (((div) & SPI_CLK_CTL_CDR2_MASK) << 0)
 #define SPI_CLK_CTL_CDR1_MASK 0xf /* Clock Divide Rate 1,master mode only : SPI_CLK = AHB_CLK/2^n */
-#define SPI_CLK_CTL_CDR1(div) (((div)&SPI_CLK_CTL_CDR1_MASK) << 8)
+#define SPI_CLK_CTL_CDR1(div) (((div) & SPI_CLK_CTL_CDR1_MASK) << 8)
 #define SPI_CLK_CTL_DRS		  (0x1 << 12) /* Divide rate select,default,0:rate 1;1:rate 2 */
 
 #define SPI_MOD_CLK 200000000
@@ -231,7 +231,8 @@ static uint32_t spi_set_clk(sunxi_spi_t *spi, u32 spi_clk, u32 mclk, u32 cdr2)
 	}
 
 	trace("SPI: clock div=%" PRIu32 " \r\n", div);
-	debug("SPI: set clock asked=%" PRIu32 "MHz actual=%" PRIu32 "MHz mclk=%" PRIu32 "MHz\r\n", spi_clk / 1000000, freq / 1000000, mclk / 1000000);
+	debug("SPI: set clock asked=%" PRIu32 "MHz actual=%" PRIu32 "MHz mclk=%" PRIu32 "MHz\r\n", spi_clk / 1000000,
+		  freq / 1000000, mclk / 1000000);
 
 	write32(spi->base + SPI_CCR, reg);
 
@@ -290,7 +291,8 @@ static int spi_clk_init(uint32_t mod_clk)
 
 	factor_m = m - 1;
 	rval	 = (1U << 31) | (0x1 << 24) | (n << 8) | factor_m;
-	trace("SPI: parent_clk=%" PRIu32 "MHz, div=%" PRIu32 ", n=%" PRIu32 ", m=%" PRIu32 "\r\n", source_clk / 1000 / 1000, divi, n + 1, m);
+	trace("SPI: parent_clk=%" PRIu32 "MHz, div=%" PRIu32 ", n=%" PRIu32 ", m=%" PRIu32 "\r\n", source_clk / 1000 / 1000,
+		  divi, n + 1, m);
 	write32(T113_CCU_BASE + CCU_SPI0_CLK_REG, rval);
 
 	return 0;

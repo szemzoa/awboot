@@ -6,7 +6,7 @@
  *
  */
 
-#include "main.h"
+#include "common.h"
 #include "io.h"
 
 /*
@@ -16,7 +16,7 @@
 uint64_t get_arch_counter(void)
 {
 	uint32_t low = 0, high = 0;
-	asm volatile("mrrc p15, 0, %0, %1, c14" : "=r"(low), "=r"(high) : : "memory");
+	__asm__ volatile("mrrc p15, 0, %0, %1, c14" : "=r"(low), "=r"(high) : : "memory");
 	return ((uint64_t)high << 32) | (uint64_t)low;
 }
 
@@ -25,7 +25,7 @@ uint64_t get_arch_counter(void)
  */
 uint32_t time_ms(void)
 {
-	return get_arch_counter() / 24000;
+	return get_arch_counter() / (uint64_t)24000;
 }
 
 /*
@@ -48,11 +48,6 @@ void udelay(uint64_t us)
 void mdelay(uint32_t ms)
 {
 	udelay(ms * 1000);
-	uint32_t now;
-
-	now = time_ms();
-	while (time_ms() - now < ms) {
-	};
 }
 
 /************************************************************

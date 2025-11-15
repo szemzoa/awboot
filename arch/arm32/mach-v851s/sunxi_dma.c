@@ -236,8 +236,8 @@ int dma_querystatus(u32 hdma)
 
 int dma_test()
 {
-	u32		*src_addr = (u32 *)CONFIG_DTB_LOAD_ADDR;
-	u32		*dst_addr = (u32 *)CONFIG_KERNEL_LOAD_ADDR;
+	u32		*src_addr = (u32 *)(uintptr_t)board_dtb_load_addr();
+	u32		*dst_addr = (u32 *)(uintptr_t)board_kernel_load_addr();
 	u32		  len	   = 512 * 1024;
 	dma_set_t dma_set;
 	u32		  hdma, st = 0;
