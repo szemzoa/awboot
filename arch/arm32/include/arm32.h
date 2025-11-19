@@ -82,6 +82,8 @@ static inline void arm32_icache_disable(void)
 	arm32_write_p15_c1(value & ~(1 << 12));
 }
 
+void arm32_invalidate_icache_btb(void);
+
 #ifdef __cplusplus
 }
 #endif

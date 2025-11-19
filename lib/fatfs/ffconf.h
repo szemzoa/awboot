@@ -14,7 +14,7 @@
 /  f_unlink(), f_mkdir(), f_chmod(), f_rename(), f_truncate(), f_getfree()
 /  and optional writing functions as well. */
 
-#define FF_FS_MINIMIZE 3
+#define FF_FS_MINIMIZE 2
 /* This option defines minimization level to remove some basic API functions.
 /
 /   0: Basic functions are fully enabled.

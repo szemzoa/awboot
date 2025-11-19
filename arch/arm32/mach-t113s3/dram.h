@@ -26,6 +26,8 @@
 #ifndef __dram_head_h__
 #define __dram_head_h__
 
+#include <stdint.h>
+
 #define SDRAM_BASE (0x40000000)
 
 enum sunxi_dram_type {
@@ -70,7 +72,7 @@ typedef struct __DRAM_PARA {
 
 } dram_para_t;
 
-int init_DRAM(int type, dram_para_t *para);
 unsigned long sunxi_dram_init(void);
+uintptr_t dram_get_top(void);
 
 #endif

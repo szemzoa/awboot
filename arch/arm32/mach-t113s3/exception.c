@@ -28,7 +28,7 @@
 
 #include <arm32.h>
 #include "debug.h"
-#include "main.h"
+#include "common.h"
 
 struct arm_regs_t {
 	uint32_t esp;
@@ -38,6 +38,14 @@ struct arm_regs_t {
 	uint32_t lr;
 	uint32_t pc;
 };
+
+void arm32_fault_stub(const char *reason, struct arm_regs_t *regs)
+{
+	if (!reason || !regs)
+		return;
+
+	error("%s fault: pc=%08lx lr=%08lx spsr=%08lx\r\n", reason, regs->pc, regs->lr, regs->cpsr);
+}
 
 static void show_regs(struct arm_regs_t *regs)
 {

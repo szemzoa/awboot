@@ -13,6 +13,8 @@ typedef enum {
 	MMC_CLK_200M
 } smhc_clk_t;
 
+#define SMHC_CLK_COUNT 7
+
 typedef struct {
 	volatile u32 gctrl; /* (0x00) SMC Global Control Register */
 	volatile u32 clkcr; /* (0x04) SMC Clock Control Register */
@@ -108,16 +110,18 @@ typedef struct {
 } sdhci_idma_desc_t __attribute__((aligned(8)));
 
 typedef struct {
-	char		 *name;
+	char		*name;
 	sdhci_reg_t *reg;
+	u8			 id;
 	u32			 reset;
 
 	u32		   voltage;
 	u32		   width;
-	smhc_clk_t clock;
+	smhc_clk_t clock_active;
+	smhc_clk_t clock_wanted;
 	u32		   pclk;
-	u8		   odly[6];
-	u8		   sdly[6];
+	u8		   odly[SMHC_CLK_COUNT];
+	u8		   sdly[SMHC_CLK_COUNT];
 
 	sdhci_idma_desc_t dma_desc[32];
 	u32				  dma_trglvl;
@@ -133,8 +137,6 @@ typedef struct {
 	gpio_mux_t gpio_clk;
 
 } sdhci_t;
-
-extern sdhci_t sdhci0;
 
 bool sdhci_reset(sdhci_t *hci);
 bool sdhci_set_voltage(sdhci_t *hci, u32 voltage);

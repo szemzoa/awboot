@@ -73,13 +73,14 @@
 #define CCU_RISCV_CFG_BGR_REG		 (0xd0c)
 
 /* MMC clock bit field */
-#define CCU_MMC_CTRL_M(x)		  ((x)-1)
+#define CCU_MMC_CTRL_M(x)		  ((x) - 1)
 #define CCU_MMC_CTRL_N(x)		  ((x) << 8)
 #define CCU_MMC_CTRL_OSCM24		  (0x0 << 24)
 #define CCU_MMC_CTRL_PLL6X1		  (0x1 << 24)
 #define CCU_MMC_CTRL_PLL6X2		  (0x2 << 24)
 #define CCU_MMC_CTRL_PLL_PERIPH1X CCU_MMC_CTRL_PLL6X1
 #define CCU_MMC_CTRL_PLL_PERIPH2X CCU_MMC_CTRL_PLL6X2
+#define CCU_MMC_CTRL_NEW_TIMING (0x1 << 30)
 #define CCU_MMC_CTRL_ENABLE		  (0x1 << 31)
 /* if doesn't have these delays */
 #define CCU_MMC_CTRL_OCLK_DLY(a) ((void)(a), 0)

@@ -1,12 +1,13 @@
 # AWBoot
 
-Small linux bootloader for Allwinner T113-S3
+Small linux bootloader for Allwinner T113-s3, T113-s4, V851s
 
 ## Building
 
-Run `make LOG_LEVEL=40`.  
-This will generate the bootloader with a valid EGON header, usable with the xfel tool or BOOTROM  
-You can change the log level with the LOG_LEVEL argument. Default is 30 (info).  
+Run `make VARIANT=all LOG_LEVEL=40`.  
+This builds every supported output (fel/spi/sdmmc/emmc) and produces awboot binaries with valid EGON headers.  
+`VARIANT` accepts a comma‑separated list (for example `VARIANT=fel,emmc`) if you only need a subset, and `LOG_LEVEL`
+continues to control verbosity (default 30 = info).  
 
 ## Using
 
@@ -14,14 +15,18 @@ You will need [xfel](https://github.com/xboot/xfel) for uploading the file to me
 This it not needed for writing to an SD card.  
 
 ### FEL memory boot:
+1. Build the variant that includes FEL (`make VARIANT=fel …`).  
+2. Provide your kernel/dtb (and optional initrd).  
+3. Run the helper script:
 ```
-xfel write 0x30000 awboot-fel.bin
-xfel exec 0x30000
+./tools/fel.sh path/to/zImage path/to/board.dtb [path/to/initrd]
 ```
+The script uploads the freshly built `awboot-fel.bin`, kernel, DTB and optional initrd, updates the FEL mailboxes and
+boots the SoC automatically.  
 
 ### FEL SPI NOR boot:
 ```
-make spi-boot.img
+make VARIANT=spi spi-boot.img
 xfel spinor
 xfel spinor write 0 spi-boot.img
 xfel reset
@@ -29,7 +34,7 @@ xfel reset
 
 ### FEL SPI NAND boot:
 ```
-make spi-boot.img
+make VARIANT=spi spi-boot.img
 xfel spi_nand
 xfel spi_nand write 0 spi-boot.img
 xfel reset

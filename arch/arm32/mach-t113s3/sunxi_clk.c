@@ -1,10 +1,33 @@
-#include "main.h"
+#include "common.h"
 #include "board.h"
 #include "sunxi_clk.h"
 #include "reg-ccu.h"
 #include "debug.h"
 
 volatile ccu_reg_t *const ccu = (ccu_reg_t *)T113_CCU_BASE;
+
+static uint32_t clk_wait_fail_addr;
+
+static bool wait_for_bit_set(virtual_addr_t addr, uint32_t mask)
+{
+	uint32_t timeout = 2000000; // arbitrary large enough spin count
+
+	while (timeout--) {
+		if (read32(addr) & mask)
+			return true;
+		/* Small delay to avoid hammering the bus */
+		sdelay(1);
+	}
+
+	if (clk_wait_fail_addr == 0)
+		clk_wait_fail_addr = (uint32_t)addr;
+	return false;
+}
+
+uint32_t sunxi_clk_get_fail_addr(void)
+{
+	return clk_wait_fail_addr;
+}
 
 void set_pll_cpux_axi(void)
 {
@@ -47,8 +70,8 @@ void set_pll_cpux_axi(void)
 	write32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG, val);
 
 	/* Wait pll stable */
-	while (!(read32(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG) & (0x1 << 28)))
-		;
+	if (!wait_for_bit_set(T113_CCU_BASE + CCU_PLL_CPU_CTRL_REG, (0x1 << 28)))
+		return;
 	sdelay(20);
 
 	/* Enable pll gating */
@@ -92,8 +115,8 @@ static void set_pll_periph0(void)
 	write32(T113_CCU_BASE + CCU_PLL_PERI0_CTRL_REG, val);
 
 	/* Wait pll stable */
-	while (!(read32(T113_CCU_BASE + CCU_PLL_PERI0_CTRL_REG) & (0x1 << 28)))
-		;
+	if (!wait_for_bit_set(T113_CCU_BASE + CCU_PLL_PERI0_CTRL_REG, (0x1 << 28)))
+		return;
 	sdelay(20);
 
 	/* Lock disable */
@@ -110,7 +133,10 @@ static void set_ahb(void)
 
 static void set_apb(void)
 {
-	write32(T113_CCU_BASE + CCU_APB0_CLK_REG, (2 << 0) | (1 << 8) | (0x03 << 24));
+	/* Keep APB0 sourcing from PLL_PERI(1x) with divisors matching pre-rebase setup. */
+	uint32_t config = (2 << 0) | (1 << 8) | (0x03 << 24);
+
+	write32(T113_CCU_BASE + CCU_APB0_CLK_REG, config);
 	sdelay(1);
 }
 
@@ -151,8 +177,8 @@ static void set_module(virtual_addr_t addr)
 		write32(addr, val);
 
 		/* Wait pll stable */
-		while (!(read32(addr) & (0x1 << 28)))
-			;
+		if (!wait_for_bit_set(addr, (0x1 << 28)))
+			return;
 		sdelay(20);
 
 		/* Lock disable */
@@ -199,12 +225,12 @@ uint32_t sunxi_clk_get_peri1x_rate()
 #ifdef CONFIG_ENABLE_CPU_FREQ_DUMP
 void sunxi_clk_dump()
 {
-	uint32_t	reg32;
-	uint32_t	cpu_clk_src;
-	uint32_t UNUSED_DEBUG	plln, pllm;
-	uint8_t		p0;
-	uint8_t	UNUSED_DEBUG	p1;
-	const char * UNUSED_DEBUG clock_str;
+	uint32_t				 reg32;
+	uint32_t				 cpu_clk_src;
+	uint32_t UNUSED_DEBUG	 plln, pllm;
+	uint8_t					 p0;
+	uint8_t UNUSED_DEBUG	 p1;
+	const char *UNUSED_DEBUG clock_str;
 
 	/* PLL CPU */
 	reg32		= read32(T113_CCU_BASE + CCU_CPU_AXI_CFG_REG);
@@ -265,8 +291,8 @@ void sunxi_clk_dump()
 		p0	 = ((reg32 >> 16) & 0x03) + 1;
 		p1	 = ((reg32 >> 20) & 0x03) + 1;
 
-		debug("CLK: PLL_peri (2X)=%" PRIu32 "MHz, (1X)=%" PRIu32 "MHz, (800M)=%" PRIu32 "MHz\r\n", (24 * plln) / (pllm * p0),
-			  (24 * plln) / (pllm * p0) >> 1, (24 * plln) / (pllm * p1));
+		debug("CLK: PLL_peri (2X)=%" PRIu32 "MHz, (1X)=%" PRIu32 "MHz, (800M)=%" PRIu32 "MHz\r\n",
+			  (24 * plln) / (pllm * p0), (24 * plln) / (pllm * p0) >> 1, (24 * plln) / (pllm * p1));
 	} else {
 		debug("CLK: PLL_peri disabled\r\n");
 	}

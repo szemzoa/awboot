@@ -1,6 +1,6 @@
 #include "debug.h"
 #include "sunxi_usart.h"
-#include "main.h"
+#include "common.h"
 #include "board.h"
 
 void message(const char *fmt, ...)

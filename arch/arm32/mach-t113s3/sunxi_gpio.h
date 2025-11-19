@@ -41,9 +41,10 @@ typedef struct {
 	uint8_t mux;
 } gpio_mux_t;
 
-extern void sunxi_gpio_init(gpio_t pin, int cfg);
-extern void sunxi_gpio_set_value(gpio_t pin, int value);
-extern int	sunxi_gpio_read(gpio_t pin);
-extern void sunxi_gpio_set_pull(gpio_t pin, enum gpio_pull_t pull);
+void sunxi_gpio_init(gpio_t pin, unsigned int cfg);
+void sunxi_gpio_write(gpio_t pin, int value);
+int	 sunxi_gpio_read(gpio_t pin);
+void sunxi_gpio_set_pull(gpio_t pin, enum gpio_pull_t pull);
+void sunxi_gpio_set_drive_lvl(const gpio_t pin, uint8_t lvl);
 
 #endif

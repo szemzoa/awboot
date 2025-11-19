@@ -136,7 +136,7 @@ typedef struct {
 	u32				   channel_count;
 	dma_channel_reg_t *channel;
 	u32				   reserved;
-	dma_desc_t		   *desc;
+	dma_desc_t		  *desc;
 	dma_irq_handler_t  dma_func;
 } dma_source_t;
 
