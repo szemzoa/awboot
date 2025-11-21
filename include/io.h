@@ -3,7 +3,7 @@
 
 #include <inttypes.h>
 
-#define BIT(x) (1 << x)
+#define BIT(x) (1 << (x))
 
 typedef unsigned int virtual_addr_t;
 

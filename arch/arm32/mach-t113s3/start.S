@@ -1,4 +1,5 @@
 #include <arch/arm32/include/linkage.h>
+#include "config.h"
 
 #define CONFIG_NBOOT_STACK	0x38000
 
@@ -14,26 +15,9 @@
 #define  ARMV7_FIQ_MASK        0x40
 #define  ARMV7_IRQ_MASK        0x80
 
-/* Reserve stack slices for each privileged mode */
-.set IRQ_STACK_SZ,  0x400
-.set ABT_STACK_SZ,  0x400
-.set UND_STACK_SZ,  0x400
-.set FIQ_STACK_SZ,  0x100
-
-.extern arm32_fault_stub
-
-.section .rodata
-	.align 2
-fault_str_undef:
-	.asciz "UNDEF"
-fault_str_prefetch:
-	.asciz "PREFETCH"
-fault_str_data:
-	.asciz "DATA"
-
-.section .text
 .arm
 .globl reset
+.text
 
 reset:
 	/* Boot head information for BROM */
@@ -61,7 +45,7 @@ reset:
 
 /* Set vector base address register */
 
-	ldr r0, =vector_template_start
+	ldr r0, =_vector
 	mcr p15, 0, r0, c12, c0, 0
 	mrc p15, 0, r0, c1, c0, 0
 	bic r0, #(1 << 13)
@@ -73,15 +57,8 @@ reset:
 	orr     r0, r0, #0x00000800     @ set bit 11 (Z---) BTB
 	bic     r0, r0, #0x00001000     @ clear bit 12 (I) I-cache
 	mcr     p15, 0, r0, c1, c0, 0
-	dsb sy
-	isb
 
-	/* Ensure non-secure world sees VFP if we drop out of secure */
-	mrc     p15, 0, r1, c1, c1, 2
-	orr     r1, r1, #(3 << 10)
-	mcr     p15, 0, r1, c1, c1, 2
-	dsb sy
-	isb
+	bl	cpu_init_cp15
 
 	/* Enable neon/vfp unit */
 	mrc p15, 0, r0, c1, c0, 2
@@ -93,29 +70,8 @@ reset:
 
 	/* Set stack pointer */
 	ldr sp, =__stack_srv_end
-	bl init_banked_stacks
 
 	bl  clear_bss
-
-	/* Build runtime vector table in SRAM */
-	ldr r0, =vector_template_start
-	ldr r1, =vector_template_end
-	ldr r2, =__vector_table
-	mov r3, r2
-
-copy_vectors_loop:
-	cmp r0, r1
-	bhs copy_vectors_done
-	ldr r4, [r0], #4
-	str r4, [r3], #4
-	b copy_vectors_loop
-
-copy_vectors_done:
-	bl arm32_invalidate_icache_btb
-	ldr r0, =__vector_table
-	mcr p15, 0, r0, c12, c0, 0
-	dsb sy
-	isb
 
 	/*
 		* disable interrupts (FIQ and IRQ), also set the cpu to SVC32 mode,
@@ -130,10 +86,8 @@ copy_vectors_done:
 	msr     cpsr,r0
 
 	@set cntfrq to 24M
-	ldr r0, =24000000
+	ldr r0, =CONFIG_COUNTER_FREQUENCY
 	mcr p15, 0, r0, c14, c0, 0
-	dsb sy
-	isb
 
 	bl main
 
@@ -149,74 +103,56 @@ copy_vectors_done:
 
 	mov pc, lr
 
-.align 5
-.arm
-.globl init_banked_stacks
-init_banked_stacks:
-	ldr   r0, =__stack_srv_end
-	sub   r0, r0, #IRQ_STACK_SZ
-	cps   #0x12
-	mov   sp, r0
-	sub   r0, r0, #ABT_STACK_SZ
-	cps   #0x17
-	mov   sp, r0
-	sub   r0, r0, #UND_STACK_SZ
-	cps   #0x1b
-	mov   sp, r0
-	sub   r0, r0, #FIQ_STACK_SZ
-	cps   #0x11
-	mov   sp, r0
-	cps   #0x13
-	bx    lr
+ENTRY(cpu_init_cp15)
+	/* Enable SMP bit before cache/TLB maintenance */
+	mrc	p15, 0, r0, c1, c0, 1
+	orr	r0, r0, #(1 << 6)
+	mcr	p15, 0, r0, c1, c0, 1
 
-.align 5
-vector_template_start:
-	b reset
-	ldr pc, vector_slot_undefined
-	ldr pc, vector_slot_software
-	ldr pc, vector_slot_prefetch
-	ldr pc, vector_slot_data
-	ldr pc, vector_slot_unused
-	ldr pc, vector_slot_irq
-	ldr pc, vector_slot_fiq
-
-vector_slot_undefined:
-	.word arm_vector_undefined_trampoline
-vector_slot_software:
-	.word arm_vector_software_trampoline
-vector_slot_prefetch:
-	.word arm_vector_prefetch_trampoline
-vector_slot_data:
-	.word arm_vector_data_trampoline
-vector_slot_unused:
-	.word arm_vector_unused_trampoline
-vector_slot_irq:
-	.word arm_vector_irq_trampoline
-vector_slot_fiq:
-	.word arm_vector_fiq_trampoline
-
-vector_template_end:
-
-	.align 5
-	.globl arm32_invalidate_icache_btb
-arm32_invalidate_icache_btb:
-	push {r0}
-	mov r0, #0
-	mcr p15, 0, r0, c7, c5, 0	@ invalidate entire I-cache
-	mcr p15, 0, r0, c7, c5, 6	@ invalidate entire branch predictor array
-	dsb sy
+	/* Invalidate TLBs, I-cache, branch predictor */
+	mov	r0, #0
+	mcr	p15, 0, r0, c8, c7, 0
+	mcr	p15, 0, r0, c7, c5, 0
+	mcr	p15, 0, r0, c7, c5, 6
+	dsb
 	isb
-	pop {r0}
-	bx lr
 
-.section .bss, "aw", %nobits
-	.align 5
-	.globl __vector_table
-__vector_table:
-	.space vector_template_end - vector_template_start
-__vector_table_end:
+	/* Disable MMU/cache features, keep BTB enabled */
+	mrc	p15, 0, r0, c1, c0, 0
+	bic	r0, r0, #0x00002000
+	bic	r0, r0, #0x00000007
+	orr	r0, r0, #0x00000002	/* alignment fault enable */
+	orr	r0, r0, #0x00000800	/* enable branch predictor */
+	bic	r0, r0, #0x00001000	/* keep I-cache disabled */
+	mcr	p15, 0, r0, c1, c0, 0
+	isb
+	bx	lr
+ENDPROC(cpu_init_cp15)
 
-.section .text
+_vector:
+	b reset
+	ldr pc, _undefined_instruction
+	ldr pc, _software_interrupt
+	ldr pc, _prefetch_abort
+	ldr pc, _data_abort
+	ldr pc, _not_used
+	ldr pc, _irq
+	ldr pc, _fiq
+
+_undefined_instruction:
+	.word undefined_instruction
+_software_interrupt:
+	.word software_interrupt
+_prefetch_abort:
+	.word prefetch_abort
+_data_abort:
+	.word data_abort
+_not_used:
+	.word not_used
+_irq:
+	.word irq
+_fiq:
+	.word fiq
 
 .macro save_regs
 	str lr, [sp, #-4]
@@ -271,61 +207,46 @@ __vector_table_end:
  * Exception handlers
  */
 	.align 5
-arm_vector_undefined_trampoline:
+undefined_instruction:
 	sub lr, lr, #4
 	save_regs
-	mov r2, r0
-	ldr r0, =fault_str_undef
-	mov r1, r2
-	bl arm32_fault_stub
-	mov r0, r2
 	bl arm32_do_undefined_instruction
 	restore_regs
 
 	.align 5
-arm_vector_software_trampoline:
+software_interrupt:
 	sub lr, lr, #4
 	save_regs
 	bl arm32_do_software_interrupt
 	restore_regs
 
 	.align 5
-arm_vector_prefetch_trampoline:
+prefetch_abort:
 	sub lr, lr, #4
 	save_regs
-	mov r2, r0
-	ldr r0, =fault_str_prefetch
-	mov r1, r2
-	bl arm32_fault_stub
-	mov r0, r2
 	bl arm32_do_prefetch_abort
 	restore_regs
 
 	.align 5
-arm_vector_data_trampoline:
+data_abort:
 	sub lr, lr, #8
 	save_regs
-	mov r2, r0
-	ldr r0, =fault_str_data
-	mov r1, r2
-	bl arm32_fault_stub
-	mov r0, r2
 	bl arm32_do_data_abort
 	restore_regs
 
 	.align 5
-arm_vector_unused_trampoline:
+not_used:
 	b .
 
 	.align 5
-arm_vector_irq_trampoline:
+irq:
 	sub lr, lr, #4
 	save_regs
 	bl arm32_do_irq
 	restore_regs
 
 	.align 5
-arm_vector_fiq_trampoline:
+fiq:
 	sub lr, lr, #4
 	save_regs
 	bl arm32_do_fiq

@@ -16,7 +16,7 @@
 uint64_t get_arch_counter(void)
 {
 	uint32_t low = 0, high = 0;
-	asm volatile("mrrc p15, 0, %0, %1, c14" : "=r"(low), "=r"(high) : : "memory");
+	__asm__ __volatile__("mrrc p15, 0, %0, %1, c14" : "=r"(low), "=r"(high) : : "memory");
 	return ((uint64_t)high << 32) | (uint64_t)low;
 }
 

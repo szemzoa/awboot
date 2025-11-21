@@ -11,6 +11,7 @@
 #include "debug.h"
 #include "ff.h"
 #include "sunxi_spi.h"
+#include "config.h"
 
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 

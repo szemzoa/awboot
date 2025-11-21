@@ -419,7 +419,7 @@ int sunxi_spi_init(sunxi_spi_t *spi)
 	val |= SPI_TCR_SPOL_MSK | SPI_TCR_DHB_MSK;
 	if (freq >= 80000000)
 		val |= SPI_TCR_SDC_MSK; // Set SDC bit when above 60MHz
-	else if ((freq <= 24000000))
+	else if ((freq <= CONFIG_COUNTER_FREQUENCY))
 		val |= SPI_TCR_SDM_MSK; // Set SDM bit when below 24MHz
 	write32(spi->base + SPI_TCR, val);
 

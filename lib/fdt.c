@@ -623,7 +623,7 @@ int fdt_update_initrd(void *blob, uint32_t start, uint32_t end)
  * - device_type: has to be "memory".
  * - reg: this property contains all the physical memory ranges of your boards.
  */
-int fdt_update_memory(void *blob, unsigned int mem_bank, unsigned int mem_size)
+int fdt_update_memory(void *blob, uint32_t mem_bank, uint32_t mem_size)
 {
 	int			 nodeoffset;
 	unsigned int data[4];

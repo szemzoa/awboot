@@ -858,9 +858,9 @@ bool sdhci_set_clock(sdhci_t *sdhci, smhc_clk_t clock)
 	else
 		mod_hz = hz * 2; /* compensate the CCU post-div */
 
-	if (mod_hz <= 24000000) {
+	if (mod_hz <= CONFIG_COUNTER_FREQUENCY) {
 		pll	   = CCU_MMC_CTRL_OSCM24;
-		pll_hz = 24000000;
+		pll_hz = CONFIG_COUNTER_FREQUENCY;
 	} else {
 		pll	   = CCU_MMC_CTRL_PLL_PERIPH1X;
 		pll_hz = sunxi_clk_get_peri1x_rate(); // 600Mhz
