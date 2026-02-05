@@ -150,7 +150,6 @@ int main(void)
 	board_init();
 
 	message("\r\n");
-	info("start time %" PRIu32 "ms\r\n", t);
 
 	info(" %" PRIu32 "ms\r\n", time_ms());
 
