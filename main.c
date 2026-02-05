@@ -167,7 +167,7 @@ int main(void)
 	sunxi_clk_dump();
 #endif
 
-	sunxi_wdg_set(10);
+	//sunxi_wdg_set(10);
 	memset(&image, 0, sizeof(image_info_t));
 	image.filename		   = kernel_filename;
 	image.of_filename	   = dtb_filename;
@@ -260,7 +260,7 @@ int main(void)
 #endif // CONFIG_SPI_NAND
 
 	// The kernel will reset WDG
-	sunxi_wdg_set(3);
+	//sunxi_wdg_set(3);
 
 	if (boot_image_setup((unsigned char *)image.kernel_dest, &entry_point) != 0) {
 		fatal("boot setup failed\r\n");
