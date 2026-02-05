@@ -34,7 +34,7 @@ HOSTSTRIP=strip
 MAKE=make
 
 SUPPORTED_VARIANTS := fel spi sdmmc emmc all
-VARIANT ?= emmc
+VARIANT ?= emmc spi sdmmc
 comma := ,
 VARIANT_LIST := $(strip $(subst $(comma), ,$(VARIANT)))
 
