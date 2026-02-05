@@ -192,7 +192,9 @@ int main(void)
 		fatal("SMHC: init failed\r\n");
 #endif
 	} else {
+#if 0
 		sdmmc_speed_test();
+#endif
 		info("SMHC: mount start\r\n");
 		if (mount_sdmmc() != 0) {
 			fatal("SMHC: card mount failed\r\n");
