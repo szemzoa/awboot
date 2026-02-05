@@ -253,6 +253,10 @@ int main(void)
 	board_init();
 
 	message("\r\n");
+	info("start time %" PRIu32 "ms\r\n", t);
+
+	info(" %" PRIu32 "ms\r\n", time_ms());
+
 	info("AWBoot r%" PRIu32 " starting...\r\n", (u32)BUILD_REVISION);
 
 	uint32_t clk_fail = sunxi_clk_get_fail_addr();

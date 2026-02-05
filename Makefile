@@ -3,7 +3,7 @@ TARGET := awboot
 CROSS_COMPILE ?= arm-none-eabi
 
 # Log level defaults to info
-LOG_LEVEL ?= 30
+LOG_LEVEL ?= 10
 
 SRCS := main.c board.c
 
