@@ -24,6 +24,17 @@ This it not needed for writing to an SD card.
 The script uploads the freshly built `awboot-fel.bin`, kernel, DTB and optional initrd, updates the FEL mailboxes and
 boots the SoC automatically.  
 
+### FEL SPI NAND read test:
+This runs from SRAM over FEL, initializes SPI0, reads 1 MiB from SPI NAND offset `0x00000000`, verifies the LCG test
+pattern, and stops after printing the result on UART3 (`PB6/PB7`, 115200).
+```
+make VARIANT=spitest LOG_LEVEL=40
+xfel ddr t113-s3
+xfel write 0x00028000 awboot-spinand-test-fel.bin
+xfel exec 0x00028000
+```
+On verify failure, awboot prints the first mismatch and dumps the bytes around that offset.
+
 ### FEL SPI NOR boot:
 ```
 make VARIANT=spi spi-boot.img

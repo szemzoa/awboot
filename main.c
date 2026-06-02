@@ -104,6 +104,100 @@ static char   initrd_filename[MAX_FILENAME_SIZE] = CONFIG_INITRD_FILENAME;
 
 static char cmd_line[128] = {0};
 
+#if CONFIG_SPINAND_TEST_ONLY
+static uint32_t load_le32(const uint8_t *buf)
+{
+	return (uint32_t)buf[0] |
+		   ((uint32_t)buf[1] << 8) |
+		   ((uint32_t)buf[2] << 16) |
+		   ((uint32_t)buf[3] << 24);
+}
+
+static void dump_spinand_test_data(const uint8_t *buf, uint32_t len, uint32_t fail_offset)
+{
+	uint32_t start = fail_offset & ~0xFU;
+	uint32_t end;
+	uint32_t i;
+
+	if (start >= 0x40U)
+		start -= 0x40U;
+	else
+		start = 0U;
+
+	end = start + 0x80U;
+	if (end > len)
+		end = len;
+
+	info("SPI-NAND TEST: dump 0x%08" PRIx32 "..0x%08" PRIx32 "\r\n",
+		 (uint32_t)(CONFIG_SPINAND_TEST_ADDR + start), (uint32_t)(CONFIG_SPINAND_TEST_ADDR + end));
+
+	for (i = start; i < end; i++) {
+		if ((i & 0xFU) == 0U)
+			message("%08" PRIx32 ":", (uint32_t)(CONFIG_SPINAND_TEST_ADDR + i));
+		message(" %02x", buf[i]);
+		if ((i & 0xFU) == 0xFU)
+			message("\r\n");
+	}
+	if ((end & 0xFU) != 0U)
+		message("\r\n");
+}
+
+static void verify_spinand_testdata(sunxi_spi_t *spi)
+{
+	uint8_t *buf = (uint8_t *)(uintptr_t)SDRAM_BASE;
+	uint32_t expected = CONFIG_SPINAND_TEST_SEED;
+	uint32_t fail_count = 0U;
+	uint32_t first_fail_word = 0U;
+	uint32_t first_expected = 0U;
+	uint32_t first_got = 0U;
+	uint64_t start;
+	uint64_t elapsed;
+	uint32_t i;
+	uint32_t ret;
+	uint32_t mb_per_second;
+
+	info("SPI-NAND TEST: read addr=0x%08" PRIx32 " len=%" PRIu32 "\r\n",
+		 (uint32_t)CONFIG_SPINAND_TEST_ADDR, (uint32_t)CONFIG_SPINAND_TEST_LEN);
+
+	start = time_us();
+	ret = spi_nand_read(spi, buf, CONFIG_SPINAND_TEST_ADDR, CONFIG_SPINAND_TEST_LEN);
+	elapsed = time_us() - start;
+	mb_per_second = (elapsed == 0U) ? 0U : (uint32_t)(((uint64_t)CONFIG_SPINAND_TEST_LEN * 1000000ULL) /
+													  ((uint64_t)elapsed * 1024ULL * 1024ULL));
+
+	info("SPI-NAND TEST: read returned %" PRIu32 ", time=%" PRIu32 "us speed=%" PRIu32 "MB/S\r\n",
+		 (uint32_t)ret, (uint32_t)elapsed, mb_per_second);
+
+	for (i = 0U; i < (CONFIG_SPINAND_TEST_LEN / 4U); i++) {
+		uint32_t got = load_le32(&buf[i * 4U]);
+
+		if (got != expected) {
+			if (fail_count == 0U) {
+				first_fail_word = i;
+				first_expected = expected;
+				first_got = got;
+			}
+			fail_count++;
+		}
+
+		expected = expected * 1664525U + 1013904223U;
+	}
+
+	if (fail_count == 0U) {
+		info("SPI-NAND TEST: PASS, %" PRIu32 " words\r\n", (uint32_t)(CONFIG_SPINAND_TEST_LEN / 4U));
+	} else {
+		uint32_t first_fail_offset = first_fail_word * 4U;
+
+		error("SPI-NAND TEST: FAIL, %" PRIu32 " mismatches\r\n", fail_count);
+		error("SPI-NAND TEST: first mismatch word=%" PRIu32 " offset=0x%08" PRIx32
+			  " expected=0x%08" PRIx32 " got=0x%08" PRIx32 "\r\n",
+			  (uint32_t)first_fail_word, (uint32_t)(CONFIG_SPINAND_TEST_ADDR + first_fail_offset),
+			  (uint32_t)first_expected, (uint32_t)first_got);
+		dump_spinand_test_data(buf, CONFIG_SPINAND_TEST_LEN, first_fail_offset);
+	}
+}
+#endif
+
 static int boot_image_setup(unsigned char *addr, unsigned int *entry)
 {
 	linux_zimage_header_t *zimage_header = (linux_zimage_header_t *)addr;
@@ -159,6 +253,26 @@ int main(void)
 
 	memory_size = sunxi_dram_init();
 	info("DRAM init done: %" PRIu32 " MiB\r\n", memory_size >> 20);
+
+#if CONFIG_SPINAND_TEST_ONLY
+	dma_init();
+	debug("SPI: init\r\n");
+	if (sunxi_spi_init(&sunxi_spi0) != 0) {
+		fatal("SPI: init failed\r\n");
+	}
+
+	if (spi_nand_detect(&sunxi_spi0) != 0) {
+		fatal("SPI-NAND: detect failed\r\n");
+	}
+	info("SPI-NAND TEST: detect OK\r\n");
+
+	verify_spinand_testdata(&sunxi_spi0);
+	sunxi_spi_disable(&sunxi_spi0);
+	sunxi_wdg_set(0);
+	info("SPI-NAND TEST: done\r\n");
+	while (1) {
+	}
+#endif
 
 #ifdef CONFIG_ENABLE_CPU_FREQ_DUMP
 	sunxi_clk_dump();

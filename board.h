@@ -41,6 +41,13 @@
 #define CONFIG_BOOT_SDCARD	0
 #define CONFIG_BOOT_MMC		1
 
+#ifndef CONFIG_SPINAND_TEST_ONLY
+#define CONFIG_SPINAND_TEST_ONLY 0
+#endif
+#define CONFIG_SPINAND_TEST_ADDR 0x00000000U
+#define CONFIG_SPINAND_TEST_LEN	 MB(1)
+#define CONFIG_SPINAND_TEST_SEED 0x811c9dc5U
+
 #define CONFIG_FATFS_CACHE_SIZE		 36 // (unit: 512B sectors, multiples of 8 to match FAT's 4KB)
 #define CONFIG_SDMMC_SPEED_TEST_SIZE 2048 // (unit: 512B sectors)
 
@@ -67,7 +74,7 @@ extern sdhci_t sdhci2;
 void board_init(void);
 void board_set_led(uint8_t num, uint8_t on);
 
-#define USART_DBG usart0_dbg
+#define USART_DBG usart3_dbg
 #define SDHCI sdhci0
 
 #endif

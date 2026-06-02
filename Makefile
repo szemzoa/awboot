@@ -33,7 +33,7 @@ HOSTSTRIP=strip
 
 MAKE=make
 
-SUPPORTED_VARIANTS := fel spi sdmmc emmc all
+SUPPORTED_VARIANTS := fel spi spitest sdmmc emmc all
 VARIANT ?= emmc
 comma := ,
 VARIANT_LIST := $(strip $(subst $(comma), ,$(VARIANT)))
@@ -135,6 +135,10 @@ ifneq ($(filter spi,$(BUILD_VARIANTS)),)
 $(eval $(call REGISTER_VARIANT,spi,CONFIG_BOOT_SPINAND=1 CONFIG_BOOT_SDCARD=0 CONFIG_BOOT_MMC=0))
 endif
 
+ifneq ($(filter spitest,$(BUILD_VARIANTS)),)
+$(eval $(call REGISTER_VARIANT,spitest,CONFIG_BOOT_SPINAND=1 CONFIG_BOOT_SDCARD=0 CONFIG_BOOT_MMC=0 CONFIG_SPINAND_TEST_ONLY=1))
+endif
+
 # build sd/mmc only image without spi
 ifneq ($(filter sdmmc,$(BUILD_VARIANTS)),)
 $(eval $(call REGISTER_VARIANT,sdmmc,CONFIG_BOOT_SPINAND=0 CONFIG_BOOT_SDCARD=1 CONFIG_BOOT_MMC=1))
@@ -179,6 +183,13 @@ ifneq ($(filter spi,$(BUILD_VARIANTS)),)
 	cp -f build-spi/$(TARGET)-boot.bin $(TARGET)-boot-spi-4k.bin
 	tools/mksunxi $(TARGET)-boot-spi.bin 8192
 	tools/mksunxi $(TARGET)-boot-spi-4k.bin 8192 4096
+endif
+
+ifneq ($(filter spitest,$(BUILD_VARIANTS)),)
+	echo "SPI NAND TEST:"
+	$(SIZE) build-spitest/$(TARGET)-fel.elf
+	cp -f build-spitest/$(TARGET)-fel.bin $(TARGET)-spinand-test-fel.bin
+	tools/mksunxi $(TARGET)-spinand-test-fel.bin 512
 endif
 
 ifneq ($(filter sdmmc,$(BUILD_VARIANTS)),)

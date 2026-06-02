@@ -72,7 +72,9 @@ enum {
 	CONFIG_ADDR_PROTECT = 0xa0,
 	CONFIG_ADDR_OTP		= 0xb0,
 	CONFIG_ADDR_STATUS	= 0xc0,
-	CONFIG_POS_BUF		= 0x08, // Micron specific
+	CONFIG_POS_ECC		= 0x10,
+	CONFIG_POS_HDIS		= 0x08,
+	CONFIG_POS_BUF		= 0x01,
 };
 
 enum {
@@ -117,7 +119,7 @@ enum {
 
 enum {
 	SPI_FCR_RX_LEVEL_POS  = 0,
-	SPI_FCR_RX_LEVEL_MSK  = (0xff < SPI_FCR_RX_LEVEL_POS),
+	SPI_FCR_RX_LEVEL_MSK  = (0xff << SPI_FCR_RX_LEVEL_POS),
 	SPI_FCR_RX_DRQEN_POS  = 8,
 	SPI_FCR_RX_DRQEN_MSK  = (0x1 << SPI_FCR_RX_DRQEN_POS),
 	SPI_FCR_RX_TESTEN_POS = 14,
@@ -148,7 +150,7 @@ typedef enum {
 	SPI_NAND_MFR_MICRON		= 0x2c,
 } spi_mfr_id;
 
-static const spi_nand_info_t spi_nand_infos[] = {
+static const spi_nand_info_t spi_nand_infos[] __always_unused = {
 	/* Winbond */
 	{	 "W25N512GV",  {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa20, 2}, 2048,	 64, 64,	 512, 1, 1, SPI_IO_QUAD_RX},
 	{	  "W25N01GV",	 {.mfr = SPI_NAND_MFR_WINBOND, .dev = 0xaa21, 2}, 2048,	64, 64, 1024, 1, 1, SPI_IO_QUAD_RX},
@@ -314,7 +316,7 @@ inline static uint32_t spi_query_txfifo(sunxi_spi_t *spi)
 	uint32_t val = read32(spi->base + SPI_FSR) & SPI_FSR_TF_CNT_MSK;
 
 	val >>= SPI_FSR_TF_CNT_POS;
-	return 0;
+	return val;
 }
 
 inline static uint32_t spi_query_rxfifo(sunxi_spi_t *spi)
@@ -477,38 +479,95 @@ static void spi_set_counters(sunxi_spi_t *spi, int txlen, int rxlen, int stxlen,
 	write32(spi->base + SPI_BCC, val);
 }
 
-static void spi_write_tx_fifo(sunxi_spi_t *spi, uint8_t *buf, uint32_t len)
+static int spi_wait_txfifo(sunxi_spi_t *spi, uint32_t max_level)
 {
-	while ((len -= 4 % 4) == 0) {
-		while (spi_query_txfifo(spi) > 60) {
-			udelay(100);
-		};
-		write32(spi->base + SPI_TXD, *(buf += 4));
+	uint32_t retry = 10000U;
+
+	while (spi_query_txfifo(spi) > max_level) {
+		if (retry-- == 0U) {
+			error("SPI: TX FIFO timeout, fsr=0x%08" PRIx32 "\r\n", read32(spi->base + SPI_FSR));
+			return -1;
+		}
 	}
 
-	while (len-- > 0) {
-		while (spi_query_txfifo(spi) > 63) {
-			udelay(100);
-		};
-		write8(spi->base + SPI_TXD, *buf++);
-	}
+	return 0;
 }
 
-static uint32_t spi_read_rx_fifo(sunxi_spi_t *spi, uint8_t *buf, uint32_t len)
+static int spi_wait_rxfifo(sunxi_spi_t *spi, uint32_t min_level)
 {
-	// Wait for data
-	while ((len -= 4 % 4) == 0) {
-		while (spi_query_rxfifo(spi) < 4) {
-		};
-		*(buf += 4) = read32(spi->base + SPI_RXD);
+	uint32_t retry = 10000U;
+
+	while (spi_query_rxfifo(spi) < min_level) {
+		if (retry-- == 0U) {
+			error("SPI: RX FIFO timeout, need=%" PRIu32 " fsr=0x%08" PRIx32 " isr=0x%08" PRIx32 "\r\n",
+				  min_level, read32(spi->base + SPI_FSR), read32(spi->base + SPI_ISR));
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static int spi_wait_tx_done(sunxi_spi_t *spi)
+{
+	uint32_t deadline = time_ms() + 10U;
+
+	while (spi_query_txfifo(spi) != 0U) {
+		if (time_ms() >= deadline) {
+			error("SPI: TX done timeout, fsr=0x%08" PRIx32 " isr=0x%08" PRIx32 "\r\n",
+				  read32(spi->base + SPI_FSR), read32(spi->base + SPI_ISR));
+			return -1;
+		}
+	}
+
+	udelay(1);
+	return 0;
+}
+
+static int spi_write_tx_fifo(sunxi_spi_t *spi, uint8_t *buf, uint32_t len)
+{
+	while (len >= 4) {
+		uint32_t word;
+
+		if (spi_wait_txfifo(spi, 60) != 0)
+			return -1;
+		memcpy(&word, buf, sizeof(word));
+		write32(spi->base + SPI_TXD, word);
+		buf += 4;
+		len -= 4;
 	}
 
 	while (len-- > 0) {
-		while (spi_query_rxfifo(spi) < 1) {
-		};
+		if (spi_wait_txfifo(spi, 63) != 0)
+			return -1;
+		write8(spi->base + SPI_TXD, *buf++);
+	}
+
+	return 0;
+}
+
+static int spi_read_rx_fifo(sunxi_spi_t *spi, uint8_t *buf, uint32_t len)
+{
+	uint32_t remain = len;
+
+	while (remain >= 4) {
+		uint32_t word;
+
+		// Wait for data
+		if (spi_wait_rxfifo(spi, 4) != 0)
+			return -1;
+		word = read32(spi->base + SPI_RXD);
+		memcpy(buf, &word, sizeof(word));
+		buf += 4;
+		remain -= 4;
+	}
+
+	while (remain-- > 0) {
+		if (spi_wait_rxfifo(spi, 1) != 0)
+			return -1;
 		*buf++ = read8(spi->base + SPI_RXD);
 	}
-	return len;
+	return 0;
 }
 
 static void spi_set_io_mode(sunxi_spi_t *spi, spi_io_mode_t mode)
@@ -560,7 +619,13 @@ static int spi_transfer(sunxi_spi_t *spi, spi_io_mode_t mode, void *txbuf, uint3
 	write32(spi->base + SPI_TCR, read32(spi->base + SPI_TCR) | (1 << 31)); // Start exchange when data in FIFO
 
 	if (txbuf && txlen) {
-		spi_write_tx_fifo(spi, txbuf, txlen);
+		if (spi_write_tx_fifo(spi, txbuf, txlen) != 0)
+			return -1;
+	}
+
+	if (txlen > 0U && (rxbuf == NULL || rxlen == 0U)) {
+		if (spi_wait_tx_done(spi) != 0)
+			return -1;
 	}
 
 	fcr = read32(spi->base + SPI_FCR);
@@ -576,10 +641,18 @@ static int spi_transfer(sunxi_spi_t *spi, spi_io_mode_t mode, void *txbuf, uint3
 				error("SPI: DMA transfer failed\r\n");
 				return -1;
 			}
+			uint32_t deadline = time_ms() + 1000U;
 			while (dma_querystatus(spi_rx_dma_hd)) {
+				if (time_ms() >= deadline) {
+					error("SPI: DMA timeout, left=%" PRIu32 " fsr=0x%08" PRIx32 " isr=0x%08" PRIx32 "\r\n",
+						  rxlen, read32(spi->base + SPI_FSR), read32(spi->base + SPI_ISR));
+					dma_stop(spi_rx_dma_hd);
+					return -1;
+				}
 			};
 		} else {
-			spi_read_rx_fifo(spi, rxbuf, rxlen);
+			if (spi_read_rx_fifo(spi, rxbuf, rxlen) != 0)
+				return -1;
 		}
 	}
 
@@ -587,22 +660,23 @@ static int spi_transfer(sunxi_spi_t *spi, spi_io_mode_t mode, void *txbuf, uint3
 
 	return txlen + rxlen;
 }
+
 /*
  * SPI NAND functions
  */
 
 static int spi_nand_info(sunxi_spi_t *spi)
 {
-	spi_nand_info_t *info;
-	spi_nand_id_t	 id;
 	uint8_t			 tx[1];
 	uint8_t			 rx[4], *rxp;
-	int				 i, r;
+	int				 r;
 
 	tx[0] = OPCODE_READ_ID;
+	info("SPI-NAND: read id transfer\r\n");
 	r	  = spi_transfer(spi, SPI_IO_SINGLE, tx, 1, rx, 4);
 	if (r < 0)
 		return r;
+	info("SPI-NAND: id raw %02x %02x %02x %02x\r\n", rx[0], rx[1], rx[2], rx[3]);
 
 	if (rx[0] == 0xff) {
 		rxp = rx + 1; // Dummy data, shift by one byte
@@ -610,28 +684,30 @@ static int spi_nand_info(sunxi_spi_t *spi)
 		rxp = rx;
 	}
 
-	id.mfr = rxp[0];
-	for (i = 0; i < ARRAY_SIZE(spi_nand_infos); i++) {
-		info = (spi_nand_info_t *)&spi_nand_infos[i];
-		if (info->id.dlen == 2) {
-			id.dev = (((uint16_t)rxp[1]) << 8 | rxp[2]);
-		} else {
-			id.dev = rxp[1];
-		}
-		if (info->id.mfr == id.mfr && info->id.dev == id.dev) {
-			memcpy((void *)&spi->info, info, sizeof(spi_nand_info_t));
-			return 0;
-		}
+	if ((rxp[0] == SPI_NAND_MFR_WINBOND) && (rxp[1] == 0xaaU) && (rxp[2] == 0x22U)) {
+		info("SPI-NAND: matched W25N02KV\r\n");
+		spi->info.name			 = "W25N02KV";
+		spi->info.id.mfr		 = SPI_NAND_MFR_WINBOND;
+		spi->info.id.dev		 = 0xaa22U;
+		spi->info.id.dlen		 = 2U;
+		spi->info.page_size		 = 2048U;
+		spi->info.spare_size	 = 128U;
+		spi->info.pages_per_block = 64U;
+		spi->info.blocks_per_die	 = 2048U;
+		spi->info.planes_per_die	 = 1U;
+		spi->info.ndies			 = 1U;
+		spi->info.mode			 = SPI_IO_QUAD_RX;
+		return 0;
 	}
 
-	error("SPI-NAND: unknown mfr:0x%02x dev:0x%04x\r\n", id.mfr, id.dev);
+	error("SPI-NAND: unknown id %02x %02x %02x\r\n", rxp[0], rxp[1], rxp[2]);
 
 	return -1;
 }
 
 static int spi_nand_reset(sunxi_spi_t *spi)
 {
-	uint8_t tx[1];
+	uint8_t tx[4];
 	int		r;
 
 	tx[0] = OPCODE_RESET;
@@ -640,6 +716,19 @@ static int spi_nand_reset(sunxi_spi_t *spi)
 		return -1;
 
 	udelay(100 * 1000);
+
+	return 0;
+}
+
+static int spi_nand_write_enable(sunxi_spi_t *spi)
+{
+	uint8_t tx[4];
+	int		r;
+
+	tx[0] = OPCODE_WRITE_ENABLE;
+	r	  = spi_transfer(spi, SPI_IO_SINGLE, tx, 1, 0, 0);
+	if (r < 0)
+		return -1;
 
 	return 0;
 }
@@ -663,6 +752,9 @@ static int spi_nand_set_config(sunxi_spi_t *spi, uint8_t addr, uint8_t val)
 	uint8_t tx[3];
 	int		r;
 
+	if (spi_nand_write_enable(spi) != 0)
+		return -1;
+
 	tx[0] = OPCODE_WRITE_STATUS;
 	tx[1] = addr;
 	tx[2] = val;
@@ -673,11 +765,12 @@ static int spi_nand_set_config(sunxi_spi_t *spi, uint8_t addr, uint8_t val)
 	return 0;
 }
 
-static void spi_nand_wait_while_busy(sunxi_spi_t *spi)
+static int spi_nand_wait_while_busy(sunxi_spi_t *spi)
 {
 	uint8_t tx[2];
 	uint8_t rx[1];
 	int		r;
+	uint32_t deadline = time_ms() + 250U;
 
 	tx[0] = OPCODE_READ_STATUS;
 	tx[1] = 0xc0; // SR3
@@ -686,39 +779,61 @@ static void spi_nand_wait_while_busy(sunxi_spi_t *spi)
 	do {
 		r = spi_transfer(spi, SPI_IO_SINGLE, tx, 2, rx, 1);
 		if (r < 0)
-			break;
-	} while ((rx[0] & 0x1) == 0x1); // SR3 Busy bit
+			return -1;
+		if ((rx[0] & 0x1) == 0x0)
+			return 0;
+	} while (time_ms() < deadline);
+
+	error("SPI-NAND: busy timeout, status=0x%02x\r\n", rx[0]);
+	return -1;
+}
+
+static int spi_nand_winbond_config_page_read(sunxi_spi_t *spi)
+{
+	uint8_t cfg;
+
+	if (spi_nand_get_config(spi, CONFIG_ADDR_OTP, &cfg) != 0)
+		return -1;
+
+	info("SPI-NAND: Winbond cfg2 0x%02x before page read\r\n", cfg);
+
+	if ((cfg & CONFIG_POS_ECC) != 0U) {
+		if (spi_nand_set_config(spi, CONFIG_ADDR_OTP, cfg & (uint8_t)~CONFIG_POS_ECC) != 0)
+			return -1;
+		if (spi_nand_wait_while_busy(spi) != 0)
+			return -1;
+		if (spi_nand_get_config(spi, CONFIG_ADDR_OTP, &cfg) != 0)
+			return -1;
+		info("SPI-NAND: Winbond cfg2 0x%02x after ECC clear\r\n", cfg);
+	}
+
+	return 0;
 }
 
 int spi_nand_detect(sunxi_spi_t *spi)
 {
-	uint8_t val;
+	uint8_t protect;
 
-	spi_nand_reset(spi);
-	spi_nand_wait_while_busy(spi);
+	info("SPI-NAND: detect start\r\n");
+	info("SPI-NAND: reset\r\n");
+	if (spi_nand_reset(spi) != 0)
+		return -1;
+	info("SPI-NAND: read id\r\n");
 
 	if (spi_nand_info(spi) == 0) {
-		if ((spi_nand_get_config(spi, CONFIG_ADDR_PROTECT, &val) == 0) && (val != 0x0)) {
-			spi_nand_set_config(spi, CONFIG_ADDR_PROTECT, 0x0);
-			spi_nand_wait_while_busy(spi);
-		}
-
-		// Disable buffer mode on Winbond (enable continuous)
-		if (spi->info.id.mfr == (uint8_t)SPI_NAND_MFR_WINBOND) {
-			if ((spi_nand_get_config(spi, CONFIG_ADDR_OTP, &val) == 0) && (val != 0x0)) {
-				val &= ~CONFIG_POS_BUF;
-				spi_nand_set_config(spi, CONFIG_ADDR_OTP, val);
-				spi_nand_wait_while_busy(spi);
+		if (spi->info.id.mfr == SPI_NAND_MFR_WINBOND) {
+			if (spi_nand_get_config(spi, CONFIG_ADDR_PROTECT, &protect) == 0) {
+				info("SPI-NAND: Winbond protect 0x%02x before clear\r\n", protect);
+				if (protect != 0U) {
+					if (spi_nand_set_config(spi, CONFIG_ADDR_PROTECT, 0U) == 0 &&
+						spi_nand_wait_while_busy(spi) == 0 &&
+						spi_nand_get_config(spi, CONFIG_ADDR_PROTECT, &protect) == 0) {
+						info("SPI-NAND: Winbond protect 0x%02x after clear\r\n", protect);
+					}
+				}
 			}
-		}
-
-		if (spi->info.id.mfr == (uint8_t)SPI_NAND_MFR_GIGADEVICE) {
-			if ((spi_nand_get_config(spi, CONFIG_ADDR_OTP, &val) == 0) && !(val & 0x01)) {
-				debug("SPI-NAND: enable Gigadevice Quad mode\r\n");
-				val |= (1 << 0);
-				spi_nand_set_config(spi, CONFIG_ADDR_OTP, val);
-				spi_nand_wait_while_busy(spi);
-			}
+			if (spi_nand_winbond_config_page_read(spi) != 0)
+				warning("SPI-NAND: Winbond page read config failed, using defaults\r\n");
 		}
 
 		info("SPI-NAND: %s detected\r\n", spi->info.name);
@@ -743,7 +858,8 @@ static int spi_nand_load_page(sunxi_spi_t *spi, uint32_t offset)
 	tx[3] = (uint8_t)(pa >> 0);
 
 	spi_transfer(spi, SPI_IO_SINGLE, tx, 4, 0, 0);
-	spi_nand_wait_while_busy(spi);
+	if (spi_nand_wait_while_busy(spi) != 0)
+		return -1;
 
 	return 0;
 }
@@ -784,43 +900,26 @@ uint32_t spi_nand_read(sunxi_spi_t *spi, uint8_t *buf, uint32_t addr, uint32_t r
 		return -1;
 	}
 
-	if (spi->info.id.mfr == SPI_NAND_MFR_GIGADEVICE) {
-		while (cnt > 0) {
-			ca = address & (spi->info.page_size - 1);
-			n  = cnt > (spi->info.page_size - ca) ? (spi->info.page_size - ca) : cnt;
-
-			spi_nand_load_page(spi, address);
-
-			tx[0] = read_opcode;
-			tx[1] = (uint8_t)(ca >> 8);
-			tx[2] = (uint8_t)(ca >> 0);
-			tx[3] = 0x0;
-
-			spi_transfer(spi, spi->info.mode, tx, 4, buf, n);
-
-			address += n;
-			buf += n;
-			len += n;
-			cnt -= n;
-		}
-	} else {
-		spi_nand_load_page(spi, addr);
-
-		// With Winbond, we use continuous mode which has 1 more dummy
-		// This allows us to not load each page
-		if (spi->info.id.mfr == SPI_NAND_MFR_WINBOND) {
-			txlen++;
-		}
-
+	while (cnt > 0) {
 		ca = address & (spi->info.page_size - 1);
+		n  = cnt > (spi->info.page_size - ca) ? (spi->info.page_size - ca) : cnt;
+
+		if (spi_nand_load_page(spi, address) != 0)
+			return len;
 
 		tx[0] = read_opcode;
 		tx[1] = (uint8_t)(ca >> 8);
 		tx[2] = (uint8_t)(ca >> 0);
 		tx[3] = 0x0;
-		tx[4] = 0x0;
 
-		spi_transfer(spi, spi->info.mode, tx, txlen, buf, rxlen);
+		if (spi_transfer(spi, spi->info.mode, tx, txlen, buf, n) < 0)
+			return len;
+
+		address += n;
+		buf += n;
+		len += n;
+		cnt -= n;
 	}
+
 	return len;
 }
